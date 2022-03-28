@@ -1,5 +1,5 @@
 # GWB
-**GWB**, the GuidosToolbox Workbench is a subset of the desktop software package GTB (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/) designed as a cmd-line application for Linux 64bit servers. Precompiled executables of the application can be downloaded from the project homepage (https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/).
+**GWB**, the GuidosToolbox Workbench is a subset of the desktop software package GTB (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/) designed as a cmd-line application for Linux 64bit servers. Full installation packages, and including precompiled executables of the application, can be downloaded from the project homepage (https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/).
 
 **Reference:** Vogt P. et al. (2022). GuidosToolbox Workbench: spatial analysis of raster maps for ecological applications, Ecography, Volume 2022, Issue 3, doi: 10.1111/ecog.05864
 
