@@ -1,0 +1,50 @@
+#!/bin/bash
+# GWB_check4updates
+#
+#############################################################
+# Purpose: 
+#   run this script to test for availability of a newer 
+#   version of GWB, the GuidosToolbox-Workbench
+#   (subset of GuidosToolbox)
+#
+# more info at:
+#  - https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/
+############################################################## 
+topdir=$(dirname "$0")
+if test "$topdir" = "." ; then
+   topdir=$PWD;
+fi
+if test "$topdir" = "/usr/bin" ; then
+   topdir="/opt/GWB"
+fi
+cd "$topdir" || exit
+
+# installed version
+v_installed=$(cat tools/GWB_version.txt)
+# current version
+v_curr=$(curl -s https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_version.txt)
+v1=${v_curr:0:1}
+re='^[0-9]+$'
+
+echo "GWB version checker"
+echo "Installed version: ""$v_installed"
+if ! [[ $v1 =~ $re ]] ; then
+  v_curr='Problem accessing the GWB website/internet.'
+  echo "  Current version: ""$v_curr"
+  exit 48
+fi
+echo "  Current version: ""$v_curr"
+echo ""
+
+if [ "$v_installed" != "$v_curr" ]; then
+  echo "**********  Your version is out of date **********"
+  echo "Support will be provided for the most recent version only."
+  echo "Please upgrade your installed version to the current one at:" 
+  echo "https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/"
+  exit 49
+else
+  echo "Your version is uptodate."
+  exit 50
+fi
+
+exit

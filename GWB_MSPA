@@ -1,0 +1,217 @@
+#!/bin/bash
+#
+# This script starts an IDL Runtime or Virtual Machine application
+# from an IDL installation located in a subdirectory of the directory
+# containing the script.
+#
+
+# are we running headless?
+if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
+
+# Find the location of this script
+topdir=$(dirname "$0")
+if test "$topdir" = "." ; then
+   topdir=$PWD;
+fi
+cd "$topdir" || exit
+
+# check status of GWB
+checker="$topdir"/GWB_check4updates
+if [[ -f "$checker" ]];then
+  GWBstatus=$("$checker" >/dev/null; echo $?)
+  if [ "$GWBstatus" == "49" ]; then
+    echo ""
+    echo "*********************** Attention ************************"
+    echo "GWB outdated. Please upgrade to the current version at:"
+    echo "https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/"
+    echo "*********************** Attention ************************"
+    echo ""
+  fi
+fi
+
+#set default parameters:
+DIR_INPUT=$topdir"/input"
+DIR_OUTPUT=$topdir"/output"
+standalone=1
+
+#read parameters from command line
+#=================================================
+
+for i in "$@"
+do
+   case $i in
+       -i=*)
+       DIR_INPUT="${i#*=}"
+       standalone=0
+       shift
+       ;;
+       -o=*)
+       DIR_OUTPUT="${i#*=}"
+       standalone=0
+       shift
+       ;;
+       --default)
+       shift
+       ;;
+       -h|--help)
+       echo "----------------------------------------------------------------------------------"
+       echo "usage: $0 -i=dir_input -o=dir_output"
+       echo "-i=<full path to directory 'input'> "
+       echo "  (with your input images and parameter files);" 
+       echo "  Standalone mode: GWB/input "
+       echo "-o=<full path to directory 'output'> "
+       echo "  (location for results, must exist and must be empty);"
+       echo "  Standalone mode: GWB/output "
+       echo "--help: show options"
+       echo ""
+       echo "Standalone mode: ./GWB_MSPA"
+       echo "System mode/use custom directories: GWB_MSPA -i=<your dir_input> -o=<your dir_output>"
+       echo "----------------------------------------------------------------------------------"
+       exit
+       ;;
+       *)
+       # unknown option
+       echo "Error: unknown option"
+       echo "usage: $0 --help"
+       exit
+       ;;
+   esac
+done
+
+# startup tests
+if [ "$(getconf LONG_BIT)" != "64" ]; then
+  echo 'OS is not 64bit'
+  exit 1
+fi
+
+if [ "$(id -u)" -eq "0" ];then 
+  echo 'Please run this script as a normal user (not root)'
+  exit 1
+fi
+
+GWBCONF="${HOME}/.gwb/"
+if ! mkdir -p "$GWBCONF";then
+  echo "You have no permissions to create the directory '${GWBCONF}'"
+  exit 1
+fi
+if [ ! -w "$GWBCONF" ];then 
+  echo "You have no write permissions in the directory '${GWBCONF}'"
+  exit 1
+fi  
+
+# provide license info
+EULAOK=$GWBCONF/EULA.txt
+licfile=$topdir"/EULA_GWB.pdf"
+if [ "$topdir" == "/usr/bin" ] || [ "$topdir" == "/opt/GWB" ];then licfile="/opt/GWB/EULA_GWB.pdf"; fi
+if [ ! -e "$EULAOK" ]; then
+  echo " "
+  echo "   GWB (GuidosToolbox Workbench) EULA information"
+  echo "================================================================"
+  if [ "${headless}" == "1" ]; then
+    echo "To use GWB you must accept the terms outlined in"
+    echo $licfile
+    echo "(https://ies-ows.jrc.ec.europa.eu/gtb/GWB/EULA_GWB.pdf)"
+    echo " "
+  else
+    xdg-open "$licfile" &
+  fi
+  echo "Do you accept the terms of the GWB EULA?"
+  echo "Please enter 'yes' or 'no' in small letters without the quotes('')"
+  echo "  "
+  read -r answer
+  if [ "${answer}" != "yes" ]; then
+    echo 'You can not use GWB because you did not agree with the GWB EULA.'
+    exit
+  fi
+  echo "GWB EULA agreed" > "$EULAOK"
+fi
+
+# did we get the full-path?
+if [ "${DIR_INPUT:0:1}" != "/" ]; then
+  echo "Please provide the full pathname to the input directory"
+  exit 1
+fi
+if [ "${DIR_OUTPUT:0:1}" != "/" ]; then
+  echo "Please provide the full pathname to the output directory"
+  exit 1
+fi
+
+# are there any empty spaces in the directory path name?
+if [[ "$DIR_INPUT" =~ \ |\' ]]; then 
+  echo "empty spaces or ' in input directory pathname '${DIR_INPUT}' "
+  exit 1
+fi
+if [[ "$DIR_OUTPUT" =~ \ |\' ]]; then 
+  echo "empty spaces or ' in output directory pathname '${DIR_OUTPUT}' "
+  exit 1
+fi
+
+# do we have write access in $DIR_INPUT and $DIR_OUTPUT?
+if [ ! -d "$DIR_INPUT" ];then 
+  echo "The input directory '${DIR_INPUT}' does not exist"
+  echo "Use the -i= option to specify your input directory"
+  exit 1
+fi  
+if [ ! -w "$DIR_INPUT" ];then 
+  echo "You have no write permissions in the input directory '${DIR_INPUT}'"
+  echo "Use the -i= option to specify your input directory"
+  exit 1
+fi  
+if [ ! -d "$DIR_OUTPUT" ];then 
+  echo "The output directory '${DIR_OUTPUT}' does not exist"
+  echo "Use the -o= option to specify your output directory"
+  exit 1
+fi  
+if [ ! -w "$DIR_OUTPUT" ];then 
+  echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
+  echo "Use the -o= option to specify your output directory"
+  exit 1
+fi  
+
+if [ "$DIR_OUTPUT" == "$DIR_INPUT" ];then 
+  echo "input and output directory must be different"
+  exit 1
+fi  
+
+# is DIR_OUTPUT empty?
+if [ "$(ls -A "$DIR_OUTPUT")" ]; then 
+  echo "Please empty the output directory '${DIR_OUTPUT}'"
+  exit 1
+fi
+
+rm -f "$GWBCONF"/gwb_dirs.txt
+# write selected settings to startup file if in system mode
+if [ "$standalone" -eq 0 ];then
+  echo "$DIR_INPUT" > "$GWBCONF"/gwb_dirs.txt
+  echo "$DIR_OUTPUT" >> "$GWBCONF"/gwb_dirs.txt
+  topdir=/opt/GWB
+    
+  # copy parameter files if not already there
+  fparam="$DIR_INPUT"/mspa-parameters.txt
+  if [ ! -e "$fparam" ];then
+   cp -f $topdir/input/backup/mspa-parameters.txt "$fparam"
+   cp -fr $topdir/input/backup "$DIR_INPUT"/
+   cp -f $topdir/input/readme.txt "$DIR_INPUT"/
+   echo "***** Attention *****"
+   echo "Copied missing parameter file, please verify settings in:"
+   echo "$fparam"
+   echo "*********************"
+  fi
+fi
+
+# Specify the path to the IDL SAVE file that launches
+# the application, relative to $topdir.
+idlapp=$topdir/tools/GWB_MSPA.sav
+
+# Specify the path to the top directory of the IDL
+# distribution, relative to $topdir.
+idl_install_dir=$topdir/tools/idl
+IDL_DIR=$idl_install_dir ; export IDL_DIR
+
+# Run the application
+if [ "${headless}" == "1" ]; then
+  exec xvfb-run -a $IDL_DIR/bin/idl -rt=$idlapp
+else
+  exec $IDL_DIR/bin/idl -rt=$idlapp
+fi
+
