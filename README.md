@@ -11,7 +11,7 @@ a) directory: GWB
 
 b) directory: tools
 -------
--   GWB_*.pro: GWB-module source code
+-   GWB_*.pro: GWB-module IDL source code
 
 c) directory: tools/external_sources
 ------
