@@ -31,6 +31,6 @@ GWB-required C-source code of external programs:
 -   spatcon: spatcon30Sept2021.c
 The compiled versions of the three programs should be placed in the directory 'tools'
 
-f) Additional documents of the current GWB-version:
+f) additional documents of the current GWB-version:
 -----
 -   current version number and changelog: https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt
