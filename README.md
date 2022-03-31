@@ -5,25 +5,25 @@
 
 This repository provides information on the GWB source code:
 
-a) directory: GWB
+a) base directory: GWB
 -----------
 -   GWB*: GWB bash-launcher scripts
 
-b) directory: input
+b) subdirectory: input
 -------
 -   *-parameter.txt: GWB module-specific parameter settings
 -   *.tif: sample images
 -   backup: directory of backup files 
 
-c) directory: output
+c) subdirectory: output
 -------
 -   location for intermediate processing and resulting output files
 
-d) directory: tools
+d) subdirectory: tools
 -------
 -   GWB_*.pro: GWB-module IDL source code
 
-e) directory: tools/external_sources
+e) subdirectory: tools/external_sources
 ------
 GWB-required C-source code of external programs:
 -   mspa: https://github.com/ec-jrc/jeolib-miallib/blob/master/core/c/mspa.c; requiring miallib: https://github.com/ec-jrc/jeolib-miallib
