@@ -1,0 +1,37 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_FRAG parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;;
+;; FOS = Fragmentation analysis at up to 10 user-selected Observation Scales
+;; 
+;; FOS5/6: per-pixel density, color-coded into 5/6 fragmentation classes
+;; FOS-APP2: average per-patch density, color-coded into 2 classes
+;; FOS-APP5: average per-patch density, color-coded into 5 classes
+;; 
+;; Input image requirements: 1b-background, 2b-foreground, optional: 
+;;    0b-missing, 3b-special background, 4b-non-fragmenting background
+;;
+;; FOS will provide an image per observation scale and summary statistics.
+;;
+;; Please specify entries at lines 32-36 ONLY using the following options:
+;; line 32: FOS5 (default)  or  FOS6  or  FOS-APP2  or  FOS-APP5
+;; line 33: Foreground connectivity: 8 (default) or 4
+;; line 34: pixel resolution [meters]
+;; line 35: up to 10 window sizes [unit: pixels] in increasing order
+;;          and separated by a single space.
+;; line 36: high-precision: 1 (default) or 0
+;;          (1-float precision, 0-rounded byte)
+;;
+;; an example parameter file doing FOS5 and using 8-connected foreground:
+;; FOS5
+;; 8
+;; 100
+;; 27
+;; 1
+****************************************************************************
+FOS5
+8
+100
+27
+1
+****************************************************************************

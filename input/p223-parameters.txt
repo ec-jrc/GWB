@@ -1,0 +1,44 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_P223 parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;;
+;; FG-Density (P2), FG-Contagion (P22), or FG-Adjacency (P23)
+;; Input image requirements: 1b-background, 2b-foreground, 
+;; 3b-specific background (for P23), optional: 0b-missing
+;;
+;; P223 will provide a color-coded image showing [0,100]% for either
+;; FG-Density, FG-Contagion, or FG-Adjacency masked for the Foreground cover.
+;; Use the alternative options 11, 12, 13 to obtain the original spatcon 
+;; output without normalisation, masking, or color-coding.
+;;
+;; For original spatcon output ONLY:
+;; Missing values are coded as 0 (rounded byte), or -0.01 (float precision). 
+;; For all output types, missing indicates the input window contained 
+;; only missing pixels.
+;; For FG-Contagion and FG-Adjacency output only, missing also indicates 
+;; the input window contained no foreground pixels (there was no information 
+;; about foreground edge).
+;; For all output types, rounded byte = (float precision * 254) + 1
+;;
+;; Please specify entries at lines 41-43 ONLY using the following options:
+;; line 41:  1 FG-Density   (FG-masked and normalised), or
+;;               2 FG-Contagion (FG-masked and normalised), or
+;;               3 FG-Adjacency (FG-masked and normalised), or
+;;             11 FG-Density   (original spatcon output), or
+;;             12 FG-Contagion (original spatcon output), or
+;;             13 FG-Adjacency (original spatcon output), or
+;;             14 FG-Shannon   (original spatcon output), or
+;;             15 FG-SumD      (original spatcon output)
+;; line 42: kdim: square window size [pixels], uneven in [3, 5, ..., 501]
+;;              obs_scale [hectare] = (pixres * kdim)^2 / 10000
+;; line 43: high-precision: 1 (default, float precision) or 0 (rounded byte)
+;;
+;; an example parameter file for FG-Density and using a 27x27 window:
+;; 1
+;; 27
+;; 1
+****************************************************************************
+1
+27
+1
+****************************************************************************

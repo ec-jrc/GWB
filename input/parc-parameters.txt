@@ -1,0 +1,18 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_PARC parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;;
+;; PARC: Landscape Parcellation index
+;; Input image requirements: [1b, 255b]-land cover classes, 
+;;    optional: 0b-missing
+;;
+;; PARC will provide summary statistics only.
+;;
+;; Please specify entries at lines 17 ONLY using the following options:
+;; line 17: Foreground connectivity: 8 (default) or 4
+;;
+;; an example parameter file using 8-connected foreground:
+;; 8
+****************************************************************************
+8
+****************************************************************************

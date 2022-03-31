@@ -1,0 +1,30 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_ACCOUNTING parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;;
+;; ACC: Accounting of image objects and patch area size classes
+;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
+;; optional: 3b-special background 1, 4b-special background 2
+;; Please specify entries at lines 25-29 ONLY using the following options:
+;;
+;; line 25: Foreground connectivity: 8 (default) or 4
+;; line 26: spatial pixel resolution in meters:
+;; line 27: up to 5 area thresholds [unit: pixels] in increasing order
+;;          and separated by a single space.
+;; line 28: output option:   default (stats + image of viewport) OR
+;;   detailed (stats + images of ID, area, viewport; requires much more CPU/RAM!)
+;; line 29: big3pink: 0 (no - default) or 1 (show 3 largest objects in pink color)
+;;
+;; an example parameter file with default output would look like this:
+;; 8
+;; 25
+;; 200 2000 20000 100000 200000
+;; default
+;; 0
+****************************************************************************
+8
+100
+200 2000 20000 100000 200000
+default
+0
+****************************************************************************

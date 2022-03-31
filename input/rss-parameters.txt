@@ -1,0 +1,15 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_RESTORATION-STATUS parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;;
+;; RSS: Restoration Status = network coherenceof image objetcs
+;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
+;;
+;; Please specify entry at lines 14 ONLY using the following options:
+;; line 14: Foreground connectivity: 8 default) or 4
+;;
+;; an example parameter file with default output would look like this:
+;; 8
+****************************************************************************
+8
+****************************************************************************
