@@ -9,17 +9,28 @@ a) directory: GWB
 -----------
 -   GWB*: GWB bash-launcher scripts
 
-b) directory: tools
+b) directory: input
+-------
+-   *-parameter.txt: GWB module-specific parameter settings
+-   *.tif: sample images
+-   backup: directory of backup files 
+
+c) directory: output
+-------
+-   location for intermediate processing and resulting output files
+
+d) directory: tools
 -------
 -   GWB_*.pro: GWB-module IDL source code
 
-c) directory: tools/external_sources
+e) directory: tools/external_sources
 ------
 GWB-required C-source code of external programs:
 -   mspa: https://github.com/ec-jrc/jeolib-miallib/blob/master/core/c/mspa.c; requiring miallib: https://github.com/ec-jrc/jeolib-miallib
 -   recode: recode28Sept2021.c
 -   spatcon: spatcon30Sept2021.c
+The compiled versions of the three programs should be placed in the directory 'tools'
 
-d) Additional documents of the current GWB-version:
+f) Additional documents of the current GWB-version:
 -----
--   changelog: https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt
+-   current version number and changelog: https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt
