@@ -26,7 +26,7 @@ d) subdirectory: tools
 e) subdirectory: tools/external_sources
 ------
 GWB-required C-source code of external programs:
--   mspa: https://github.com/ec-jrc/jeolib-miallib/blob/master/core/c/mspa.c; requiring miallib: https://github.com/ec-jrc/jeolib-miallib
+-   fsp: directory with source files and instructions needed to compile GTB/GWB-amended version of mspa requiring miallib: https://github.com/ec-jrc/jeolib-miallib
 -   recode: recode28Sept2021.c
 -   spatcon: spatcon30Sept2021.c
 The compiled versions of the three programs should be placed in the directory 'tools'
