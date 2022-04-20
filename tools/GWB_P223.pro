@@ -23,9 +23,10 @@ PRO GWB_P223
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_P223 (version 1.8.6)'
+GWB_mv = 'GWB_P223 (version 1.8.7)'
 ;;
 ;; Module changelog:
+;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8  : added P23, shannon, sumd and spatcon mode
 ;; 1.6  : nocheck, highres switch

@@ -22,9 +22,10 @@ PRO GWB_LM
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_LM (version 1.8.6)'
+GWB_mv = 'GWB_LM (version 1.8.7)'
 ;;
 ;; Module changelog:
+;; 1.8.7: IDL 8.8.2 & fixed standalone execution
 ;; 1.8.6: added mod_params check
 ;; 1.8.4: rearranged processing sequence
 ;; 1.8.1: fixed csv output
@@ -725,20 +726,20 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   openr, 1, 'recoutput' & readu,1, im & close,1  
   if ctmiss gt 0 then im[qmiss] = 0b ;; add back missing
   ;; write out the LM image having the 19 colours only
-  fn_out = outdir + '/' + fbn + '_lm_' + kdim_str + '.tif'
+  fboutdir = '../' + fbn + '_lm_' + kdim_str + '/'
+  fn_out = fboutdir + fbn + '_lm_' + kdim_str + '.tif'
   desc = 'GTB_LM, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
   ;; add the geotiff info if available
   IF is_geotiff GT 0 THEN $
     write_tiff, fn_out, im, red = r, green = g, blue = b, geotiff = geotiff, description = desc, compression = 1 ELSE $
     write_tiff, fn_out, im, red = r, green = g, blue = b, description = desc, compression = 1
-
   
   ;; rename the 103 class image for later
   file_move, 'recinput', 'lm103class', /overwrite
   ;; write out the LM image having all the 103 classes
-  fn_out = outdir  + '/' + fbn + '_lm_' + kdim_str + '_103class.tif'
-  close,1 & openr, 1, dir_proc + '/lm103class'
-  readu,1, im & close, 1
+  fn_out = fboutdir  + fbn + '_lm_' + kdim_str + '_103class.tif'
+  close,1 & openr, 1, 'lm103class'
+  readu,1, im & close, 1  
   IF is_geotiff gt 0 THEN $
     write_tiff, fn_out, im, geotiff = geotiff, description = desc, compression = 1 ELSE $
     write_tiff, fn_out, im, description = desc, compression = 1

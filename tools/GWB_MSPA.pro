@@ -397,9 +397,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.8.6)'
+GWB_mv = 'GWB_MSPA (version 1.8.7)'
 ;;
 ;; Module changelog:
+;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8.5: mspa v2.3, added porosity, switch for disk and statistics
 ;; 1.8.2: remove file size calculation, add memory check
