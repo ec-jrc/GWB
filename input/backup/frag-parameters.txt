@@ -17,8 +17,8 @@
 ;; line 32: FOS5 (default)  or  FOS6  or  FOS-APP2  or  FOS-APP5
 ;; line 33: Foreground connectivity: 8 (default) or 4
 ;; line 34: pixel resolution [meters]
-;; line 35: up to 10 window sizes [unit: pixels] in increasing order
-;;          and separated by a single space.
+;; line 35: up to 10 window sizes (unit: pixels, uneven within [3, 501] )
+;;          in increasing order and separated by a single space.
 ;; line 36: high-precision: 1 (default) or 0
 ;;          (1-float precision, 0-rounded byte)
 ;;
