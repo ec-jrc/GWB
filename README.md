@@ -30,6 +30,7 @@ GWB-required C-source and python code of external programs:
 -   recode: recode28Sept2021.c
 -   spatcon: spatcon30Sept2021.c
 -   gdalcopyproj.py
+
 gdalcopyproj.py and the compiled versions of fsp, recode, and spatcon should be placed in the directory 'tools'
 
 f) additional documents of the current GWB-version:
