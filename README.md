@@ -25,11 +25,12 @@ d) subdirectory: tools
 
 e) subdirectory: tools/external_sources
 ------
-GWB-required C-source code of external programs:
+GWB-required C-source and python code of external programs:
 -   fsp: directory with source files and instructions needed to compile GTB/GWB-amended version of mspa requiring miallib: https://github.com/ec-jrc/jeolib-miallib
 -   recode: recode28Sept2021.c
 -   spatcon: spatcon30Sept2021.c
-The compiled versions of the three programs should be placed in the directory 'tools'
+-   gdalcopyproj.py
+gdalcopyproj.py and the compiled versions of fsp, recode, and spatcon should be placed in the directory 'tools'
 
 f) additional documents of the current GWB-version:
 -----
