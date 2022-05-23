@@ -22,9 +22,10 @@ PRO GWB_FAD
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FAD (version 1.8.7)'
+GWB_mv = 'GWB_FAD (version 1.8.8)'
 ;;
 ;; Module changelog:
+;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.6:   nocheck, byte-prec, fad_av, reduced processing time
@@ -84,8 +85,10 @@ ENDIF
 
 ;; echo selected directories
 print,'GWB_FAD using:'
-if standalone eq 0 then print, 'dir_input= ', dir_input else print, dir_inputdef + "/input"
-if standalone eq 0 then print, 'dir_output= ', dir_output else print, dir_inputdef + "/output"
+if standalone eq 1 then dir_input = dir_inputdef + "/input"
+if standalone eq 1 then dir_output = dir_inputdef + "/output"
+print, 'dir_input= ', dir_input
+print, 'dir_output= ', dir_output
 
 ;; verify colortables
 IF (file_info('idl/fadcolors.sav')).exists EQ 0b THEN BEGIN
@@ -120,26 +123,31 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file 
 ;;==============================================================================
-;; read fad settings: 8conn
-tt = strarr(31) & close,1
-IF file_lines(mod_params) LT n_elements(tt) THEN BEGIN
+;; read fad settings, we need at least 3 valid lines
+fl = file_lines(mod_params)
+IF fl LT 3 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
 ENDIF
-;; check for correct input section lines
-openr, 1, mod_params & readf,1,tt & close,1
-if strmid(tt[26],0,6) ne '******' OR strmid(tt[30],0,6) ne '******' then begin
+;; check for input parameters
+finp = strarr(fl) & close,1
+openr, 1, mod_params & readf, 1, finp & close, 1
+;; filter out lines starting with ; or * or empty lines
+q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strlen(strtrim(finp,2)) GT 0, ct)
+IF ct LT 3 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-endif
-
-fadtype = strtrim(tt[27],2)
+ENDIF
+;; get and check parameters
+fadtype = strtrim(finp(q[0]), 2)
 if fadtype eq 'FAD' or fadtype eq 'FAD-APP5' then begin
   restore, 'idl/fadcolors.sav'
 endif else if fadtype eq 'FAD-APP2' then begin
@@ -151,7 +159,9 @@ endif else begin
 endelse
 tvlct, r, g, b
 if fadtype eq 'FAD' then fadg = 'FAD' else fadg = 'FAD-APP'
-c_FGconn = strtrim(tt[28],2)
+
+;; FG-connectivity
+c_FGconn = strtrim(finp(q[1]), 2)
 if c_FGconn eq '8' then begin
   conn_str = '8-conn FG' & conn8 = 1
 endif else if c_FGconn eq '4' then begin
@@ -161,7 +171,8 @@ endif else begin
   print, "Exiting..."
   goto,fin
 endelse
-hprec = strtrim(tt[29],2) & condition = hprec EQ '0' or hprec EQ '1'
+
+hprec = strtrim(finp(q[2]), 2) & condition = hprec EQ '0' or hprec EQ '1'
 IF condition NE 1b THEN BEGIN
   print, "High precision switch is not 0 or 1."
   print, "Exiting..."

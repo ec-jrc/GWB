@@ -22,9 +22,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.8.7)'
+GWB_mv = 'GWB_FRAG (version 1.8.8)'
 ;;
 ;; Module changelog:
+;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8.4: reduced memory footprint, fixed image description, new FOS5
@@ -82,8 +83,10 @@ ENDIF
 
 ;; echo selected directories
 print,'GWB_FRAG using:'
-if standalone eq 0 then print, 'dir_input= ', dir_input else print, dir_inputdef + "/input"
-if standalone eq 0 then print, 'dir_output= ', dir_output else print, dir_inputdef + "/output"
+if standalone eq 1 then dir_input = dir_inputdef + "/input"
+if standalone eq 1 then dir_output = dir_inputdef + "/output"
+print, 'dir_input= ', dir_input 
+print, 'dir_output= ', dir_output
 
 ;; verify colortables
 IF (file_info('idl/fadcolors.sav')).exists EQ 0b THEN BEGIN
@@ -123,26 +126,31 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file 
 ;;==============================================================================
-;; read frag settings: Frag type
-tt = strarr(37) & close,1
-IF file_lines(mod_params) LT n_elements(tt) THEN BEGIN
+;; read frag settings, we need at least 5 valid lines
+fl = file_lines(mod_params)
+IF fl LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
 ENDIF
-;; check for correct input section lines
-openr, 1, mod_params & readf,1,tt & close,1
-if strmid(tt[30],0,6) ne '******' OR strmid(tt[36],0,6) ne '******' then begin
+;; check for input parameters
+finp = strarr(fl) & close,1
+openr, 1, mod_params & readf, 1, finp & close, 1
+;; filter out lines starting with ; or * or empty lines
+q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strlen(strtrim(finp,2)) GT 0, ct)
+IF ct LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-endif
-
-fadtype = strtrim(tt[31],2)
+ENDIF
+;; get and check parameters
+fadtype = strtrim(finp(q[0]), 2)
 if fadtype eq 'FOS6' or fadtype eq 'FOS-APP5' then begin
   restore, 'idl/fadcolors.sav'
 endif else if fadtype eq 'FOS5' then begin
@@ -158,7 +166,7 @@ tvlct, r, g, b
 if strlen(fadtype) eq 4 then fosg = 'FOS' else fosg = 'FOS-APP'
 
 ;; FG-connectivity
-c_FGconn = strtrim(tt[32],2)
+c_FGconn = strtrim(finp(q[1]), 2)
 if c_FGconn eq '8' then begin
   conn_str = '8-conn FG' & conn8 = 1
 endif else if c_FGconn eq '4' then begin
@@ -170,13 +178,28 @@ endif else begin
 endelse
 
 ;; Pixel resolution
-pixres_str = strtrim(tt[33],2) & pixres = float(pixres_str)
+pixres_str = strtrim(finp(q[2]), 2) & pixres = abs(float(pixres_str))
+if pixres le 0.000001 then begin
+  print, "Pixel resolution [m] seems wonky: " + pixres_str
+  print, "Exiting..."
+  goto,fin
+endif
+pixres_str = strtrim(pixres, 2)
 ;; area conversions
 pix2hec = ((pixres)^2) / 10000.0
 pix2acr = pix2hec * 2.47105
 
+;; high precision?
+hprec = strtrim(finp(q[4]), 2) & condition = hprec EQ '0' or hprec EQ '1'
+IF condition NE 1b THEN BEGIN
+  print, "High precision switch is not 0 or 1."
+  print, "Exiting..."
+  goto,fin
+ENDIF
+if hprec eq '1' then prec = 'FOS_av: ' else prec = '(byte)FOS_av: '
+
 ;; observation scales, maximum 10
-ath = strtrim(tt[34],2)
+ath = strtrim(finp(q[3]), 2)
 res = strsplit(ath,' ',/extract) & nr_res = n_elements(res)
 cl1 = 0 & cl2 = 0 & cl3 = 0 & cl4 = 0 & cl5 = 0
 cl6 = 0 & cl7 = 0 & cl8 = 0 & cl9 = 0 & cl10 = 0
@@ -209,25 +232,24 @@ IF nr_res GE 10 THEN BEGIN ;; more than 10 will be neglected
   cl10_str = res[9] & cl10 = ulong(abs(cl10_str))
 ENDIF
 cat = [cl1, cl2, cl3, cl4, cl5, cl6, cl7, cl8, cl9, cl10] ;; the defined kernel sizes
-q = where(cat GE 1)
-cat = cat[q] & cat = cat(uniq(cat))  ;; remove potential double entries
+;; filter out invalid settings
+q = where(cat ge 3,ct)
+if ct eq 0 then begin
+  print, "Invalid kernel window size settings."
+  print, "Exiting..."
+  goto,fin
+endif else begin
+  cat=cat[q]
+endelse
 ;; make sure numbers are uneven
 cat2 = cat mod 2 & q = where(cat2 eq 0, ct)
 if ct gt 0 then cat[q] = cat[q] + 1
 ;; make sure min is at least 3 and max is not larger than 501
 cat = 3 > cat < 501
-;; sort it
-cat = cat(sort(cat))
+;; sort it, remove double entries, increasing order
+cat = cat(sort(cat)) & cat = cat(uniq(cat))
 nr_cat = n_elements(cat)
 
-;; high precision?
-hprec = strtrim(tt[35],2) & condition = hprec EQ '0' or hprec EQ '1'
-IF condition NE 1b THEN BEGIN
-  print, "High precision switch is not 0 or 1."
-  print, "Exiting..."
-  goto,fin
-ENDIF
-if hprec eq '1' then prec = 'FOS_av: ' else prec = '(byte)FOS_av: '
 
 dir_proc = dir_output + '/.proc'
 file_mkdir, dir_proc

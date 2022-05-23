@@ -22,9 +22,10 @@ PRO GWB_ACC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_ACC (version 1.8.7)'
+GWB_mv = 'GWB_ACC (version 1.8.8)'
 ;;
 ;; Module changelog:
+;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8.4: decreased memory footprint, in particular for default processing
@@ -91,8 +92,10 @@ ENDIF
 
 ;; echo selected directories
 print,'GWB_ACC using:'
-if standalone eq 0 then print, 'dir_input= ', dir_input else print, dir_inputdef + "/input"
-if standalone eq 0 then print, 'dir_output= ', dir_output else print, dir_inputdef + "/output"
+if standalone eq 1 then dir_input = dir_inputdef + "/input"
+if standalone eq 1 then dir_output = dir_inputdef + "/output"
+print, 'dir_input= ', dir_input 
+print, 'dir_output= ', dir_output
 
 ;; restore colortable
 IF (file_info('idl/mspacolorston.sav')).exists EQ 0b THEN BEGIN
@@ -122,26 +125,31 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file
 ;;==============================================================================
-;; read accounting settings: 4/8-conn, pixres, area thresholds, outopt, big3pink
-tt = strarr(30) & close,1
-IF file_lines(mod_params) LT n_elements(tt) THEN BEGIN
+;; read accounting settings, we need at least 5 valid lines
+fl = file_lines(mod_params)
+IF fl LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
 ENDIF
-;; check for correct input section lines
-openr, 1, mod_params & readf,1,tt & close,1
-if strmid(tt[23],0,6) ne '******' OR strmid(tt[29],0,6) ne '******' then begin
+;; check for input parameters
+finp = strarr(fl) & close,1
+openr, 1, mod_params & readf, 1, finp & close, 1
+;; filter out lines starting with ; or * or empty lines
+q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strlen(strtrim(finp,2)) GT 0, ct)
+IF ct LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-endif
-
-conn8_str = strtrim(tt[24],2)
+ENDIF
+;; get and check parameters
+conn8_str = strtrim(finp(q[0]), 2)
 true = (conn8_str eq '8') + (conn8_str eq '4')
 IF true EQ 0 THEN BEGIN
   print, "Foreground connectivity is not 8 or 4."
@@ -149,16 +157,26 @@ IF true EQ 0 THEN BEGIN
   goto,fin
 ENDIF
 
-pixres_str = strtrim(tt[25],2) & pixres = float(pixres_str)
-ath = strtrim(tt[26],2)
-outopt = strlowcase(strtrim(tt[27],2))
+;; Pixel resolution
+pixres_str = strtrim(finp(q[1]), 2) & pixres = abs(float(pixres_str))
+if pixres le 0.000001 then begin
+  print, "Pixel resolution [m] seems wonky: " + pixres_str
+  print, "Exiting..."
+  goto,fin
+endif
+pixres_str = strtrim(pixres, 2)
+
+;; output option
+outopt = strtrim(finp(q[3]), 2)
 true = (outopt EQ 'default') + (outopt EQ 'detailed')
 IF true EQ 0 THEN BEGIN
   print, "output option is not 'default' or 'detailed'."
   print, "Exiting..."
   goto,fin
 ENDIF
-big3pink = strtrim(tt[28],2)
+
+;; big3pink switch
+big3pink = strtrim(finp(q[4]), 2)
 true = (big3pink eq '0') + (big3pink eq '1')
 IF true EQ 0 THEN BEGIN
   print, "big3pink is not '0' or '1'."
@@ -166,6 +184,8 @@ IF true EQ 0 THEN BEGIN
   goto,fin
 ENDIF
 
+;; area thresholds, maximum 5
+ath = strtrim(finp(q[2]), 2)
 res = strsplit(ath,' ',/extract) & nr_res = n_elements(res)
 cl1 = 0 & cl2 = 0 & cl3 = 0 & cl4 = 0 & cl5 = 0
 ;; constrain area threshold to 0 to 1000000000000000000
@@ -189,10 +209,19 @@ IF nr_res GE 5 THEN BEGIN ;; more than 5 will be neglected
 ENDIF
 
 cat = [cl1, cl2, cl3, cl4, cl5] ;; the defined size category thresholds
-q = where(cat GE 1)
-cat = cat[q] & cat = cat(uniq(cat))  ;; remove potential double entries
-;; sort it
-cat = cat(sort(cat))
+;; filter out invalid settings
+q = where(cat ge 1,ct)
+if ct eq 0 then begin
+  print, "Invalid accouting threshold settings."
+  print, "Threshold(s) must be integers within"
+  print, "[1, 1000000000000000000]."
+  print, "Exiting..."
+  goto,fin
+endif else begin
+  cat=cat[q]
+endelse
+;; sort it, remove double entries, increasing order
+cat = cat(sort(cat)) & cat = cat(uniq(cat))
 nr_cat = n_elements(cat) 
 IF total(cat) LT 1.0 THEN BEGIN
   print, "Threshold(s) must be integers within"

@@ -22,9 +22,10 @@ PRO GWB_RSS
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 1.8.7)'
+GWB_mv = 'GWB_RSS (version 1.8.8)'
 ;;
 ;; Module changelog:
+;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8.4: reduced memory footprint
@@ -81,8 +82,10 @@ ENDIF
 
 ;; echo selected directories
 print,'GWB_RSS using:'
-if standalone eq 0 then print, 'dir_input= ', dir_input else print, dir_inputdef + "/input"
-if standalone eq 0 then print, 'dir_output= ', dir_output else print, dir_inputdef + "/output"
+if standalone eq 1 then dir_input = dir_inputdef + "/input"
+if standalone eq 1 then dir_output = dir_inputdef + "/output"
+print, 'dir_input= ', dir_input 
+print, 'dir_output= ', dir_output
 
 ;; verify to have tif image(s) (should be a geotiff)
 pushd, dir_input & list = file_search('*.tif', count=ct_tifs) & popd
@@ -103,33 +106,37 @@ ENDIF
 ;;==============================================================================
 ;; verify parameter file
 ;;==============================================================================
-;; read rss settings: 4/8-conn
-tt = strarr(15) & close,1
-IF file_lines(mod_params) LT n_elements(tt) THEN BEGIN
+;; read rss settings: 4/8-conn, we need at least 1 valid line
+fl = file_lines(mod_params)
+IF fl LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
 ENDIF
-;; check for correct input section lines
-openr, 1, mod_params & readf,1,tt & close,1
-if strmid(tt[12],0,6) ne '******' OR strmid(tt[14],0,6) ne '******' then begin
-  print, 'rss-parameter file modified incorrectly.'
+;; check for input parameters
+finp = strarr(fl) & close,1
+openr, 1, mod_params & readf, 1, finp & close, 1
+;; filter out lines starting with ; or * or empty lines
+q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strlen(strtrim(finp,2)) GT 0, ct)
+IF ct LT 1 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-endif
-
-conn8_str = strtrim(tt[13],2)
+ENDIF
+;; get and check parameters
+conn8_str = strtrim(finp(q[0]), 2)
 true = (conn8_str eq '8') + (conn8_str eq '4')
 IF true EQ 0 THEN BEGIN
   print, "Foreground connectivity is not 8 or 4."
   print, "Exiting..."
   goto,fin
 ENDIF
-
 
 ;;==============================================================================
 ;;==============================================================================

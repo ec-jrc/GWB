@@ -397,9 +397,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.8.7)'
+GWB_mv = 'GWB_MSPA (version 1.8.8)'
 ;;
 ;; Module changelog:
+;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
 ;; 1.8.5: mspa v2.3, added porosity, switch for disk and statistics
@@ -465,8 +466,10 @@ ENDIF
 
 ;; echo selected directories
 print,'GWB_MSPA using:'
-if standalone eq 0 then print, 'dir_input= ', dir_input else print, dir_inputdef + "/input"
-if standalone eq 0 then print, 'dir_output= ', dir_output else print, dir_inputdef + "/output"
+if standalone eq 1 then dir_input = dir_inputdef + "/input"
+if standalone eq 1 then dir_output = dir_inputdef + "/output"
+print, 'dir_input= ', dir_input 
+print, 'dir_output= ', dir_output
 
 ;; check for colortables
 IF (file_info('idl/mspacolorston.sav')).exists EQ 0b THEN BEGIN
@@ -500,31 +503,36 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file
 ;;==============================================================================
-;; read MSPA settings: 
-tt = strarr(33) & close,1
-IF file_lines(mod_params) LT n_elements(tt) THEN BEGIN
+;; read MSPA settings, we need at least 6 valid lines
+fl = file_lines(mod_params)
+IF fl LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-ENDIF  
-;; check for correct input section lines
-openr, 1, mod_params & readf,1,tt & close,1
-if strmid(tt[25],0,6) ne '******' OR strmid(tt[32],0,6) ne '******' then begin
+ENDIF
+;; check for input parameters
+finp = strarr(fl) & close,1
+openr, 1, mod_params & readf, 1, finp & close, 1
+;; filter out lines starting with ; or * or empty lines
+q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
+q = where(strlen(strtrim(finp,2)) GT 0, ct)
+IF ct LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Exiting..."
   goto,fin
-endif
-
-c_FGconn = strtrim(tt[26],2)
-c_size = strtrim(tt[27],2)
-c_trans = strtrim(tt[28],2) 
-c_intext = strtrim(tt[29],2)
-c_disk = strtrim(tt[30],2)
-c_stats =strtrim(tt[31],2)
+ENDIF
+;; get and check parameters
+c_FGconn = strtrim(finp(q[0]), 2)
+c_size = strtrim(finp(q[1]), 2)
+c_trans = strtrim(finp(q[2]), 2)
+c_intext = strtrim(finp(q[3]), 2)
+c_disk = strtrim(finp(q[4]), 2)
+c_stats = strtrim(finp(q[5]), 2)
 
 ;; MSPA-parameter 1: FGconn
 if c_FGconn eq '8' then begin
@@ -538,12 +546,13 @@ endif else begin
 endelse
 
 ;; MSPA-parameter 2: EdgeWidth
-c_size = strtrim(abs(fix(c_size)),2)
-if c_size eq '0' then begin
-  print, "EdgeWidth is not an integer number."
+ccs = abs(fix(c_size))
+if ccs eq 0 or ccs gt 100 then begin
+  print, "EdgeWidth is not an integer number in [1, 100]."
   print, "Exiting..."
   goto,fin
-endif  
+endif
+c_size = strtrim(ccs,2)
 
 ;; MSPA-parameter 3: Transition
 if c_trans eq '1' then begin
