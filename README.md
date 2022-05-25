@@ -37,8 +37,8 @@ f) additional documents of the current GWB-version:
 -----
 -   current version number and changelog: https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt
 
-g) Citation:
+g) Citing GWB in publications:
 -----
--   Vogt P., Riitters K., Rambaud P., d'Annunzio R., Lindquist E., Pekkarinen A. (2022). GuidosToolbox Workbench: spatial analysis of raster maps for ecological applications, Ecography, Volume 2022, Issue 3, doi: 10.1111/ecog.05864
+-   Vogt P., Riitters K., Rambaud P., d'Annunzio R., Lindquist E., Pekkarinen A. (2022). GuidosToolbox Workbench: spatial analysis of raster maps for ecological applications, Ecography, Volume 2022, Issue 3, doi: [10.1111/ecog.05864](https://doi.org/10.1111/ecog.05864)
 -   GuidosToolbox Workbench is available for free at the following web site: https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/
 
