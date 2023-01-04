@@ -1,0 +1,61 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_SPATCON parameter file:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; For all output types, missing indicates the input window contained only
+;; missing pixels or missing pixel adjacencies.
+;; Missing values are coded as 0 (rounded byte), or -0.01 (float precision).
+;;
+;; Rule options at the end of this file and between the lines in *****
+;; 1 = Majority (most frequent) pixel value
+;; 6 = Landscape mosaic (19-class version)
+;; 7 = Landscape mosaic (103-class version)
+;; 10 = Number of unique pixel values
+;; 20 = Median pixel value
+;; 21 = Mean pixel value
+;; 5x = Pixel diversity:
+;;    51 = Gini-Simpson pixel diversity
+;;    52 = Gini-Simpson pixel evenness
+;;    53 = Shannon pixel evenness
+;;    54 = Pmax
+;; 7x = Pixel adjacency (with regard to order of pixels in pairs):
+;;    71 = Angular second moment
+;;    72 = Gini-Simpson adjacency evenness
+;;    73 = Shannon adjacency evenness
+;;    74 = Sum of diagonals
+;;    75 = Proportion of total adjacencies involving a specific pixel value
+;;    76 = Proportion of total adjacencies which are between two specific pixel values
+;;    77 = Proportion of adjacencies involving a specific pixel value which are adjacencies with that same pixel value
+;;    78 = Proportion of adjacencies involving a specific pixel value which are adjacencies
+;;             between that pixel value and another specific pixel value
+;; 8x = Pixel value density and ratios
+;;    81 = Area density
+;;    82 = Ratio of the frequencies of two specified pixel values
+;;    83 = Combined ratio of two specific pixel values
+;;
+;; for more details on SPATCON, see the Technical Note and/or source code at:
+;; https://github.com/ec-jrc/GWB/tree/main/tools/external_sources/
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; spatcon parameters for all rules (some rules use only a subset of all parameters)
+;; R (mapping rule in {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83})
+;; W (window size - minimum 3, maximum < x or y dimension of input map)
+;; A (first target code - required for mapping rules 75, 76, 77, 78, 81, 82, 83. Default = 0)
+;; B (second target code - required for mapping rules 76, 78, 82, 83. Default = 0)
+;; H (handling of missing values or adjacencies: 1-ignore. 2-include;  -no effect for mapping rules 21, 82, 83. Default = 1)
+;; F (output precision: 0 = 8-bit byte. 1 = 32-bit float. Float is not available for mapping rules 1, 6, 7, 10. Default = 0)
+;; Z (Request re-code of input pixels. 0 = No. 1 = Yes. Default = 0)
+;; M (AFTER optional re-coding (z = 1), the pixel value that is missing. Default = 0)
+;;
+;; NOTE: parameters R and W are mandatory. Parameters that are not specified will use their default value.
+;; Example parameter file for running spatcon rule Majority and using a 27x27 window:
+;; R 1
+;; W 27
+****************************************************************************
+R 1
+W 27
+A 2
+B 3
+H 1
+F 0
+Z 0
+M 0
+****************************************************************************

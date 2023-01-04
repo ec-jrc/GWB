@@ -2,7 +2,7 @@
 ;; GWB_LM parameter file:
 ;; NOTE: do NOT delete or add any lines in this parameter file!
 ;;
-;; LM will provide an image and summary statistics.
+;; LM will provide one (1) image and summary statistics.
 ;; Please specify entries at line 14 ONLY using the following options:
 ;; line 14: kdim: square window size [pixels], uneven in [3, 5, ...501]
 ;;          obs_scale [hectare] = (pixres[m] * kdim)^2 / 10000
