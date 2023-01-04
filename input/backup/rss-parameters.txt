@@ -2,7 +2,7 @@
 ;; GWB_RESTORATION-STATUS parameter file:
 ;; NOTE: do NOT delete or add any lines in this parameter file!
 ;;
-;; RSS: Restoration Status = network coherenceof image objetcs
+;; RSS: Restoration Status Summary = network coherence of foreground image objetcs
 ;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
 ;;
 ;; Please specify entry at lines 14 ONLY using the following options:

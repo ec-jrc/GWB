@@ -5,7 +5,7 @@
 ;; MSPA: Morphological Spatial Pattern Analysis (up to 25 classes)
 ;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
 ;;
-;; MSPA will provide an image and summary statistics.
+;; MSPA will provide one (1) image and summary statistics.
 ;; (see tools/docs/MSPA_Guide.pdf for details)
 ;; Please specify entries at lines 27-32 ONLY using the following options:
 ;;
