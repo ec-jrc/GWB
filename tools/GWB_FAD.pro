@@ -17,14 +17,13 @@ PRO GWB_FAD
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FAD (version 1.8.8)'
+GWB_mv = 'GWB_FAD (version 1.9.0)'
 ;;
 ;; Module changelog:
+;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
@@ -93,11 +92,13 @@ print, 'dir_output= ', dir_output
 ;; verify colortables
 IF (file_info('idl/fadcolors.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/fadcolors.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 IF (file_info('idl/fe47colors.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/fe47colors.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -115,6 +116,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -129,6 +131,7 @@ IF fl LT 3 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -143,6 +146,7 @@ IF ct LT 3 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -153,7 +157,9 @@ if fadtype eq 'FAD' or fadtype eq 'FAD-APP5' then begin
 endif else if fadtype eq 'FAD-APP2' then begin
   restore, 'idl/fe47colors.sav'
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Select either: FAD or FAD-APP5 or FAD-APP2."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -167,20 +173,26 @@ if c_FGconn eq '8' then begin
 endif else if c_FGconn eq '4' then begin
   conn_str = '4-conn FG' & conn8 = 0
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
 
 hprec = strtrim(finp(q[2]), 2) & condition = hprec EQ '0' or hprec EQ '1'
 IF condition NE 1b THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "High precision switch is not 0 or 1."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 if hprec eq '1' then prec = 'FAD_av: ' else prec = '(byte)FAD_av: '
 
 dir_proc = dir_output + '/.proc'
+;; cleanup temporary proc directory
+file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
 file_mkdir, dir_proc
 
 ;;==============================================================================
@@ -214,8 +226,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_fad  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -223,9 +235,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_fad  ;; invalid input
   ENDIF
-
-  ;; check if input is an image format
-  res = query_image(input, inpinfo)
  
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN

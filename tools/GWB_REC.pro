@@ -17,14 +17,13 @@ PRO GWB_REC
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.8.8)'
+GWB_mv = 'GWB_REC (version 1.9.0)'
 ;;
 ;; Module changelog
+;; 1.9.0: added note to restore files, simplify to read values to be recoded only, IDL 8.8.3
 ;; 1.8.8: use gdal only for recoding, added BIGTIFF switch, flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
@@ -98,6 +97,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -105,91 +105,103 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file
 ;;==============================================================================
-;; read recode settings: , we need at least 256 valid lines
+;; read recode settings:
 fl = file_lines(mod_params)
-IF fl LT 256 THEN BEGIN
-  print, "The file: " + mod_params + " is in a wrong format."
-  print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "Exiting..."
-  goto,fin
-ENDIF
 ;; check for input parameters
 finp = strarr(fl) & close,1
 openr, 1, mod_params & readf, 1, finp & close, 1
 ;; filter out lines starting with ; or * or empty lines
 q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
 q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
-q = where(strlen(strtrim(finp,2)) GT 0, ct)
-IF ct LT 256 THEN BEGIN
+q = where(strlen(strtrim(finp,2)) GT 0, ctrec)
+IF ctrec LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "(Recode table has less than 256 rows)"
+  print, "(Recode table must have at least 1 row and no more than 256 rows)"
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 ;; get and check parameters
-;; cut out the recoding table
-tt = strtrim(finp(q[0:255]),2) & psel = uintarr(2,256)
+tt = strtrim(finp[q],2) & psel = uintarr(2,ctrec)
 ;; rows are pruned now. Check that empty space is present to separate the two entries
 xx = strpos(tt, ' ') & q = where(xx eq -1, ct)
 if ct gt 0 then begin
-  print, "The file: " + mod_params + " has rows without a space separator"
+  print, "The file: " + mod_params + " is invalid:"
+  print, "Row without 2 entries separated by a space detected"
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
-;; verify that second entry is correct
-for i = 0, 255 do begin
-  istr = strtrim(i,2) 
+;; verify entries 
+for i = 0, ctrec-1 do begin
   a = (strsplit(tt[i],' ',/extract, count=ct))[0] & b = (strsplit(tt[i],' ',/extract))[1]
   if ct gt 2 then begin
-    print, "row with more than 2 entries detected"
+    print, "The file: " + mod_params + " is invalid:"
+    print, "Row with more than 2 entries detected"
     print, "Please copy the respective backup file into your input directory:"
     print, dir_inputdef + "/input/backup/*parameters.txt"
+    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
-  if b ne istr then begin
-    print, 'Second column (old_original_value) has a wonky value of: ' + b
-    print, 'or is not in sequential order or modified incorrectly.'
-    print, 'Correct to have new sequential values in [0, 255] only, or'
+  ;; verify that the first (original) entry is correct
+  vx = uint(a) & cc = strtrim(vx,2)
+  if a ne cc then begin
+    print, "The file: " + mod_params + " is invalid:"
+    print, 'First column (original value) has a wonky value of: ' + a
+    print, 'Correct to have values in [0, 255] only.'
+    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, "Exiting..."
+    goto,fin
+  endif
+  if vx gt 255 then begin
+    print, "The file: " + mod_params + " is invalid"
+    print, 'First column (original value) has incorrect value of: ' + cc
+    print, 'Correct to have values in [0, 255] only.'
+    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, "Exiting..."
+    goto,fin
+  endif
+  ;; verify that the second (recoded) value is correct
+  vx = uint(b) & cc = strtrim(vx,2)
+  if b ne cc then begin
+    print, "The file: " + mod_params + " is invalid:"
+    print, 'Second column (recoded_value) has a wonky value of: ' + b
+    print, 'Correct to have new values in [0, 255] only, or'
     print, 'copy the respective backup file into your input directory:'
     print, dir_inputdef + "/input/backup/*parameters.txt"
+    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
-  newv = uint(a) & cc = strtrim(newv,2)
-  if a ne cc then begin
-    print, 'First column (new recode value) has a wonky value of: ' + a
-    print, 'Correct to have new recode values in [0, 255] only.'
+  if vx gt 255 then begin
+    print, "The file: " + mod_params + " is invalid"
+    print, 'Second column (recoded_value) has incorrect value of: ' + cc
+    print, 'Correct to have values in [0, 255] only.'
+    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
-    goto,fin  
-  endif  
-  if newv gt 255 then begin
-    print, 'First column (new recode value) has incorrect value of: ' + strtrim(newv,2)
-    print, 'Correct to have new recode values in [0, 255] only.'
-    print, "Exiting..."
-    goto,fin    
+    goto,fin
   endif
-  psel[0,i] = newv
+  psel[0,i] = uint(a)
   psel[1,i] = uint(b)
   
 endfor
-pseln=rotate(psel,5)
-
 dir_proc = dir_output + '/.proc'
+;; cleanup temporary proc directory
+file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
 file_mkdir, dir_proc
 
 ;;==============================================================================
 ;; check for python version
 syspython = 3 & spawn, 'which python3 2>&1', res & res = res[0]
-if strpos(res, "no python3") ge 0 then begin ;; python3 not found
+if strpos(res, " python3") ge 0 then begin ;; python3 not found
   syspython = 2
   spawn, 'which python2 2>&1', res & res = res[0]
-  if strpos(res, "no python2") ge 0 then begin
+  if strpos(res, " python2") ge 0 then begin
     print, "python was not found in the system"
     print, "Exiting..."
     goto,fin
@@ -230,8 +242,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_p  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, inpinfo, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -295,7 +307,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf,1,'nrows '+strtrim(ydim,2)
   printf,1,'ncols '+strtrim(xdim,2)
   close, 1
-  openw, 1, 'recode.txt' & printf, 1,pseln & close, 1
+  openw, 1, 'recode.txt' & printf, 1, psel & close, 1
   ;; use gdal to write the raw data in bsq and without the geoheader
   spawn, 'gdal_translate -of ENVI ' + input + ' recinput > /dev/null 2>&1'  
   file_copy, dir_gwb + '/recode_lin64', 'recode', /overwrite
@@ -316,7 +328,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   file_move, 'recinput.hdr','recoutput.hdr', /overwrite
   file_move, 'recinput.aux.xml','recoutput.aux.xml', /overwrite
   spawn, 'gdal_translate -of GTiff -co "COMPRESS=LZW"' + CCPU + BTIFF + ' recoutput ' + fn_out + ' > /dev/null 2>&1'
-  spawn, './gdalcopyproj.py ' + input + ' ' + fn_out 
+  spawn, './gdalcopyproj.py ' + input + ' ' + fn_out  + ' > /dev/null 2>&1'
   popd
   okfile = okfile + 1
 

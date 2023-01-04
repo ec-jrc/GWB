@@ -17,14 +17,13 @@ PRO GWB_LM
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_LM (version 1.8.8)'
+GWB_mv = 'GWB_LM (version 1.9.0)'
 ;;
 ;; Module changelog:
+;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2 & fixed standalone execution
 ;; 1.8.6: added mod_params check
@@ -99,6 +98,7 @@ print, 'dir_output= ', dir_output
 ;; restore colortable
 IF (file_info('idl/lmcolors.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/lmcolors.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -117,6 +117,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -130,6 +131,7 @@ IF fl LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -144,6 +146,7 @@ IF ct LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -153,12 +156,16 @@ kdim_str = strtrim(finp(q[0]), 2) & kdim = fix(kdim_str) & kdim_str = strtrim(kd
 ;; make sure kdim is appropriate
 uneven = kdim mod 2
 IF kdim LT 3 OR kdim GT 501 OR uneven EQ 0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Moving window size is not in [3, 5, 7, ..., 501]."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 
 dir_proc = dir_output + '/.proc'
+;; cleanup temporary proc directory
+file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
 file_mkdir, dir_proc
 
 ;;==============================================================================
@@ -192,8 +199,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_lm  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -201,9 +208,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_lm  ;; invalid input
   ENDIF
-
-  ;; check if input is an image format
-  res = query_image(input, inpinfo)
  
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
@@ -292,7 +296,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf,1,'b 0'
   printf,1,'m 0'
   if resfloat eq 1 then printf,1,'f 1' else printf,1,'f 0'
-  printf,1,'p 0'
   close,1
 
   openw, 1, 'scinput' & writeu,1, im & close,1 & im = 0

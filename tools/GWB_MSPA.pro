@@ -392,14 +392,13 @@ PRO GWB_MSPA
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.8.8)'
+GWB_mv = 'GWB_MSPA (version 1.9.0)'
 ;;
 ;; Module changelog:
+;; 1.9.0: added note to restore files, fixed metadata description on loop, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
@@ -474,11 +473,13 @@ print, 'dir_output= ', dir_output
 ;; check for colortables
 IF (file_info('idl/mspacolorston.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/mspacolorston.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 IF (file_info('idl/mspacolorstoff.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/mspacolorstoff.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -496,6 +497,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -509,6 +511,7 @@ IF fl LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -523,6 +526,7 @@ IF ct LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -540,7 +544,9 @@ if c_FGconn eq '8' then begin
 endif else if c_FGconn eq '4' then begin
   fconn = 0b
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -548,7 +554,9 @@ endelse
 ;; MSPA-parameter 2: EdgeWidth
 ccs = abs(fix(c_size))
 if ccs eq 0 or ccs gt 100 then begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "EdgeWidth is not an integer number in [1, 100]."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
@@ -561,6 +569,7 @@ endif else if c_trans eq '0' then begin
   restore, 'idl/mspacolorstoff.sav' & ttrans = 0b
 endif else begin
   print, "Transition is not 1 or 0."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -572,7 +581,9 @@ if c_intext eq '1' then begin
 endif else if c_intext eq '0' then begin
   tintext = 0b
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "IntExt is not 1 or 0."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -583,7 +594,9 @@ if c_disk eq '1' then begin
 endif else if c_disk eq '0' then begin
   tdisk = ' '
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Disk is not 0 or 1."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -594,12 +607,16 @@ if c_stats eq '1' then begin
 endif else if c_stats eq '0' then begin
   tstats = 0b
 endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Statistics is not 1 or 0."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
 
 dir_proc = dir_output + '/.proc'
+;; cleanup temporary proc directory
+file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
 file_mkdir, dir_proc
 
 ;;==============================================================================
@@ -607,7 +624,7 @@ file_mkdir, dir_proc
 ;; apply MSPA settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
-desc = 'GTB_MSPA, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+descbase = 'GTB_MSPA, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
 fn_logfile = dir_output + '/mspa.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
@@ -633,8 +650,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_mspa  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -643,8 +660,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_mspa  ;; invalid input
   ENDIF
 
-  ;; check if input is an image format
-  res = query_tiff(input, inpinfo)
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
@@ -747,7 +762,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   outdir = dir_output + '/' + fbn + '_mspa' & file_mkdir, outdir
   fn_out = outdir + '/' + fbn + '_' + c_FGconn + '_' + c_size + '_' + c_trans + '_' + c_intext + '.tif'
   ;; add MSPA settings
-  desc = desc + ' ' + c_FGconn + '_' + c_size + '_' + c_trans + '_' + c_intext 
+  desc = descbase + ' ' + c_FGconn + '_' + c_size + '_' + c_trans + '_' + c_intext 
   
   ;; add the geotiff info if available
   IF is_geotiff gt 0 THEN $

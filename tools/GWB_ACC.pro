@@ -17,14 +17,13 @@ PRO GWB_ACC
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_ACC (version 1.8.8)'
+GWB_mv = 'GWB_ACC (version 1.9.0)'
 ;;
 ;; Module changelog:
+;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
@@ -100,6 +99,7 @@ print, 'dir_output= ', dir_output
 ;; restore colortable
 IF (file_info('idl/mspacolorston.sav')).exists EQ 0b THEN BEGIN
   print, "The file 'tools/idl/mspacolorston.sav' was not found."
+  print, "Restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -118,6 +118,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -131,6 +132,7 @@ IF fl LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -145,6 +147,7 @@ IF ct LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -152,7 +155,9 @@ ENDIF
 conn8_str = strtrim(finp(q[0]), 2)
 true = (conn8_str eq '8') + (conn8_str eq '4')
 IF true EQ 0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -160,7 +165,9 @@ ENDIF
 ;; Pixel resolution
 pixres_str = strtrim(finp(q[1]), 2) & pixres = abs(float(pixres_str))
 if pixres le 0.000001 then begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Pixel resolution [m] seems wonky: " + pixres_str
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
@@ -170,7 +177,9 @@ pixres_str = strtrim(pixres, 2)
 outopt = strtrim(finp(q[3]), 2)
 true = (outopt EQ 'default') + (outopt EQ 'detailed')
 IF true EQ 0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "output option is not 'default' or 'detailed'."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -179,7 +188,9 @@ ENDIF
 big3pink = strtrim(finp(q[4]), 2)
 true = (big3pink eq '0') + (big3pink eq '1')
 IF true EQ 0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "big3pink is not '0' or '1'."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -212,9 +223,11 @@ cat = [cl1, cl2, cl3, cl4, cl5] ;; the defined size category thresholds
 ;; filter out invalid settings
 q = where(cat ge 1,ct)
 if ct eq 0 then begin
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Invalid accouting threshold settings."
   print, "Threshold(s) must be integers within"
   print, "[1, 1000000000000000000]."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif else begin
@@ -224,8 +237,10 @@ endelse
 cat = cat(sort(cat)) & cat = cat(uniq(cat))
 nr_cat = n_elements(cat) 
 IF total(cat) LT 1.0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Threshold(s) must be integers within"
   print, "[1, 1000000000000000000]."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -264,8 +279,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_acc  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -273,9 +288,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
-
-  ;; check if input is an image format
-  res = query_image(input, inpinfo)
  
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN

@@ -17,14 +17,13 @@ PRO GWB_RSS
 ;;       European Commission, JRC
 ;;       Via E. Fermi, 2749
 ;;       21027 Ispra, ITALY
-;;
-;;       Phone : +39 0332 78-5002
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 1.8.8)'
+GWB_mv = 'GWB_RSS (version 1.9.0)'
 ;;
 ;; Module changelog:
+;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
 ;; 1.8.6: added mod_params check
@@ -99,6 +98,7 @@ IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -112,6 +112,7 @@ IF fl LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -126,6 +127,7 @@ IF ct LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -133,7 +135,9 @@ ENDIF
 conn8_str = strtrim(finp(q[0]), 2)
 true = (conn8_str eq '8') + (conn8_str eq '4')
 IF true EQ 0 THEN BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
+  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -173,8 +177,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_rss  ;; invalid input
   ENDIF
   
-  type = '' & res = query_image(input, type=type)
-  IF type NE 'TIFF' THEN BEGIN
+  res = query_tiff(input, inpinfo)
+  IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, ' '
     printf, 9, '==============   ' + counter + '   =============='
@@ -182,9 +186,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_rss  ;; invalid input
   ENDIF
-
-  ;; check if input is an image format
-  res = query_image(input, inpinfo)
  
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
