@@ -1,0 +1,10 @@
+/*******************************************************************************
+*   custom colors
+*
+**/
+html[data-theme="dark"] {
+    --pst-color-primary: #034DA1;
+  }
+  html[data-theme="light"] {
+    --pst-color-primary: #034DA1;
+  }
