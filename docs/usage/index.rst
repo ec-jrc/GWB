@@ -1,36 +1,42 @@
 Usage
 =====
 
-The GuidosToolbox Workbench (**GWB**, `homepage <https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/>`_) is a subset of the desktop software package GuidosToolbox (`GTB <https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/>`_) designed as a cmd-line application for Linux 64bit servers. Citation reference: `GuidosToolbox Workbench: Spatial analysis of raster maps for ecological applications <https://doi.org/10.1111/ecog.05864>`_.
-
-This document provides usage instructions for the cmd-line implementation of  **GWB**.
-
-Initial setup
--------------
-
-As regular user, please first copy the **GWB** setup into your :code:`$HOME` account using the command:
+This page provides GWB usage instructions. GWB uses two directories :code:`input` and :code:`output`, located in  your :code:`$HOME` account (system-mode) or 
+in :code:`$HOME/GWB<version>/GWB/` (standalone mode). In system-mode, you can reset the original setup using the command:
 
 .. code-block:: console
 
     $ cp -fr /opt/GWB/*put ~/
 
-You will now find the new directories :code:`input` and :code:`output` in your :code:`$HOME` account.
 
--   :code:`input`: This directory contains module-specific parameter files, two sample geotif images and a README file.
--   :code:`output`: This directory is empty.
+Directory setup
+---------------
+The two directories have the following content and functionality: 
 
-All GWB modules require categorical raster input maps in data type unsigned byte (8bit), with discrete integer values within [0, 255] byte. The two sample images in the directory :code:`input` are:
+**Directory:** :code:`input`: all your input images will go here
 
--   :code:`example.tif`: 0 byte - Missing, 1 byte - Background, 2 byte - Foreground
--   :code:`clc3class.tif`: 1 byte - Agriculture, 2 byte - Natural, 3 byte - Developed
+- :code:`backup`: backup copies of all parameter files. This subdirectory may also be used to temporarily store images that should be excluded from processing.
+- :code:`splitlump`: empty directory where GWB_SPLITLUMP results will be saved 
+- GWB module-specific parameter files, 
+- two sample geotif images: :code:`example.tif` and :code:`clc3class.tif`
+- readme.txt: information on file content and usage
+    
+**Directory:** :code:`output`: empty directory where GWB results will be saved
 
+- resulting images/statistics 
+- log.txt: a log-file with information on the batch process
 
-**GWB** is designed to apply the module-specific settings of the respective parameter file to all tif-images placed in the directory :code:`input`. The module-specific results will be written into the directory :code:`output`.
+**Input data:** All GWB modules require categorical raster input maps in data type unsigned byte (8bit), with discrete integer values within [0, 255] byte. The two sample images in the directory :code:`input` are:
+
+1. :code:`example.tif`: 0 byte - Missing, 1 byte - Background, 2 byte - Foreground
+2. :code:`clc3class.tif`: 1 byte - Agriculture, 2 byte - Natural, 3 byte - Developed
 
 .. note::
 
-    -   Please also run the above cp-command to update your **GWB**-setup files with potentially modified files provided by a newer version of **GWB**.
-    -   The directory :code:`input` has a subdirectory :code:`backup` having backup copies of all parameter files. This subdirectory may also be used to temporarily store images that should be excluded from processing.
+   - GWB is designed to apply the module-specific settings of the respective parameter file to **all tif-images** placed in the directory :code:`input`. 
+   - Use the subdirectory :code:`input/backup` to temporarily store images that should be excluded from processing.
+   - The module-specific results will be written into the directory :code:`output` or into the directory :code:`input/splitlump` for GWB_SPLITLUMP
+
 
 Example of the **GWB** setup in the user account :code:`~`.
 
@@ -41,11 +47,13 @@ Example of the **GWB** setup in the user account :code:`~`.
 
     $ ls output/
     $ ls input/
-    acc-parameters.txt   clc3class.tif        example.tif
-    frag-parameters.txt  mspa-parameters.txt  parc-parameters.txt
-    rec-parameters.txt   spa-parameters.txt   backup
-    dist-parameters.txt  fad-parameters.txt   lm-parameters.txt
-    p223-parameters.txt  readme.txt           rss-parameters.txt
+    backup/              splitlump/           readme.txt
+    clc3class.tif        example.tif 
+    acc-parameters.txt   dist-parameters.txt  frag-parameters.txt 
+    gsc-parameters.txt   lm-parameters.txt    mspa-parameters.txt 
+    parc-parameters.txt  rec-parameters.txt   rss-parameters.txt 
+    sc-parameters.txt    spa-parameters.txt   splitlump-parameters.txt
+    
 
     $ less input/readme.txt
     Images:
@@ -58,6 +66,8 @@ Example of the **GWB** setup in the user account :code:`~`.
     Directory backup: not needed for processing
     - a set of backup parameter files is included here
     - temporarily store images here that you want to exclude from processing
+    
+    Directory splitlump: empty, will contain the output of GWB_SPLITLUMP
 
 
 Usage Instructions Overview
@@ -81,123 +91,140 @@ To get an overview of all **GWB** modules enter the command: :code:`GWB`
     GWB_check4updates
        Display installed and current program version
        and test for program updates
+       (Automatic updater for Debian systems: '/opt/GWB/tools/GWBupdate_deb.sh')     
 
     GWB_ACC: Accounting of image objects and area classes
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
-        optional: 3b-special background 1, 4b-special background 2
-        Parameter file: input/acc-parameters.txt
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
+       optional: 3b-special background 1, 4b-special background 2
+       Parameter file: input/acc-parameters.txt
 
     GWB_DIST: Euclidean Distance and Hypsometric Curve
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing
-        Parameter file: input/dist-parameters.txt
-
-    GWB_FAD: Multiscale fragmentation analysis
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
-        optional: 3b-special BG, 4b-non-fragmenting BG
-        Parameter file: input/fad-parameters.txt
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing
+       Parameter file: input/dist-parameters.txt
 
     GWB_FRAG: user-selected custom scale fragmentation analysis
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
-        optional: 3b-special BG, 4b-non-fragmenting BG
-        Parameter file: input/frag-parameters.txt
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
+       optional: 3b-special BG, 4b-non-fragmenting BG
+       Parameter file: input/frag-parameters.txt
+        
+    GWB_GSC: GraySpatCon moving window analysis of proportion and attribute adjacency table
+       Requirements: categorical map within [0b, 255b]
+       Parameter file: input/gsc-parameters.txt
 
     GWB_LM: Landscape Mosaic
-        Requirements: 1b-Agriculture, 2b-Natural, 3b-Developed
-        optional: 0b-missing
-        Parameter file: input/lm-parameters.txt
+       Requirements: 1b-Agriculture, 2b-Natural, 3b-Developed
+       optional: 0b-missing
+       Parameter file: input/lm-parameters.txt
 
-    GWB_MSPA: Morphological Spatial Pattern Analysis (up to 25 classes)
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing
-        Parameter file: input/mspa-parameters.txt
-
-    GWB_P223: Foreground Density [%], Contagion [%], or Adjacency [%]
-        Spatcon: P2, P22, P23, Shannon, Sumd
-        Requirements: 1b-BG, 2b-FG, 3b-specific BG (for Adjacency), optional: 0b-missing
-        Parameter file: input/p223-parameters.txt
+    GWB_MSPA: Morphological Spatial Pattern Analysis (up to 23 classes)
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing
+       Parameter file: input/mspa-parameters.txt
 
     GWB_PARC: Landscape Parcellation index
-        Requirements: [1b, 255b]-land cover classes, optional: 0b-missing
-        Parameter file: input/parc-parameters.txt
+       Requirements: [1b, 255b]-land cover classes, optional: 0b-missing
+       Parameter file: input/parc-parameters.txt
 
     GWB_REC: Recode class values
-        Requirements: categorical map with up to 256 classes [0b, 255b]
-        Parameter file: input/rec-parameters.txt
+       Requirements: categorical map with up to 256 classes [0b, 255b]
+       Parameter file: input/rec-parameters.txt
 
     GWB_RSS: Restoration Status summary
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing
-        Parameter file: input/rss-parameters.txt
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing
+       Parameter file: input/rss-parameters.txt
+
+    GWB_SC: SpatCon moving window analysis of proportion and attribute adjacency table
+       Requirements: categorical map within [0b, 255b]
+       Parameter file: input/sc-parameters.txt
 
     GWB_SPA: Spatial Pattern Analysis (2, 3, 5, or 6 classes)
-        Requirements: 1b-BG, 2b-FG, optional: 0b-missing
-        Parameter file: input/spa-parameters.txt
+       Requirements: 1b-BG, 2b-FG, optional: 0b-missing
+       Parameter file: input/spa-parameters.txt
+
+    GWB_SPLITLUMP: setup scripts to cut/process/merge buffered stripes of large images
+       Requirements: categorical map within [0b, 255b]
+       Parameter file: input/splitlump-parameters.txt
 
     More details in the module-specific parameter files, or run: GWB_XXX --help
 
     ===============================================================================
          Part B: usage
     ===============================================================================
-    a) standalone mode (within the directory GWB): ./GWB_ACC
-       OR add a custom full path to your input and output directory i.e.:
-       ./GWB_ACC -i=<your dir_input> -o=<your dir_output>
-
-    b) system mode (GWB installed in /opt/):
+    a) system mode (GWB installed in /opt/GWB/): 
        To get started in system mode, copy the input/output directories to
-       your home folder using the command: cp -fr /opt/GWB/*put ~/
-       To process, add the full path to your input and output directory:
+       your $HOME folder using the command: cp -fr /opt/GWB/*put ~/
+       To process, add the full path to your input and output directory: 
        GWB_ACC -i=$HOME/input -o=$HOME/output
+ 
+    b) standalone mode (within $HOME/GWB<version>/GWB): ./GWB_ACC 
+       Note: standalone mode requires using the existing directories:
+       $HOME/GWB<version>/GWB/input           as the input directory and
+       $HOME/GWB<version>/GWB/output          as the output directory
+       To process, ensure you are in $HOME/GWB<version>/GWB, then run:
+       ./GWB_ACC
 
     ===============================================================================
          Part C: processing requirements
     ===============================================================================
-    RAM requirements depend on module processing settings and the amount
-    and the configuration of objects in the input image.
-    You can use: /usr/bin/time -v <full GWB-command> and then look
-    at 'Maximum resident set size', which will show the maximum
-    RAM usage point (in kb) encountered during execution.
-     a) RAMpeakGB = divide 'Maximum resident set size' by 1024^2
-     b) imsizeGB = image size in GB = xdim*ydim/1024^3
-     c) processing RAM requirement by module: RAMpeak/imsizeGB
+    RAM requirements depend on amount/configuration of image objects, the selected  
+    module and processing settings, and the image size: imsizeGB = xdim*ydim/1024^3
+  
+    Note:
+    a) On multi-user systems you may not have full access to the available RAM!
+    b) The peak RAM usage factors below are indicative only. 
+    c) The log-file will list imsizeGB, approximate RAM requirements, and peak RAM usage
 
     Approximate peak RAM usage factors for an image of size imsizeGB:
     GWB_ACC  : 30 * imsizeGB
     GWB_DIST : 18 * imsizeGB
-    GWB_FAD  : 30 * imsizeGB
     GWB_FRAG : 13 * imsizeGB
+    GWB_GSC  : metric-dependent
     GWB_LM   :  9 * imsizeGB
     GWB_MSPA : 20 * imsizeGB
-    GWB_P223 : 15 * imsizeGB
     GWB_PARC : 22 * imsizeGB
     GWB_REC  :  2 * imsizeGB
     GWB_RSS  : 20 * imsizeGB
     GWB_SPA  : 20 * imsizeGB
+    GWB_SC   : metric-dependent
+    GWB_SPLITLUMP: shell-script, no RAM required
+ 
     Example: input image 50,000 x 50,000 pixels -> imsizeGB = 2.33 GB.
     Processing this image for GWB_ACC will require 30 * 2.33 ~ 70 GB RAM
 
-    The RAM usage factors above are indicative only. They depend on module
-    settings and the amount/configuration of objects in the input image.
     ===============================================================================
      ***  Please scroll up to read GWB information in Part A, B, C above  ***
     ===============================================================================
 
 
-It is also possible to use the "help" option: :code:`GWB_ACC --help`
+It is also possible to use the "help" option, for example: :code:`GWB_ACC --help`
 
 .. code-block:: console
 
-    $ GWB_ACC --help
+    $ GWB_ACC --help    
     ----------------------------------------------------------------------------------
-    usage: /usr/bin/GWB_ACC -i=dir_input -o=dir_output
-    -i=<full path to directory 'input'>
-    (with your input images and parameter files);
-    Standalone mode: GWB/input
-    -o=<full path to directory 'output'>
-    (location for results, must exist and must be empty);
-    Standalone mode: GWB/output
-    --help: show options
-
-    Standalone mode: ./GWB_ACC
-    System mode/use custom directories: GWB_ACC -i=<your dir_input> -o=<your dir_output>
+    1) System mode - you MUST specify custom directories:
     ----------------------------------------------------------------------------------
+    GWB_ACC -i=<your dir_input> -o=<your dir_output>
+    -i=<full path to directory 'input'> 
+     (with your input images and parameter files)
+    -o=<full path to directory 'output'> 
+     (location for results, must exist and must be empty)
+    
+    ----------------------------------------------------------------------------------
+    2) Standalone mode - fixed directory setup:
+    ----------------------------------------------------------------------------------
+    cd into: $HOME/GWB<version>/GWB
+    then run the command: ./GWB_ACC
+    Note: standalone mode enforces using the default standalone
+    - input directory: /home/pinoc64/GWB1.9.1/GWB/input 
+      (with your input images and parameter files);
+    - output directory: /home/pinoc64/GWB1.9.1/GWB/output 
+      (location for results, must exist and must be empty);
+    ----------------------------------------------------------------------------------
+     
+    other cmd-line options:
+    --help: show cmd-line options
+    --nox: enforce headless execution via xvfb-run
+    --version: show GWB version number
 
 .. tip::
 
@@ -205,16 +232,20 @@ It is also possible to use the "help" option: :code:`GWB_ACC --help`
 
 Additional, general remarks:
 
--   The directory :code:`output` must be empty before running a new analysis. Please watch out for hidden files/folders in this directory, which may be the result of an interrupted execution. The safest way to empty the directory is to delete it and recreate a new directory :code:`output`.
--   **GWB** will automatically process all suitable geotiff images (single band and of datatype byte) from the directory :code:`input`. Images of different format or that are not compatible with the selected analysis module requirements will be skipped. Details on each image processing result can be found in the log-file in the directory :code:`output`.
--   **GWB** is written in the  the `IDL language <https://www.l3harrisgeospatial.com/Software-Technology/IDL>`_. It includes all required IDL libraries and the source code of each module, stored in the folder: :code:`/opt/GWB/tools/source/`.
--   To list your current version of **GWB**, or to check for potential new **GWB** versions, please run the command:
+-   The directory :code:`output` must be empty before running a new analysis. Please watch out for hidden files/folders in this directory, 
+    which may be the result of an interrupted execution. The safest way to empty the directory is to delete it and recreate a new directory :code:`output`.
+-   GWB will automatically process all suitable geotiff images (single band and of datatype byte) from the directory :code:`input`. 
+    Images of different format or that are not compatible with the selected analysis module requirements will be skipped. Details on each image processing 
+    result can be found in the log-file in the directory :code:`output`.
+-   GWB is written in the  the `IDL language <https://www.l3harrisgeospatial.com/Software-Technology/IDL>`_. It includes all required IDL libraries and 
+    the source code of each module, stored in the folder: :code:`/opt/GWB/tools/source/`.
+-   To list your current version of GWB, or to check for a potential new GWB version, please run the command:
 
     .. code-block:: console
 
         $ GWB_check4updates
 
--   Any distance or area measures are calculated in pixels. It is therefore crucial to use images in equal area projection. Conversion to meters/hectares require to know the pixel resolution.
+-   Any distance or area measures are calculated in pixels. It is therefore crucial to use images in equal area projection. Conversion to meters/hectares require knowing the pixel resolution.
 
 Available Commands
 ------------------
