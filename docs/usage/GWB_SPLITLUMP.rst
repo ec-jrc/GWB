@@ -1,18 +1,15 @@
-Simplified Pattern Analysis (GWB_SPA)
-=====================================
+Cut/process/merge (GWB_SPLITLUMP)
+=================================
 
-This module will conduct the **Simplified Pattern Analysis**. SPA analyses shape and 
-conducts a segmentation of foreground patches into 2, 3, 5, or 6 feature classes. 
-The result are spatially explicit maps and tabular summary statistics. :code:`GWB_SPA` 
-is a simpler version of :code:`GWB_MSPA`. Details on the methodology and input/output 
-options can be found in the 
-`Morphology <https://ies-ows.jrc.ec.europa.eu/gtb/GTB/psheets/GTB-Pattern-Morphology.pdf>`_ 
-product sheet.
+This module will setup two scripts to cut and merge buffered stripes buffered stripes of large images
+The result are spatially explicit maps and tabular summary statistics. 
+:code:`GWB_SPA` is a simpler version of :code:`GWB_MSPA`. Details on the methodology
+and input/output options can be found in the .
 
 Requirements
 ------------
 
-A single band (Geo)TIFF image in data format byte.
+Single band geotiff in data format byte:
 
 -   0 byte: missing (optional)
 -   1 byte: background
@@ -24,47 +21,40 @@ Processing parameter options are stored in the file :code:`input/spa-parameters.
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; GTB_SPA parameter file:
-    ;; NOTE: do NOT delete or add any lines in this parameter file!
+    ;;    ***  do NOT delete header lines starting with ";;" ***
     ;;
     ;; SPA: Spatial Pattern Analysis (2, 3, 5, or 6 classes)
-    ;; see https://ies-ows.jrc.ec.europa.eu/gtb/GTB/MSPA_Guide.pdf
     ;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
     ;;
-    ;; SPAx will provide one (1) image and summary statistics using 8-connectivity.
-    ;; line 21: enter a single number, representing the number of pattern classes:
-    ;;    2: SLF, Contiguous
-    ;;    3: Core, Core-Openings, Margin
-    ;;    5: Core, Core-Openings, Edge, Perforation, Margin
-    ;;    6: Core, Core-Openings, Edge, Perforation, Islet, Margin
-    ;; line 22: statistics: 0 (default) or 1 (add summary statistics)
+    ;; SPAx will provide an image and summary statistics using 8-connectivity.
+    ;; Line 18: enter a single number, representing the number of pattern classes:
+    ;; 2: SLF, Contiguous
+    ;; 3: Core, Core-Openings, Margin
+    ;; 5: Core, Core-Openings, Edge, Perforation, Margin
+    ;; 6: Core, Core-Openings, Edge, Perforation, Islet, Margin
     ;;
     ;; an example parameter file would look like this:
-    ;; 6
-    ;; 0
+    ;; 5
     ****************************************************************************
     2
-    1
     ****************************************************************************
-
 
 Example
 -------
 
-The results are stored in the directory :code:`output`, one directory for each input 
-image accompanied by a log-file providing details on computation time and processing 
-success of each input image.
+The results are stored in the directory :code:`output`, one directory for each input image accompanied by a log-file providing details on computation time and processing success of each input image.
 
 :code:`GWB_SPA` command and listing of results in the directory output:
 
 .. code-block:: console
 
-    $ GWB_SPA -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    $ GWB_SPA -i=~/input -o=~/output
+    IDL 8.8.0 (linux x86_64 m64).
+    (c) 2020, Harris Geospatial Solutions, Inc.
 
     GWB_SPA using:
-    dir_input= $HOME/input
-    dir_output= $HOME/output
+    dir_input= ~/input
+    dir_output= ~/output
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
@@ -74,11 +64,10 @@ success of each input image.
     output/:
     example_spa2  spa2.log
 
-    output/example_spa6:
+    output/example_spa2:
     example_spa2.tif  example_spa2.txt
 
-Statistics and spatial result of the input image :code:`example.tif` showing a 2-class 
-segmentation (SPA2): Contiguous and Small & Linear Features (SLF):
+Statistics and spatial result of the input image :code:`example.tif` showing a 2-class segmentation (SPA2): Contiguous and Small & Linear Features (SLF):
 
 .. code-block:: text
 
@@ -129,17 +118,12 @@ segmentation (SPA2): Contiguous and Small & Linear Features (SLF):
     ================================================================================
 
 .. figure:: ../_image/example_spa2.png
-    :width: 100%
+    :width: 50%
 
 Remarks
 -------
 
--   The full version, :code:`GWB_MSPA` provides many more features and classes.
--   Please use :code:`GWB_MSPA` if you need an edge width > 1 pixel and/or to 
-    detect connecting pathways.
+-   The full version, GWB_MSPA provides many more features and classes.
+-   Please use :code:`GWB_MSPA` if you need an edge width > 1 pixel and/or to detect connecting pathways.
 
-:code:`GWB_SPA` is a purely geometric analysis scheme, which can be applied to any 
-type of raster image. It is ideal to describe the morphology of foreground (forest) 
-patches for basic mapping and statistics, which may be sufficient in many application 
-fields. Advanced analysis, including the detection of connecting pathways require using 
-the full version :code:`GWB_MSPA`.
+:code:`GWB_SPA` is a purely geometric analysis scheme, which can be applied to any type of raster image. It is ideal to describe the morphology of foreground (forest) patches for basic mapping and statistics, which may be sufficient in many application fields. Advanced analysis, including the detection of connecting pathways require using the full version :code:`GWB_MSPA`.
