@@ -1,7 +1,7 @@
 Fragmentation (GWB_FRAG)
 ========================
 
-This module will conduct the **fragmentation** analysis at a **user-specified**
+This module conducts the **fragmentation** analysis at a **user-specified**
 single (or multiple) observation scale. The result are spatially explicit maps and 
 tabular summary statistics. Details on the methodology and input/output options can be 
 found in the 

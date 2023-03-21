@@ -1,7 +1,7 @@
 Distance (GWB_DIST)
 ===================
 
-This module will conduct the **Euclidean Distance** analysis. Each pixel will show the 
+This module conducts the **Euclidean Distance** analysis. Each pixel will show the 
 shortest distance to the foreground boundary. Pixels inside a foreground object have a 
 positive distance value while background pixels have a negative distance value. The 
 result are spatially explicit maps and tabular summary statistics.

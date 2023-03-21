@@ -1,9 +1,9 @@
 Restoration Status Summary (GWB_RSS)
 ====================================
 
-This module will conduct the **Restoration Status Summary** analysis. It will calculate 
+This module conducts the **Restoration Status Summary** analysis. It calculates 
 key attributes of the current network status, composed of foreground (forest) objects. It  
-will also provide the normalized degree of network coherence. The result are tabular 
+also provides the normalized degree of network coherence. The result are tabular 
 summary statistics. Details on the methodology and input/output options can be found in the 
 `Restoration Planner <https://ies-ows.jrc.ec.europa.eu/gtb/GTB/psheets/GTB-RestorationPlanner.pdf>`_ 
 product sheet.

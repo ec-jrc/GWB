@@ -1,7 +1,7 @@
 Simplified Pattern Analysis (GWB_SPA)
 =====================================
 
-This module will conduct the **Simplified Pattern Analysis**. SPA analyses shape and 
+This module conducts the **Simplified Pattern Analysis**. SPA analyses shape and 
 conducts a segmentation of foreground patches into 2, 3, 5, or 6 feature classes. 
 The result are spatially explicit maps and tabular summary statistics. :code:`GWB_SPA` 
 is a simpler version of :code:`GWB_MSPA`. Details on the methodology and input/output 

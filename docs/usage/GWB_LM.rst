@@ -1,7 +1,7 @@
 Landscape Mosaic (GWB_LM)
 =========================
 
-This module will conduct the **Landscape Mosaic** analysis at a **user-selected 
+This module conducts the **Landscape Mosaic** analysis at a **user-selected 
 observation scale**. The Landscape Mosaic measures land cover heterogeneity, or human 
 influence, in a tri-polar classification of a location accounting for the relative 
 contributions of the three land cover types **Agriculture**, **Natural**, **Developed** 

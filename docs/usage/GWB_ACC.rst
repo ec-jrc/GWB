@@ -1,7 +1,7 @@
 Accounting (GWB_ACC)
 ====================
 
-This module will conduct the **Accounting** analysis. Accounting will label and calculate 
+This module conducts the **Accounting** analysis. Accounting will label and calculate 
 the area of all foreground objects. The result are spatially explicit maps and tabular 
 summary statistics. Details on the methodology and input/output options can be found in the
 `Accounting <https://ies-ows.jrc.ec.europa.eu/gtb/GTB/psheets/GTB-Objects-Accounting.pdf>`_ 

@@ -1,7 +1,7 @@
 Recoding (GWB_REC)
 ==================
 
-This module will conduct **Recoding** of categorical class values.
+This module conducts **Recoding** of categorical class values.
 
 
 Requirements

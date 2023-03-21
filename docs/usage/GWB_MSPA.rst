@@ -10,7 +10,7 @@ Morphology (GWB_MSPA)
     address certain features of fragmentation, a more comprehensive assessment of 
     fragmentation is obtained with the dedicated fragmentation modules :code:`GWB_FRAG`.
 
-This module will conduct the **Morphological Spatial Pattern Analysis**. 
+This module conducts the **Morphological Spatial Pattern Analysis**. 
 `MSPA <https://forest.jrc.ec.europa.eu/en/activities/lpa/mspa/>`_ analyses shape and 
 connectivity and conducts a segmentation of foreground (i.e. forest) objects in up to 23 
 morphological feature classes. The result are spatially explicit maps and tabular 

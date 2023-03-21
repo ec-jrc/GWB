@@ -1,7 +1,7 @@
 Parcellation (GWB_PARC)
 =======================
 
-This module will conduct the **Parcellation** analysis. It provides a statistical summary 
+This module conducts the **Parcellation** analysis. It provides a statistical summary 
 file (txt/csv- format) with details for each unique class found in the image as well as 
 the full image content: class value, total number of objects, total area, degree of 
 parcellation. Details on the methodology and input/output options can be found in the 
