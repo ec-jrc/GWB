@@ -15,13 +15,13 @@ Directory setup
 ---------------
 The two directories have the following content and functionality: 
 
-**Directory:** :code:`input`: all your input images will go here
+**Directory:** :code:`input`: all your (Geo)TIFF input images will go here
 
 - :code:`backup`: backup copies of all parameter files. This subdirectory may also be 
   used to temporarily store images that should be excluded from processing
 - :code:`splitlump`: empty directory where GWB_SPLITLUMP results will be saved 
 - GWB module-specific parameter files
-- two sample geotif images: :code:`example.tif` and :code:`clc3class.tif`
+- two sample GeoTIFF images: :code:`example.tif` and :code:`clc3class.tif`
 - readme.txt: information on file content and usage
     
 **Directory:** :code:`output`: empty directory where GWB results will be saved
@@ -49,7 +49,7 @@ format and of data type unsigned byte (8bit), with discrete integer values withi
      or into the directory :code:`input/splitlump` for :code:`GWB_SPLITLUMP` 
 
 
-Example of the GWB setup in the user account :code:`~`.
+Example of the GWB setup in the user account :code:`~`, or :code:`$HOME`.
 
 .. code-block:: console
 
@@ -200,6 +200,8 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
  
     Example: input image 50,000 x 50,000 pixels -> imsizeGB = 2.33 GB.
     Processing this image for GWB_ACC will require 30 * 2.33 ~ 70 GB RAM
+    
+    Online manual:  https://gwbdoc.readthedocs.io
 
 
 It is also possible to use the "help" option, for example: :code:`GWB_ACC --help`
@@ -255,14 +257,14 @@ Additional, general remarks:
     includes all required IDL libraries and the source code of each module, stored in 
     the folder: :code:`/opt/GWB/tools/source/`.
 -   To list your current version of GWB, or to check for a potential new GWB version, 
-    please run the command:
+    please run the command :code:`GWB` or:
 
     .. code-block:: console
 
         $ GWB_check4updates
 
 -   Any distance or area measures are calculated in pixels. It is therefore crucial 
-    to use images in equal area projection. Conversion to meters/hectares require 
+    to use maps in equal area projection. Conversion to meters/hectares require 
     knowing the pixel resolution.
 
 Available Commands
@@ -270,11 +272,10 @@ Available Commands
 
 .. danger::
 
-    Please enter your own settings by amending the module-specific parameters within the
-    section marked with :code:`*******` in the respective 
-    :code:`input/<module>-parameters.txt` file. Changing the setup of this section
-    may crash the module execution. If in doubt, consult the respective backup file
-    :code:`input/backup/<module>-parameters.txt`.
+    Please only amend the settings at the end of the module-specific parameter files 
+    :code:`input/<module>-parameters.txt` within the section marked with :code:`*******`.
+    A wrong setup of this final section will crash the module execution. If in doubt, 
+    consult the respective backup file :code:`input/backup/<module>-parameters.txt`.
 
 .. toctree::
     :maxdepth: 1

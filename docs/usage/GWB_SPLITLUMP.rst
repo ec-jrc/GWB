@@ -40,7 +40,9 @@ Steps to be conducted upon completion of :code:`GWB_SPLITLUMP`:
 4. Use :code:`GWB_XXX -i=<splitlump directory> -o =<your output directory>` to process all 
    buffered stripes with the GWB module of your choice
    
-5. Move all resulting tif-maps from step 4 into the :code:`splitlump` directory
+5. Delete the buffered stripes from step 2 and then move all resulting tif-maps 
+   from step 4 into the :code:`splitlump` directory
+   
 6. Open a terminal in the :code:`splitlump` directory and run the bash-script 
    :code:`./lumper.sh` to cut and reassemble all processed buffered stripes (tif-maps) 
    into the final large processed map.
@@ -48,7 +50,8 @@ Steps to be conducted upon completion of :code:`GWB_SPLITLUMP`:
 
 .. Tip::
 
-    * If possible, **avoid** buffered striping by using a machine with sufficient RAM.
+    * If possible, **avoid** buffered striping by using a machine with sufficient RAM to 
+      allow for direct GWB-processing.
     * If you must use striping, use as few stripes as possible with sufficiently 
       large buffers.
     * Compare the result of horizontal and vertical striping and increase buffers if the
@@ -65,7 +68,8 @@ Steps to be conducted upon completion of :code:`GWB_SPLITLUMP`:
 Requirements
 ------------
 
-A single band (Geo)TIFF image in data format byte.
+A single band (Geo)TIFF image in data format byte and at least of size 12,000 x 12,000 
+pixels in x and y direction.
 
 Processing parameter options and further detailed instructions are stored in the 
 file :code:`input/splitlump-parameters.txt`.
@@ -144,8 +148,8 @@ file :code:`input/splitlump-parameters.txt`.
     ;; 0
     ****************************************************************************
     ~/input/splitlump
-    ~/input/backup/Mekong_2019.tif
-    2
+    ~/input/backup/Mekong.tif
+    3
     1200
     horizontal
     1
@@ -155,23 +159,145 @@ file :code:`input/splitlump-parameters.txt`.
 Example
 -------
 
-* Place a large map into the directory :code:`$HOME/input/backup/`
-* Ensure the directory :code:`$HOME/input/splitlump` is empty
-* Amend the parameter file :code:`$HOME/input/splitlump-parameters.txt` to meet your needs
-* To setup the two scripts :code:`splitter.sh` and :code:`lumper.sh`, open a terminal 
-  and run :code:`GWB_SPLITLUMP -i=$HOME/input/splitlump-parameters.txt`
-* To cut the large input map into buffered stripes, open a terminal in the 
-  :code:`splitlump` directory and run :code:`./splitter.sh`
-* GWB-processing: for example for fragmentation, copy the fragmentation parameter file 
-  :code:`cp $HOME/input/frag-parameters.txt $HOME/input/splitlump/` and amend as needed
-* Ensure :code:`$HOME/output` is empty, then run the GWB analysis for all buffered stripes: 
-  :code:`GWB_FRAG -i=$HOME/input/splitlump -o=$HOME/output`
-* Delete the initial buffered stripes and move all GWB-processed maps into the directory 
-  :code:`$HOME/input/splitlump`:
-  :code:`cd $HOME/input/splitlump; rm -f *stripe*.tif; cp $HOME/output/*stripe*/*.tif $HOME/input/splitlump/`
-* Reassemble the GWB-processed maps, open a terminal in the :code:`splitlump` directory 
-  and run :code:`./lumper.sh`
-* The final processed large map is stored in the directory :code:`splitlump` and has the 
-  basename of the original input map with the GWB module-specific extension.
-* Verify the result via the :code:`gdalinfo` command or load it into your GIS application.
+1. Place a large map (here *Mekong.tif*) into the directory :code:`$HOME/input/backup/`
+2. Ensure the directory :code:`$HOME/input/splitlump` is empty
+3. Amend the parameter file :code:`$HOME/input/splitlump-parameters.txt` to meet your needs
+   (in this example we set to cut 3 horizontal buffered stripes with a buffer of 1200 pixels)
+4. To setup the two scripts :code:`splitter.sh` and :code:`lumper.sh`, open a terminal 
+   and run:
+  
+   .. code-block:: console
+  
+     $ GWB_SPLITLUMP -i=$HOME/input/splitlump-parameters.txt
+    
+     IDL 8.8.3 (linux x86_64 m64).
+     (c) 2022, L3Harris Geospatial Solutions, Inc.
+    
+     parameter file: $HOME/input/splitlump-parameters.txt
+     % Loaded DLM: TIFF.
+    
+     Next, please follow the instructions at the end of: ~/input/splitlump/splitter.sh
+    
+     $ ls $HOME/input/splitlump/
+     lumper.sh*   splitter.sh*
+
+  
+5. **Cut:** to cut the large input map into buffered stripes, open a terminal, cd into the 
+   :code:`splitlump` directory and run:
+  
+   .. code-block:: console
+  
+     $ cd $HOME/input/splitlump
+     $ ./splitter.sh
+    
+     Input file size is 19907, 24966
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     Input file size is 19907, 24966
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     Input file size is 19907, 24966
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     The script './splitter.sh' has finished.
+    
+     $ ls
+     hstripe1.tif  hstripe2.tif  hstripe3.tif  lumper.sh*  splitter.sh*
+     
+   The bash-script :code:`splitter.sh` has now cut the large input map *Mekong.tif* into 3
+   horizontal buffered stripes with an overlapping buffer of 1200 pixels at the 
+   intersection of neighbouring stripes, more details in :code:`splitter.sh`.
+   
+
+  
+6. Prepare for GWB-processing: for example for fragmentation, amend the fragmentation parameter file
+   as needed and then copy it into the directory :code:`$HOME/input/splitlump`:
+
+   .. code-block:: console
+  
+     $ cp $HOME/input/frag-parameters.txt $HOME/input/splitlump/
+     $ ls
+     frag-parameters.txt hstripe1.tif  hstripe2.tif  hstripe3.tif  lumper.sh*  splitter.sh*
+    
+    
+7. **GWB-processing:** ensure :code:`$HOME/output` is empty, then run the GWB analysis for all buffered stripes: 
+
+   .. code-block:: console
+  
+     $ GWB_FRAG -i=$HOME/input/splitlump -o=$HOME/output
+    
+     IDL 8.8.3 (linux x86_64 m64).
+     (c) 2022, L3Harris Geospatial Solutions, Inc.
+    
+     GWB_FRAG using:
+     dir_input= $HOME/input/splitlump
+     dir_output= $HOME/output
+     % Loaded DLM: TIFF.
+     Done with: hstripe1.tif
+     Done with: hstripe2.tif
+     Done with: hstripe3.tif
+     Frag finished sucessfully
+    
+     $ ls $HOME/output
+     ls -R $HOME/output
+     $HOME/output:
+     frag.log  hstripe1_frag/  hstripe2_frag/  hstripe3_frag/
+    
+     $HOME/output/hstripe1_frag:
+     hstripe1_fos-fac_5class_27.tif
+    
+     $HOME/output/hstripe2_frag:
+     hstripe2_fos-fac_5class_27.tif
+    
+     $HOME/output/hstripe3_frag:
+     hstripe3_fos-fac_5class_27.tif
+          
+    
+8. Prepare for merging: **delete the no longer needed initial buffered stripes,** which 
+   is necessary to make step 9 work. After this, move all GWB-processed maps into the 
+   directory :code:`$HOME/input/splitlump`:
+  
+   .. code-block:: console
+    
+     $ cd $HOME/input/splitlump
+     $ rm -f *stripe*.tif
+     $ cp $HOME/output/*stripe*/*.tif $HOME/input/splitlump/
+     $ ls
+     frag-parameters.txt             hstripe2_fos-fac_5class_27.tif  lumper.sh*
+     hstripe1_fos-fac_5class_27.tif  hstripe3_fos-fac_5class_27.tif  splitter.sh*
+
+       
+9. **Merge:** reassemble the GWB-processed striped maps in the directory :code:`splitlump`:
+  
+   .. code-block:: console
+    
+     $ cd $HOME/input/splitlump
+     $ ./lumper.sh
+     Input file size is 19907, 9522
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     Input file size is 19907, 10722
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     Input file size is 19907, 9522
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     Input file size is 19907, 24966
+     0...10...20...30...40...50...60...70...80...90...100 - done.
+     The script lumper.sh has finished, please verify your output file:
+     Mekong_fos-fac_5class_27.tif
+     
+     $ ls
+     frag-parameters.txt  hstripe3_fos-fac_5class_27.tif  lumper3.tif  splitter.sh*
+     hstripe1_fos-fac_5class_27.tif   lumper1.tif   lumper.sh*   tmp.vrt
+     hstripe2_fos-fac_5class_27.tif   lumper2.tif   Mekong_fos-fac_5class_27.tif
+
+
+   The bash-script :code:`lumper.sh` has now cut the common buffers of the 3 buffered 
+   stripes and then merged the 3 unbuffered stripes into the final map, applied 
+   LZW-compression and renamed the final processed large map 
+   (here, *Mekong_fos-fac_5class_27.tif*) using the basename of the 
+   original input name (here *Mekong.tif*) and the GWB module specific extension 
+   (here, *_fos-fac_5class_27*), more details in :code:`lumper.sh`.  
+     
+     
+10. Move the result to a final location and empty the directory :code:`$HOME/input/splitlump`.
+    Verify the result via the command :code:`gdalinfo -noct Mekong_fos-fac_5class_27.tif` 
+    or load it into your favoured GIS application.
+    
 

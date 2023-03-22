@@ -9,9 +9,9 @@ To ensure package integrity, compare the md5sum against the
 GWB requires :code:`gdal`, :code:`xvfb`, :code:`time`, :code:`libgomp1` and can 
 be installed in either:
 
-* System-wide mode: installation requires root-privileges. GWB will be available to 
+* **System-wide mode:** installation requires root-privileges. GWB will be available to 
   all system users.
-* Standalone mode: installation per user and *not* requiring root-privileges. GWB is 
+* **Standalone mode:** installation per user and *not* requiring root-privileges. GWB is 
   available for the user only and the standalone directory GWB can be used in any 
   user-accessible location or any external device, provided :code:`gdal`, 
   :code:`xvfb`, :code:`time`, :code:`libgomp1` is installed in the system.
@@ -22,7 +22,7 @@ System-wide mode:
 
 As root, install GWB into the system by using one of the following options:
 
-* PCLinuxOS: Open Synaptic and search for/install: GWB
+* PCLinuxOS: Open Synaptic and search for/install: :code:`GWB`
 * Fedora/RedHat/CentOS: Download the package 
   `GWB-Fedora.x86_64.rpm <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB-Fedora.x86_64.rpm>`_ 
   to a local directory. From a root-terminal enter the command:
@@ -77,20 +77,12 @@ As root, install GWB into the system by using one of the following options:
   The script will copy the standalone directory :code:`GWB` under :code:`/opt/` and setup 
   symlinks to each GWB-module in :code:`/usr/bin/`. 
   
-Uninstall GWB: if GWB was installed via the rpm/deb-package, then use your package 
-manager. If GWB was installed via the generic installer, open a root-terminal 
-in the directory :code:`GWB<version>` and enter the command:
-
-.. code-block:: console
-
-  $ ./uninstallGWB.sh
-
 
 
 Standalone mode:
 ----------------
 
-Form a *regular-user* (non-root!) account:
+From a *regular-user* (non-root!) account:
 
 * Download the generic installer 
   `GWB_linux64.run <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_linux64.run>`_ to 
@@ -107,7 +99,44 @@ simply delete the directory :code:`$HOME/GWB<version>`.
 
 
 
+Upgrade/Uninstall:
+------------------
 
+Note that support will be provided for the **uptodate version of GWB only**. The command: 
 
+.. code-block:: console
 
+  $ GWB_check4updates
+
+will show the installed version of GWB and check for/list a potential newer version of GWB.
+
+To upgrade to a newer version, or to uninstall GWB, please follow the distribution-specific 
+instructions below:
+
+* PCLinuxOS: open the package manager Synaptic to find/upgrade to a newer version of GWB, 
+  or to uninstall GWB.
+* rpm-distributions: download any newer version of GWB from the 
+  `project homepage <https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/>`_. Then use 
+  your distribution-specific command line package management tool to upgrade to the newer
+  version. To uninstall GWB, use your distribution-specific command line package 
+  management tool.
+* deb-distributions: from a root-terminal, use the command:
+  
+  .. code-block:: console
+  
+    $ /opt/GWB/tools/GWBupdate_deb.sh
+  
+  to automatically download and upgrade to the latest version of GWB. To uninstall GWB, 
+  use the command:
+  
+  .. code-block:: console
+  
+    $ apt remove gwb
+  
+* If GWB was installed via the generic installer: open a root-terminal in the 
+  directory :code:`GWB<version>` and enter the command:
+
+  .. code-block:: console
+  
+    $ ./uninstallGWB.sh
 

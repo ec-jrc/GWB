@@ -189,8 +189,8 @@ image :code:`example.tif`:
 Remarks
 -------
 
--   The metric-dependent settings are automatically verified before execution and echoed 
-    in the log-file.
+-   The metric-dependent settings are echoed 
+    in the log-file and automatically verified before execution.
 -   Potential erroneous settings are reported in the log-file. 
 -   All density or adjacency metrics are scale-dependent (specified by the size of the 
     moving window).
