@@ -10,8 +10,8 @@ The open source code of GWB and all dependencies is released under GPL version 3
 `GitHub <https://github.com/ec-jrc/GWB>`_. Using the compiled version of GWB implies 
 acceptance of the `GWB-EULA <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/EULA_GWB.pdf>`_. 
 
-**This document describes GWB version 1.9.1.**, 
-`changelog <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt>`
+**This document describes GWB version 1.9.1,** 
+`changelog <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_changelog.txt>`_
 
 .. figure:: _image/gwb.jpg
     :width: 100%
