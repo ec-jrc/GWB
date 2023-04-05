@@ -188,14 +188,14 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
     GWB_ACC  : 30 * imsizeGB
     GWB_DIST : 18 * imsizeGB
     GWB_FRAG : 13 * imsizeGB
-    GWB_GSC  : metric-dependent
+    GWB_GSC  :  5 * imsizeGB
     GWB_LM   :  9 * imsizeGB
     GWB_MSPA : 20 * imsizeGB
     GWB_PARC : 22 * imsizeGB
     GWB_REC  :  2 * imsizeGB
     GWB_RSS  : 20 * imsizeGB
     GWB_SPA  : 20 * imsizeGB
-    GWB_SC   : metric-dependent
+    GWB_SC   :  5 * imsizeGB
     GWB_SPLITLUMP: shell-script, no RAM required
  
     Example: input image 50,000 x 50,000 pixels -> imsizeGB = 2.33 GB.

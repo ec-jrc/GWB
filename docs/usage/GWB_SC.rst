@@ -7,8 +7,8 @@ metrics from a categorical raster map
 (`Riitters et al. (1995) <https://link.springer.com/content/pdf/10.1007/BF00158551.pdf>`_, 
 `Riitters et al. (2000) <https://www.srs.fs.usda.gov/pubs/ja/ja_riitters006.pdf>`_). 
 Over time, **SpatCon** grew to now offer 21 spatial convolution metrics, which are 
-summarised in a dedicated 
-`Technical Note <https://github.com/ec-jrc/GWB/blob/main/tools/external_sources/GWB_SPATCON-TechnicalNote.pdf>`_.
+summarised in the 
+`SPATCON_Guide <https://github.com/ec-jrc/GWB/blob/main/tools/external_sources/SPATCON_Guide.pdf>`_.
 **SpatCon** conducts a moving window, or focal analysis and results in a spatially 
 explicit map for the selected metric. 
 
@@ -55,7 +55,7 @@ processing options are stored in the file :code:`input/sc-parameters.txt`.
     ;;    82 = Ratio of the frequencies of two specified pixel values
     ;;    83 = Combined ratio of two specific pixel values
     ;;
-    ;; for more details on SpatCon, see the Technical Note and/or source code at:
+    ;; for more details on SpatCon, see the Guide and/or the source code at:
     ;; https://github.com/ec-jrc/GWB/tree/main/tools/external_sources/
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; SpatCon parameters for all rules (some rules use only a subset of all parameters)

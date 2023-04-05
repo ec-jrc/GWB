@@ -5,8 +5,8 @@ This module provides full access to the spatial convolution program
 **GraySpatCon**. **GraySpatCon** is an extended version of **SpatCon**, with the 
 additional feature of permitting analysing grayscale density maps and conducting a global 
 map analysis. **GraySpatCon** offers 51 spatial convolution metrics, which are summarised 
-in a dedicated 
-`Technical Note <https://github.com/ec-jrc/GWB/blob/main/tools/external_sources/GWB_SPATCON-TechnicalNote.pdf>`_.
+in the 
+`GRAYSPATCON_Guide <https://github.com/ec-jrc/GWB/blob/main/tools/external_sources/GRAYSPATCON_Guide.pdf>`_.
 **GraySpatCon** conducts a moving window, or focal analysis and results in a spatially 
 explicit map for the selected metric. 
 
@@ -75,7 +75,7 @@ processing options are stored in the file :code:`input/gsc-parameters.txt`.
     ;; 50 = Skewness
     ;; 51 = Kurtosis
     ;;
-    ;; for more details on GraySpatCon, see the Technical Note and/or source code at:
+    ;; for more details on GraySpatCon, see the Guide and/or the source code at:
     ;; https://github.com/ec-jrc/GWB/tree/main/tools/external_sources/
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; GraySpatCon parameters for all metrics (some metrics use only a subset of all parameters)
