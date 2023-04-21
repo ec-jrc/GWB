@@ -7,19 +7,19 @@
 ;; Output: the same image coverage but with recoded class values
 ;;
 ;; Please specify recoding values with two entries per line.
-;; GWB_REC/GWB_SPATCON/spatcon.c or recode.c will error/exit if not in correct range.
+;; GWB_REC will error/exit if not in correct range.
 ;; Class values not found in the image will be skipped.
 ;; Class values not in the list will not be re-coded.
 ;; If an old value appears on more than one line, the last one listed is used.
 ;;
 ;; Recoding rule:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; The first value is the original value and the second the new recoded value:
-;; original value within [0, 255] byte      new recoded value within [0, 255] byte
+;; The first value is the original value and the second is the new recoded value:
+;; original value within [0, 255] byte     new recoded value within [0, 255] byte
 ;; i.e., to recode class 1 to 12 and class 2 to 22 , enter one line each, like:
 ;; 1 12
 ;; 2 22
 ****************************************************************************
-1 12
-2 22
+1 120
+2 220
 ****************************************************************************

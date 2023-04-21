@@ -1,0 +1,179 @@
+#!/bin/bash
+# This script starts an IDL Runtime or Virtual Machine application
+# Are we running headless?
+if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
+
+# check for system or standalone mode and set default parameters
+if [ "$0" == "/usr/bin/GWB_SPLITLUMP" ] &&  [ -f "/opt/GWB/tools/GWB_version.txt" ]; then
+  v_installed=$(cat /opt/GWB/tools/GWB_version.txt)
+  standalone=0
+  topdir=/opt/GWB
+elif  [ "$0" == "./GWB_SPLITLUMP" ] &&  [ -f "tools/GWB_version.txt" ]; then
+  v_installed=$(cat tools/GWB_version.txt)
+  standalone=1
+  topdir=$PWD
+  DIR_INPUT=$topdir"/input"
+  DIR_OUTPUT=$topdir"/output"
+else
+  echo "Please run this script from /usr/bin/ or from your local GWB installation"
+  exit 1
+fi
+
+# check status of GWB
+checker="$topdir"/GWB_check4updates
+if [ ! -f "$checker" ]; then
+  echo "GWB installation corrupted, please reinstall."
+  exit 1
+fi
+GWBstatus=$("$checker" >/dev/null; echo $?)
+if [ "$GWBstatus" == "49" ]; then
+    echo ""
+    echo "*********************** Attention ************************"
+    echo "GWB outdated. Please upgrade to the current version at:"
+    echo "https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/"
+    echo "*********************** Attention ************************"
+    echo ""
+fi
+
+options="$*"
+# if no option is provided in system-mode:
+if [ "$standalone" -eq 0 ] && [  "$options" == "" ]; then
+    echo "usage: GWB_SPLITLUMP --help"
+    exit 1
+fi
+
+#read parameters from command line
+#=================================================
+
+for i in "$@"
+do
+   case $i in
+       -i=*)
+       f_param="${i#*=}"
+       shift
+       ;;
+       --nox)
+       headless='1'
+       echo "Note: after execution, the cmd-line message: "
+       echo "'% Program caused arithmetic error: Floating illegal operand'"
+       echo "can be safely ignored."
+       shift
+       ;;
+       -v | --version)
+       echo "GWB version: $v_installed"
+       exit
+       ;;
+       -h|--help)
+       echo "----------------------------------------------------------------------------------"
+       echo " 1) System mode - specify the splitlump parameter file:"
+       echo "----------------------------------------------------------------------------------"
+       echo "GWB_SPLITLUMP -i=<full path to 'splitlump-parameters.txt'>"
+       echo " "
+       echo "----------------------------------------------------------------------------------"
+       echo " 2) Standalone mode - specify the splitlump parameter file:"
+       echo "----------------------------------------------------------------------------------"
+       echo "cd into: $HOME/GWB$v_installed/GWB"
+       echo "then run the command: "
+       echo "./GWB_SPLITLUMP -i=<full path to 'splitlump-parameters.txt'>"
+       echo "----------------------------------------------------------------------------------"
+       echo " "
+       echo "other cmd-line options:"
+       echo "--help: show cmd-line options"
+       echo "--nox: enforce headless execution via xvfb-run"
+       echo "--version: show GWB version number"
+       exit
+       ;;
+       *)
+       # unknown option
+       echo "Error: unknown option $i"
+       echo "usage: GWB_SPLITLUMP --help"
+       exit 1
+       ;;
+   esac
+done
+
+# startup tests
+if [ "$(getconf LONG_BIT)" != "64" ]; then
+  echo 'OS is not 64bit'
+  exit 1
+fi
+
+if [ "$(id -u)" -eq "0" ];then 
+  echo 'Please run this script as a normal user (not root)'
+  exit 1
+fi
+
+GWBCONF="${HOME}/.gwb/"
+if ! mkdir -p "$GWBCONF";then
+  echo "You have no permissions to create the directory '${GWBCONF}'"
+  exit 1
+fi
+if [ ! -w "$GWBCONF" ];then
+  echo "You have no write permissions in the directory '${GWBCONF}'"
+  exit 1
+fi
+
+# provide license info
+EULAOK="$GWBCONF"EULA.txt
+licfile=$topdir"/EULA_GWB.pdf"
+if [ ! -e "$EULAOK" ]; then
+  echo " "
+  echo "   GWB (GuidosToolbox Workbench) EULA information"
+  echo "================================================================"
+  if [ "${headless}" == "1" ]; then
+    echo "To use GWB you must accept the terms outlined in"
+    echo "$licfile"
+    echo "(https://ies-ows.jrc.ec.europa.eu/gtb/GWB/EULA_GWB.pdf)"
+    echo " "
+  else
+    xdg-open "$licfile" &
+  fi
+  echo "Do you accept the terms of the GWB EULA?"
+  echo "Please enter 'yes' or 'no' in small letters without the quotes('')"
+  echo "  "
+  read -r answer
+  if [ "${answer}" != "yes" ]; then
+    echo 'You can not use GWB because you did not agree with the GWB EULA.'
+    exit
+  fi
+  echo "GWB EULA agreed" > "$EULAOK"
+fi
+
+########################################
+### same for standalone or system mode ########
+########################################
+# did we get the full-path?
+if [ "${f_param:0:1}" != "/" ]; then
+  echo "Please provide the full pathname to the splitlump-parameters.txt"
+  exit 1
+fi
+# are there any empty spaces in the full path name?
+if [[ "$f_param" =~ \ |\' ]]; then
+  echo "empty spaces or ' in splitlump-parameters.txt pathname '${f_param}' "
+  exit 1
+fi
+# the filename should be as pre-defined
+filename="${f_param##*/}"
+if [[ "$filename" != "splitlump-parameters.txt" ]]; then
+  echo "splitlump parameter file is not named 'splitlump-parameters.txt' "
+  echo "Exiting..."
+  exit 1
+fi
+# write out the filename to inform the idl sav file
+echo $f_param > "$GWBCONF"gwb_splitlump_param.txt
+
+# Specify the path to the IDL SAVE file that launches
+# the application, relative to $topdir.
+idlapp=$topdir/tools/GWB_SPLITLUMP.sav
+
+# Specify the path to the top directory of the IDL
+# distribution, relative to $topdir.
+idl_install_dir=$topdir/tools/idl
+IDL_DIR=$idl_install_dir ; export IDL_DIR
+
+if [ "${headless}" == "1" ]; then
+   xvfb-run -a "$IDL_DIR"/bin/idl -rt="$idlapp"
+else
+  "$IDL_DIR"/bin/idl -rt="$idlapp"
+fi
+exit

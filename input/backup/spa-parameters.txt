@@ -7,14 +7,17 @@
 ;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
 ;;
 ;; SPAx will provide one (1) image and summary statistics using 8-connectivity.
-;; Line 19: enter a single number, representing the number of pattern classes:
-;; 2: SLF, Contiguous
-;; 3: Core, Core-Openings, Margin  
-;; 5: Core, Core-Openings, Edge, Perforation, Margin
-;; 6: Core, Core-Openings, Edge, Perforation, Islet, Margin
+;; line 21: enter a single number, representing the number of pattern classes:
+;;    2: SLF, Contiguous
+;;    3: Core, Core-Openings, Margin
+;;    5: Core, Core-Openings, Edge, Perforation, Margin
+;;    6: Core, Core-Openings, Edge, Perforation, Islet, Margin
+;; line 22: statistics: 0 (default) or 1 (add summary statistics)
 ;;
 ;; an example parameter file would look like this:
-;; 5
+;; 6
+;; 0
 ****************************************************************************
-2
+6
+1
 ****************************************************************************

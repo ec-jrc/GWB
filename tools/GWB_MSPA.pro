@@ -395,9 +395,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.9.0)'
+GWB_mv = 'GWB_MSPA (version 1.9.1)'
 ;;
 ;; Module changelog:
+;; 1.9.1: added image size info, SW tag
 ;; 1.9.0: added note to restore files, fixed metadata description on loop, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -496,8 +497,8 @@ mod_params = dir_input + '/mspa-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -510,8 +511,8 @@ fl = file_lines(mod_params)
 IF fl LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -525,8 +526,8 @@ q = where(strlen(strtrim(finp,2)) GT 0, ct)
 IF ct LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -546,7 +547,9 @@ endif else if c_FGconn eq '4' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -556,6 +559,9 @@ ccs = abs(fix(c_size))
 if ccs eq 0 or ccs gt 100 then begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "EdgeWidth is not an integer number in [1, 100]."
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
@@ -569,7 +575,9 @@ endif else if c_trans eq '0' then begin
   restore, 'idl/mspacolorstoff.sav' & ttrans = 0b
 endif else begin
   print, "Transition is not 1 or 0."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -583,7 +591,9 @@ endif else if c_intext eq '0' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "IntExt is not 1 or 0."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -596,20 +606,24 @@ endif else if c_disk eq '0' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Disk is not 0 or 1."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
 
 ;; processing parameter: Statistics
 if c_stats eq '1' then begin
-  tstats = 1b
+  tstats = 1b & dostats = 'yes'
 endif else if c_stats eq '0' then begin
-  tstats = 0b
+  tstats = 0b & dostats = 'no'
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Statistics is not 1 or 0."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -625,6 +639,9 @@ file_mkdir, dir_proc
 ;;==============================================================================
 ;;==============================================================================
 descbase = 'GTB_MSPA, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+
 fn_logfile = dir_output + '/mspa.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
@@ -632,20 +649,38 @@ nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
 openw, 9, fn_logfile
 if nocheck eq 0 then printf,9,GWB_mv else printf,9, GWB_mv + ' - nocheck'
 printf, 9, 'MSPA batch processing logfile: ', systime()
+printf, 9, 'Statistics: ' + dostats
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_mspa_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
   counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  input = dir_input + '/' + list[fidx]
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0 
   
-  input = dir_input + '/' + list[fidx] & res = strpos(input,' ') ge 0
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 20x RAM needed [GB]: ' + strtrim(imsizeGB*20.0,2)
+  close, 9
+  
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -653,8 +688,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Skipping invalid input (not a TIF image): ', input
     close, 9
     GOTO, skip_mspa  ;; invalid input
@@ -663,9 +696,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -673,9 +704,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ss = inpinfo.dimensions & ssct = n_elements(ss)
   IF res EQ 0 or ssct ne 2 THEN BEGIN ;;invalid file , wrong dimensions
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (wrong dimensions): ', input
+    printf, 9, 'Skipping invalid input (wrong dimensions) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -689,9 +718,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF size(im, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -700,9 +727,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF size(im, / type) NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -712,24 +737,18 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   mxx = max(im, min = mii)
   IF mxx GT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image maximum is larger than 2 BYTE): ', input
+    printf, 9, 'Skipping invalid input (Image maximum is larger than 2 BYTE) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF ELSE IF mxx LT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE)) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
   IF mii GT 1b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)) '
     close, 9
     GOTO, skip_mspa  ;; invalid input
   ENDIF
@@ -743,16 +762,28 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   pushd, dir_proc
   tmp_in = 'inputmorph.tif'
   tmp_out = 'outputmorph.tif'
-  write_tiff, tmp_in, temporary(im), compression = 1
+  write_tiff, tmp_in, temporary(im), compression = 1, /BIGTIFF
   file_copy, dir_gwb + '/mspa_lin64', 'mspa', /overwrite
   
   ;; execute the segmentation
-  cmd = './mspa -graphfg ' + c_FGconn + $
-    ' -eew ' + c_size + ' -internal ' + c_intext + $
-    ' -transition ' + c_trans + tdisk + $
-    ' -i inputmorph.tif -o outputmorph.tif -odir ./'
-  spawn, cmd, log
+;  cmd = './mspa -graphfg ' + c_FGconn + ' -eew ' + c_size + ' -internal ' + c_intext + $
+;    ' -transition ' + c_trans + tdisk + ' -i inputmorph.tif -o outputmorph.tif -odir ./'
+;  spawn, cmd, log
+;
+; a little bit faster...
+  cmdarr = ['./mspa', '-graphfg', c_FGconn, '-eew', c_size, '-internal', c_intext, '-transition', c_trans]  
+  if c_disk eq '1' then begin
+    cmdarr = [[cmdarr], '-disk', '-i', 'inputmorph.tif', '-o', 'outputmorph.tif', '-odir', './']
+  endif else begin
+    cmdarr = [[cmdarr], '-i', 'inputmorph.tif', '-o', 'outputmorph.tif', '-odir', './']
+  endelse  
+  spawn, cmdarr, log, /noshell   
+    
   im = read_tiff(tmp_out)
+  ;; fix large size MSPA bug
+  IF c_size EQ '1' THEN BEGIN
+    q = where(im EQ 2b, ct, /l64) & IF ct GT 0 THEN im[q] = 0b 
+  ENDIF  
   file_delete, tmp_in, tmp_out, /allow_nonexistent, /quiet
   popd
   
@@ -766,9 +797,10 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   
   ;; add the geotiff info if available
   IF is_geotiff gt 0 THEN $
-    write_tiff, fn_out, im, red = r, green = g, blue = b, geotiff = geotiff, description = desc, compression = 1 ELSE $
-    write_tiff, fn_out, im, red = r, green = g, blue = b, description = desc, compression = 1
-
+    write_tiff, fn_out, im, red = r, green = g, blue = b, geotiff = geotiff, compression = 1 ELSE $
+    write_tiff, fn_out, im, red = r, green = g, blue = b, compression = 1
+  gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+  spawn, gedit + fn_out + ' > /dev/null 2>&1'
   
   if tstats eq 0b then goto, skip_stats ;; statistical summary not wanted
   
@@ -805,9 +837,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; update the log-file
   okfile = okfile + 1
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
   printf, 9, 'MSPA comp.time [sec]: ', systime( / sec) - time0
   close, 9
 

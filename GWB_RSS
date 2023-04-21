@@ -1,38 +1,46 @@
 #!/bin/bash
-#
 # This script starts an IDL Runtime or Virtual Machine application
-# from an IDL installation located in a subdirectory of the directory
-# containing the script.
-#
-
-# are we running headless?
+# Are we running headless?
 if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
 
-# Find the location of this script
-topdir=$(dirname "$0")
-if test "$topdir" = "." ; then
-   topdir=$PWD;
+# check for system or standalone mode and set default parameters
+if [ "$0" == "/usr/bin/GWB_RSS" ] &&  [ -f "/opt/GWB/tools/GWB_version.txt" ]; then
+  v_installed=$(cat /opt/GWB/tools/GWB_version.txt)
+  standalone=0
+  topdir=/opt/GWB
+elif  [ "$0" == "./GWB_RSS" ] &&  [ -f "tools/GWB_version.txt" ]; then
+  v_installed=$(cat tools/GWB_version.txt)
+  standalone=1
+  topdir=$PWD
+  DIR_INPUT=$topdir"/input"
+  DIR_OUTPUT=$topdir"/output"
+else
+  echo "Please run this script from /usr/bin/ or from your local GWB installation"
+  exit 1
 fi
-cd "$topdir" || exit
 
 # check status of GWB
 checker="$topdir"/GWB_check4updates
-if [[ -f "$checker" ]];then
-  GWBstatus=$("$checker" >/dev/null; echo $?)
-  if [ "$GWBstatus" == "49" ]; then
+if [ ! -f "$checker" ]; then
+  echo "GWB installation corrupted, please reinstall."
+  exit 1
+fi
+GWBstatus=$("$checker" >/dev/null; echo $?)
+if [ "$GWBstatus" == "49" ]; then
     echo ""
     echo "*********************** Attention ************************"
     echo "GWB outdated. Please upgrade to the current version at:"
     echo "https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/"
     echo "*********************** Attention ************************"
     echo ""
-  fi
 fi
 
-#set default parameters:
-DIR_INPUT=$topdir"/input"
-DIR_OUTPUT=$topdir"/output"
-standalone=1
+options="$*"
+# if no option is provided in system-mode:
+if [ "$standalone" -eq 0 ] && [  "$options" == "" ]; then
+    echo "usage: GWB_RSS --help"
+    exit 1
+fi
 
 #read parameters from command line
 #=================================================
@@ -42,37 +50,55 @@ do
    case $i in
        -i=*)
        DIR_INPUT="${i#*=}"
-       standalone=0
        shift
        ;;
        -o=*)
        DIR_OUTPUT="${i#*=}"
-       standalone=0
        shift
        ;;
-       --default)
+       --nox)
+       headless='1'
+       echo "Note: after execution, the cmd-line message: "
+       echo "'% Program caused arithmetic error: Floating illegal operand'"
+       echo "can be safely ignored."
        shift
+       ;;
+       -v | --version)
+       echo "GWB version: $v_installed"
+       exit
        ;;
        -h|--help)
        echo "----------------------------------------------------------------------------------"
-       echo "usage: $0 -i=dir_input -o=dir_output"
-       echo "-i=<full path to directory 'input'> "
-       echo "  (with your input images and parameter files);" 
-       echo "  Standalone mode: GWB/input "
-       echo "-o=<full path to directory 'output'> "
-       echo "  (location for results, must exist and must be empty);"
-       echo "  Standalone mode: GWB/output "
-       echo "--help: show options"
-       echo ""
-       echo "Standalone mode: ./GWB_RSS"
-       echo "System mode/use custom directories: GWB_RSS -i=<your dir_input> -o=<your dir_output>"
+       echo " 1) System mode - you MUST specify custom directories:"
        echo "----------------------------------------------------------------------------------"
+       echo "GWB_RSS -i=<your dir_input> -o=<your dir_output>"
+       echo "-i=<full path to directory 'input'> "
+       echo "     (with your input images and parameter files)"
+       echo "-o=<full path to directory 'output'> "
+       echo "     (location for results, must exist and must be empty)"
+       echo " "
+       echo "----------------------------------------------------------------------------------"
+       echo " 2) Standalone mode - fixed directory setup:"
+       echo "----------------------------------------------------------------------------------"
+       echo "cd into: $HOME/GWB$v_installed/GWB"
+       echo "then run the command: ./GWB_RSS"
+       echo "Note: standalone mode enforces using the default standalone"
+       echo "- input directory: $HOME/GWB$v_installed/GWB/input "
+       echo "  (with your input images and parameter files);"
+       echo "- output directory: $HOME/GWB$v_installed/GWB/output "
+       echo "  (location for results, must exist and must be empty);"
+       echo "----------------------------------------------------------------------------------"
+       echo " "
+       echo "other cmd-line options:"
+       echo "--help: show cmd-line options"
+       echo "--nox: enforce headless execution via xvfb-run"
+       echo "--version: show GWB version number"
        exit
        ;;
        *)
        # unknown option
-       echo "Error: unknown option"
-       echo "usage: $0 --help"
+       echo "Error: unknown option $i"
+       echo "usage: GWB_RSS --help"
        exit
        ;;
    esac
@@ -100,16 +126,15 @@ if [ ! -w "$GWBCONF" ];then
 fi  
 
 # provide license info
-EULAOK=$GWBCONF/EULA.txt
+EULAOK="$GWBCONF"EULA.txt
 licfile=$topdir"/EULA_GWB.pdf"
-if [ "$topdir" == "/usr/bin" ] || [ "$topdir" == "/opt/GWB" ];then licfile="/opt/GWB/EULA_GWB.pdf"; fi
 if [ ! -e "$EULAOK" ]; then
   echo " "
   echo "   GWB (GuidosToolbox Workbench) EULA information"
   echo "================================================================"
   if [ "${headless}" == "1" ]; then
     echo "To use GWB you must accept the terms outlined in"
-    echo $licfile
+    echo "$licfile"
     echo "(https://ies-ows.jrc.ec.europa.eu/gtb/GWB/EULA_GWB.pdf)"
     echo " "
   else
@@ -126,67 +151,99 @@ if [ ! -e "$EULAOK" ]; then
   echo "GWB EULA agreed" > "$EULAOK"
 fi
 
-# did we get the full-path?
-if [ "${DIR_INPUT:0:1}" != "/" ]; then
-  echo "Please provide the full pathname to the input directory"
-  exit 1
-fi
-if [ "${DIR_OUTPUT:0:1}" != "/" ]; then
-  echo "Please provide the full pathname to the output directory"
-  exit 1
-fi
-
-# are there any empty spaces in the directory path name?
-if [[ "$DIR_INPUT" =~ \ |\' ]]; then 
-  echo "empty spaces or ' in input directory pathname '${DIR_INPUT}' "
-  exit 1
-fi
-if [[ "$DIR_OUTPUT" =~ \ |\' ]]; then 
-  echo "empty spaces or ' in output directory pathname '${DIR_OUTPUT}' "
-  exit 1
-fi
-
-# do we have write access in $DIR_INPUT and $DIR_OUTPUT?
-if [ ! -d "$DIR_INPUT" ];then 
-  echo "The input directory '${DIR_INPUT}' does not exist"
-  echo "Use the -i= option to specify your input directory"
-  exit 1
-fi  
-if [ ! -w "$DIR_INPUT" ];then 
-  echo "You have no write permissions in the input directory '${DIR_INPUT}'"
-  echo "Use the -i= option to specify your input directory"
-  exit 1
-fi  
-if [ ! -d "$DIR_OUTPUT" ];then 
-  echo "The output directory '${DIR_OUTPUT}' does not exist"
-  echo "Use the -o= option to specify your output directory"
-  exit 1
-fi  
-if [ ! -w "$DIR_OUTPUT" ];then 
-  echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
-  echo "Use the -o= option to specify your output directory"
-  exit 1
-fi  
-
-if [ "$DIR_OUTPUT" == "$DIR_INPUT" ];then 
-  echo "input and output directory must be different"
-  exit 1
-fi  
-
-# is DIR_OUTPUT empty?
-if [ "$(ls -A "$DIR_OUTPUT")" ]; then 
-  echo "Please empty the output directory '${DIR_OUTPUT}'"
-  exit 1
+#############################
+### we are in standalone mode #####
+#############################
+# if standalone mode is active (1), reset the input/output directories to the default
+if [ "$standalone" -eq 1 ]; then
+  DIR_INPUT=$topdir"/input"
+  DIR_OUTPUT=$topdir"/output"
+  echo "*********************** Attention ************************"
+  echo "Running in standalone mode implies using"
+  echo "the default standalone input/output directories:"
+  echo "$DIR_INPUT"
+  echo "$DIR_OUTPUT"
+  echo "*********************** Attention ************************"
+  if [ ! -d "$DIR_INPUT" ];then
+   echo "The input directory '${DIR_INPUT}' does not exist"
+   exit 1
+ fi
+ if [ ! -d "$DIR_OUTPUT" ];then
+   echo "The output directory '${DIR_OUTPUT}' does not exist"
+   exit 1
+ fi
+ if [ ! -w "$DIR_OUTPUT" ];then
+   echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
+   exit 1
+ fi
+ # is DIR_OUTPUT empty?
+ if [ "$(ls -A "$DIR_OUTPUT")" ]; then
+   echo "Please empty the output directory '${DIR_OUTPUT}'"
+   exit 1
+ fi
 fi
 
-rm -f "$GWBCONF"/gwb_dirs.txt
+
+#############################
+### we are in system mode ########
+#############################
+if [ "$standalone" -eq 0 ];then
+    # did we get the full-path?
+    if [ "${DIR_INPUT:0:1}" != "/" ]; then
+      echo "Please provide the full pathname to the input directory"
+      exit 1
+    fi
+    if [ "${DIR_OUTPUT:0:1}" != "/" ]; then
+      echo "Please provide the full pathname to the output directory"
+      exit 1
+    fi
+    # are there any empty spaces in the directory path name?
+    if [[ "$DIR_INPUT" =~ \ |\' ]]; then
+      echo "empty spaces or ' in input directory pathname '${DIR_INPUT}' "
+      exit 1
+    fi
+    if [[ "$DIR_OUTPUT" =~ \ |\' ]]; then
+      echo "empty spaces or ' in output directory pathname '${DIR_OUTPUT}' "
+      exit 1
+    fi
+    # do we have write access in $DIR_INPUT and $DIR_OUTPUT?
+    if [ ! -d "$DIR_INPUT" ];then
+      echo "The input directory '${DIR_INPUT}' does not exist"
+      echo "Use the -i= option to specify your input directory"
+      exit 1
+    fi
+    if [ ! -w "$DIR_INPUT" ];then
+      echo "You have no write permissions in the input directory '${DIR_INPUT}'"
+      echo "Use the -i= option to specify your input directory"
+      exit 1
+    fi
+    if [ ! -d "$DIR_OUTPUT" ];then
+      echo "The output directory '${DIR_OUTPUT}' does not exist"
+      echo "Use the -o= option to specify your output directory"
+      exit 1
+    fi
+    if [ ! -w "$DIR_OUTPUT" ];then
+      echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
+      echo "Use the -o= option to specify your output directory"
+      exit 1
+    fi
+    if [ "$DIR_OUTPUT" == "$DIR_INPUT" ];then
+      echo "input and output directory must be different"
+      exit 1
+    fi
+    # is DIR_OUTPUT empty?
+    if [ "$(ls -A "$DIR_OUTPUT")" ]; then
+      echo "Please empty the output directory '${DIR_OUTPUT}'"
+      exit 1
+    fi
+fi
+
+rm -f "$GWBCONF"gwb_dirs.txt
 # write selected settings to startup file if in system mode
 if [ "$standalone" -eq 0 ];then
-  echo "$DIR_INPUT" > "$GWBCONF"/gwb_dirs.txt
-  echo "$DIR_OUTPUT" >> "$GWBCONF"/gwb_dirs.txt
-  topdir=/opt/GWB
-    
-#   copy parameter files if not already there
+  echo "$DIR_INPUT" > "$GWBCONF"gwb_dirs.txt
+  echo "$DIR_OUTPUT" >> "$GWBCONF"gwb_dirs.txt
+  #   copy parameter files if not already there
   fparam="$DIR_INPUT"/rss-parameters.txt
   if [ ! -e "$fparam" ];then
    cp -f $topdir/input/backup/rss-parameters.txt "$fparam"
@@ -209,9 +266,22 @@ idl_install_dir=$topdir/tools/idl
 IDL_DIR=$idl_install_dir ; export IDL_DIR
 
 # Run the application
+logram="$GWBCONF"gwb_rss_pram.txt
+# output Peak RAM usage (kb) if /usr/bin/time is available
+cmd1=' '
+if [[ -f "/usr/bin/time" ]];then cmd1=(command time --output="$logram" --format="%M"); fi
 if [ "${headless}" == "1" ]; then
-  exec xvfb-run -a $IDL_DIR/bin/idl -rt=$idlapp
+  ${cmd1[@]} xvfb-run -a "$IDL_DIR"/bin/idl -rt="$idlapp"
 else
-  exec $IDL_DIR/bin/idl -rt=$idlapp
+  ${cmd1[@]} "$IDL_DIR"/bin/idl -rt="$idlapp"
 fi
+
+# convert the peak RAM usage from kb into GB and add it to the end of the log-file
+if [[ -f "/usr/bin/time" ]];then
+  logidl="$GWBCONF"gwb_rss_log.txt
+  logfile=$(cat "$logidl")
+  pruse=$(awk "BEGIN {print $(cat "$logram")/1024^2}")
+  echo 'Peak RAM use [GB]: '"$pruse" >> "$logfile"
+fi
+exit
 

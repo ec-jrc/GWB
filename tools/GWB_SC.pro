@@ -1,12 +1,12 @@
-PRO GWB_SPATCON
+PRO GWB_SC
 ;;==============================================================================
-;; GWB APP interface to spatcon 
+;; GWB APP interface to SpatCon 
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to run native spatcon
-;; more info in the GTB manual: https://docs.sepal.io/en/latest/cli/gwb.html
+;; IDL cmd-line app to run native SpatCon
+;; more info at: https://docs.sepal.io/en/latest/cli/gwb.html
 ;;
 ;; Requirements: no external requirements
 ;;
@@ -19,12 +19,13 @@ PRO GWB_SPATCON
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SPATCON (version 1.9.0)'
+GWB_mv = 'GWB_SC (version 1.9.1)'
 ;;
 ;; Module changelog:
-;; 1.9.0: initial release: extended from GWP_P223 to provide full spatcon access,
+;; 1.9.1: SpatCon bugfix, SW tag, rename to GWB_SC
+;; 1.9.0: initial release of GWB_SPATCON: extended from GWB_P223 to provide full SpatCon access,
 ;;        added note to restore files, IDL 8.8.3
-;;        fixed spatcon binary for consistent float output       
+;;        fixed SpatCon binary for consistent float output       
 ;;
 ;;==============================================================================
 ;; Input: at least 2 files in the subfolder "input"
@@ -32,21 +33,21 @@ GWB_mv = 'GWB_SPATCON (version 1.9.0)'
 ;; a) input image(s) (geotiff):
 ;; at least 1 or more geotiff images in the subfolder "input"
 ;; the input image must be of data type byte and the appropriate assignment
-;; to be evaluated by the selected spatcon rule 
+;; to be evaluated by the selected SpatCon rule 
 ;;
-;; b) spatcon-parameters.txt: (see header info in input/spatcon-parameters.txt)
-;;  - spatcon rule
+;; b) sc-parameters.txt: (see header info in input/sc-parameters.txt)
+;;  - SpatCon rule
 ;;  - moving window size [pixels]
 ;;  - switch for high precision (on/off)
 ;;
 ;;==============================================================================
 ;; Output: in the subfolder "output"
 ;;==============================================================================
-;; native spatcon output
+;; native SpatCon output
 ;; 
 ;; Processing steps:
 ;; 1) verify parameter file and compatibility of input image
-;; 2) run spatcon rule
+;; 2) run SpatCon rule
 ;; 3) post-process: write-out
 ;;
 ;;==============================================================================
@@ -76,7 +77,7 @@ IF res.exists EQ 1b THEN BEGIN
 ENDIF
 
 ;; echo selected directories
-print,'GWB_SPATCON using:'
+print,'GWB_SC using:'
 if standalone eq 1 then dir_input = dir_inputdef + "/input"
 if standalone eq 1 then dir_output = dir_inputdef + "/output"
 print, 'dir_input= ', dir_input 
@@ -90,7 +91,7 @@ IF ct_tifs EQ 0 THEN BEGIN
   print, "Exiting..."
   goto,fin
 ENDIF
-mod_params = dir_input + '/spatcon-parameters.txt'
+mod_params = dir_input + '/sc-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
@@ -103,7 +104,7 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file
 ;;==============================================================================
-;; read spatcon settings, we need at least 3 valid lines
+;; read SpatCon settings, we need at least 3 valid lines
 fl = file_lines(mod_params)
 IF fl LT 3 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
@@ -130,16 +131,15 @@ IF ct LT 3 THEN BEGIN
 ENDIF
 ;; get and check parameters
 finp = strtrim(finp[q],2)
-scp = ['r ', 'w ', 'a ', 'b ', 'h ', 'f '] ;; spatcon parameters to check for
-;; For now, we do not use the spatcon parameters z (recode) and m (missing after having done recoding)
+scp = ['r ', 'w ', 'a ', 'b ', 'h ', 'f '] ;; SpatCon parameters to check for
 
-;; 1) R: get the spatcon mapping rule
+;; 1) R: get the SpatCon mapping rule
 ;; valid entries: {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83}
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 q = where(strlowcase(strmid(finp,0,2)) eq 'r ') & q = q[0]
 if q lt 0 then begin
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "no line with valid spatcon parameter 'r <rule number>' found."
+  print, "no line with valid SpatCon parameter 'r <rule number>' found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -149,75 +149,75 @@ endif
 
 sc_r = (strsplit(finp(q),' ',/extract))[1]
 ;; sc_r_str: header info in log-file
-;; px: filename abbreviation string
-px = 'rule' + sc_r
+;; px: filename abbreviation string, px2 in log-file
+px = 'rule' + sc_r & px2 = 'SC-rule ' + sc_r
 case sc_r of 
   '1': BEGIN
-    sc_r_str = 'Spatcon-rule 1: Majority pixel value'
+    sc_r_str = 'SC-rule 1: Majority pixel value'
   END
   '6': BEGIN
-    sc_r_str = 'Spatcon-rule 6: Landscape Mosaic 19-class'
+    sc_r_str = 'SC-rule 6: Landscape Mosaic 19-class'
   END
   '7': BEGIN
-    sc_r_str = 'Spatcon-rule 7: Landscape Mosaic 103-class'
+    sc_r_str = 'SC-rule 7: Landscape Mosaic 103-class'
   END
   '10': BEGIN
-    sc_r_str = 'Spatcon-rule 10: Number of unique byte values'
+    sc_r_str = 'SC-rule 10: Number of unique byte values'
   END
   '20': BEGIN
-    sc_r_str = 'Spatcon-rule 20: Median pixel value'
+    sc_r_str = 'SC-rule 20: Median pixel value'
   END
   '21': BEGIN
-    sc_r_str = 'Spatcon-rule 21: Mean pixel value'
+    sc_r_str = 'SC-rule 21: Mean pixel value'
   END
   '51': BEGIN
-    sc_r_str = 'Spatcon-rule 51: Gini-Simpson pixel diversity'
+    sc_r_str = 'SC-rule 51: Gini-Simpson pixel diversity'
   END
   '52': BEGIN
-    sc_r_str = 'Spatcon-rule 52: Gini-Simpson pixel evenness'
+    sc_r_str = 'SC-rule 52: Gini-Simpson pixel evenness'
   END
   '53': BEGIN
-    sc_r_str = 'Spatcon-rule 53: Shannon pixel evenness'
+    sc_r_str = 'SC-rule 53: Shannon pixel evenness'
   END
   '54': BEGIN
-    sc_r_str = 'Spatcon-rule 54: Pmax'
+    sc_r_str = 'SC-rule 54: Pmax'
   END
   '71': BEGIN
-    sc_r_str = 'Spatcon-rule 71: Angular second moment'
+    sc_r_str = 'SC-rule 71: Angular second moment'
   END
   '72': BEGIN
-    sc_r_str = 'Spatcon-rule 72: Gini-Simpson adjacency evenness'
+    sc_r_str = 'SC-rule 72: Gini-Simpson adjacency evenness'
   END
   '73': BEGIN
-    sc_r_str = 'Spatcon-rule 73: Shannon adjacency evenness'
+    sc_r_str = 'SC-rule 73: Shannon adjacency evenness'
   END
   '74': BEGIN
-    sc_r_str = 'Spatcon-rule 74: Sum of diagonals'
+    sc_r_str = 'SC-rule 74: Sum of diagonals'
   END
   '75': BEGIN
-    sc_r_str = 'Spatcon-rule 75: Proportion of total adjacencies involving a specific pixel value'
+    sc_r_str = 'SC-rule 75: Proportion of total adjacencies involving a specific pixel value'
   END
   '76': BEGIN
-    sc_r_str = 'Spatcon-rule 76: Proportion of total adjacencies which are between two specific pixel values'
+    sc_r_str = 'SC-rule 76: Proportion of total adjacencies which are between two specific pixel values'
   END
   '77': BEGIN
-    sc_r_str = 'Spatcon-rule 77: Proportion of adjacencies involving a specified pixel value which are adjacencies with that same pixel value'
+    sc_r_str = 'SC-rule 77: Proportion of adjacencies involving a specified pixel value which are adjacencies with that same pixel value'
   END
   '78': BEGIN
-    sc_r_str = 'Spatcon-rule 78: Proportion of adjacencies involving a specific pixel value which are adjacencies between that pixel value and another specific pixel value'
+    sc_r_str = 'SC-rule 78: Proportion of adjacencies involving a specific pixel value which are adjacencies between that pixel value and another specific pixel value'
   END
   '81': BEGIN
-    sc_r_str = 'Spatcon-rule 81: Area density'
+    sc_r_str = 'SC-rule 81: Area density'
   END
   '82': BEGIN
-    sc_r_str = 'Spatcon-rule 82: Ratio of the frequencies of two specified pixel values'
+    sc_r_str = 'SC-rule 82: Ratio of the frequencies of two specified pixel values'
   END
   '83': BEGIN
-    sc_r_str = 'Spatcon-rule 83: Combined ratio of two specific pixel values'
+    sc_r_str = 'SC-rule 83: Combined ratio of two specific pixel values'
   END
   ELSE: BEGIN
     print, "The file: " + mod_params + " is in a wrong format."
-    print, "R: SPATCON rule is not in {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83}."
+    print, "R: SpatCon rule is not in {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83}."
     print, "Or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
@@ -230,7 +230,7 @@ ENDCASE
 q = where(strlowcase(strmid(finp,0,2)) eq 'w ') & q = q[0]
 if q lt 0 then begin
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "W: no line with valid spatcon parameter 'W <window size number>' found."
+  print, "W: no line with valid SpatCon parameter 'W <window size number>' found."
   print, "Please copy the respective backup file into your input directory:"
   print, dir_inputdef + "/input/backup/*parameters.txt"
   print, "Or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -343,7 +343,7 @@ endif else begin
     goto,fin
   ENDIF
 endelse
-;; do we want recoding? If so, then prepare the recoding table for spatcon
+;; do we want recoding? If so, then prepare the recoding table for SpatCon
 if sc_z eq '1' then begin
   rec_file = dir_input + '/rec-parameters.txt'
   IF (file_info(rec_file)).exists EQ 0b THEN BEGIN
@@ -474,10 +474,15 @@ file_mkdir, dir_proc
 
 ;;==============================================================================
 ;;==============================================================================
-;; apply spatcon settings in a loop over all tif images 
+;; apply SpatCon settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
-fn_logfile = dir_output + '/' + px + '_' + sc_w + '.log' 
+desc = 'GTB_SC, https://forest.jrc.ec.europa.eu/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+
+fn_logfile = dir_output + '/SpatCon.log' 
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
 
@@ -489,18 +494,34 @@ printf, 9, 'Window size: ' + sc_w + 'x' + sc_w + prec
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_sc_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
-  counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)  
+  input = dir_input + '/' + list[fidx] 
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
   
-  input = dir_input + '/' + list[fidx] & res = strpos(input,' ') ge 0
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'Rule dependent RAM requirements'
+  close, 9
+  
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Skipping invalid input (empty space in directory path or input filename): '
-    printf, 9, input
     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
@@ -508,10 +529,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Skipping invalid input (not a TIF image): '
-    printf, 9, input
     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
@@ -519,11 +537,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): '
-    printf, 9, input
-    close, 9
+     printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): '
+     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
 
@@ -537,10 +552,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF size(im, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): '
-    printf, 9, input
     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
@@ -549,31 +561,25 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF size(im, / type) NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Skipping invalid input (image is not of type BYTE): '
-    printf, 9, input
     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
     
   IF sc_w_fix ge mindim THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
     printf, 9, 'Window dimension larger than x or y image dimension. ' 
-    printf, 9, input
     close, 9
     GOTO, skip_sc  ;; invalid input
   ENDIF
 
   good2go:
   ;;==============================================================================
-  ;; 2) process for spatcon
+  ;; 2) process for SpatCon
   ;;==============================================================================
   time0 = systime( / sec)
     
-  ;; run spatcon (Spatial Convolution metrics by K.Riitters)
+  ;; run SpatCon (Spatial Convolution metrics by K.Riitters)
   pushd, dir_proc
   resfloat = fix(sc_f)
   openw,1, 'scsize.txt'
@@ -592,45 +598,38 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf,1,'z ' + sc_z
   printf,1,'m ' + sc_m
   close,1
-  okfile = okfile + 1
 
-  ;; echo the final assigned settings to the log-file
-  if okfile eq 1 then begin
-    openw, 9, fn_logfile, /append
-    printf, 9, 'Spatcon parameters assigned: '
-    tt = strarr(file_lines('scpars.txt'))
-    close, 10 & openr, 10, 'scpars.txt' & readf, 10, tt & close, 10
-    for ii = 0,n_elements(tt)-1 do printf, 9, tt(ii)
-    printf, 9, '==============================================='
-    close, 9
-  endif 
+  ;; echo the assigned settings to the log-file
+  openw, 9, fn_logfile, /append
+  printf, 9, 'Spatcon parameters assigned: '
+  tt = strarr(file_lines('scpars.txt'))
+  close, 10 & openr, 10, 'scpars.txt' & readf, 10, tt & close, 10
+  for ii = 0,n_elements(tt)-1 do printf, 9, tt(ii)
+  close, 9
   
   openw, 1, 'scinput' & writeu,1, im & close,1
   file_copy, dir_gwb + '/spatcon_lin64', 'spatcon', /overwrite
   
-  ;; do we want recoding? If so, then prepare the recoding table for spatcon 
+  ;; do we want recoding? If so, then prepare the recoding table for SpatCon 
   if sc_z eq '1' then begin
     file_copy, dir_input + '/screcode.txt', 'screcode.txt'
   endif
   
-  ;; run spatcon
+  ;; run SpatCon
   spawn, './spatcon', log
   
   ;; get result
   im = bytarr(sz(0),sz(1)) 
   if resfloat eq 1 then im=float(im)
-  ;; if we get a spatcon error then the last entry will not be "Normal Finish" 
+  ;; if we get a SpatCon error then the last entry will not be "Normal Finish" 
   res = log[n_elements(log)-1] & res = strpos(strlowcase(res), 'normal finish') gt 0
   if res eq 0 then begin
     file_delete, 'scinput', 'scoutput', 'scpars.txt', 'scsize.txt', 'screcode.txt', /allow_nonexistent,/quiet
     popd
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'File: ' + input
-    printf, 9, strupcase(px) + ' comp.time [sec]: ', systime( / sec) - time0
+    printf, 9, px2 + ' comp.time [sec]: ', systime( / sec) - time0
     printf, 9, '+++++++++++++++++++++++++++++++++'
-    printf, 9, '                SPATCON error output:'
+    printf, 9, '                SpatCon error output:'
     for idd = 0, n_elements(log)-1 do printf, 9, log[idd]
     printf, 9, '+++++++++++++++++++++++++++++++++'
     printf, 9, '  '
@@ -642,7 +641,9 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   file_delete, 'scinput', 'scoutput', 'scpars.txt', 'scsize.txt', 'screcode.txt', /allow_nonexistent,/quiet
   popd
   
-  ;; write out the original spatcon output
+  ;; when we arrive here then SpatCon worked ok.
+  okfile = okfile + 1
+  ;; write out the original SpatCon output
   fbn = file_basename(list[fidx], '.tif')
   outdir = dir_output + '/' + fbn + '_' + px + '_' + sc_w & file_mkdir, outdir
   fn_out = outdir + '/' + fbn + '_' + px + '_' + sc_w + '.tif'
@@ -651,14 +652,12 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ENDIF ELSE BEGIN
     write_tiff, fn_out, im, float = resfloat, compression = 1
   ENDELSE
+  spawn, gedit + fn_out + ' > /dev/null 2>&1'
   im = 0
 
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input 
-  printf, 9, strupcase(px) + ' comp.time [sec]: ', systime( / sec) - time0
-  printf, 9, '                SPATCON log:'
+  printf, 9, px2 + ' comp.time [sec]: ', systime( / sec) - time0
+  printf, 9, '                SpatCon log:'
   for idd = 0, n_elements(log)-1 do printf, 9, log[idd]
   close, 9
   
@@ -682,12 +681,12 @@ IF proct LT 60.0 THEN proctstr = strtrim(round(proct),2) + ' secs'
 openw, 9, fn_logfile, /append
 printf, 9, ''
 printf, 9, '==============================================='
-printf, 9, strupcase(px) + ' Batch Processing total comp.time: ', proctstr
+printf, 9,  px2 + ' Batch Processing total comp.time: ', proctstr
 printf, 9, 'Successfully processed files: ',strtrim(okfile,2)+'/'+ strtrim(nr_im_files,2)
 printf, 9, '==============================================='
 close, 9
 
-print, strupcase(px) + ' finished sucessfully'
+print, px2 + ' finished sucessfully'
 
 fin:
 file_delete, dir_input + '/screcode.txt', /allow_nonexistent,/quiet

@@ -8,3 +8,5 @@ Parameter files: *-parameter.txt
 Directory backup: not needed for processing
 - a set of backup parameter files is included here
 - temporarily store images here that you want to exclude from processing
+
+Directory splitlump:  empty, will contain the output of GWB_SPLITLUMP

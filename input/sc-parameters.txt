@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GWB_SPATCON parameter file:
+;; GWB_SC parameter file:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; For all output types, missing indicates the input window contained only
 ;; missing pixels or missing pixel adjacencies.
@@ -32,21 +32,21 @@
 ;;    82 = Ratio of the frequencies of two specified pixel values
 ;;    83 = Combined ratio of two specific pixel values
 ;;
-;; for more details on SPATCON, see the Technical Note and/or source code at:
+;; for more details on SpatCon, see the Guide and/or source code at:
 ;; https://github.com/ec-jrc/GWB/tree/main/tools/external_sources/
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; spatcon parameters for all rules (some rules use only a subset of all parameters)
-;; R (mapping rule in {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83})
-;; W (window size - minimum 3, maximum < x or y dimension of input map)
-;; A (first target code - required for mapping rules 75, 76, 77, 78, 81, 82, 83. Default = 0)
-;; B (second target code - required for mapping rules 76, 78, 82, 83. Default = 0)
-;; H (handling of missing values or adjacencies: 1-ignore. 2-include;  -no effect for mapping rules 21, 82, 83. Default = 1)
-;; F (output precision: 0 = 8-bit byte. 1 = 32-bit float. Float is not available for mapping rules 1, 6, 7, 10. Default = 0)
-;; Z (Request re-code of input pixels. 0 = No. 1 = Yes. Default = 0)
-;; M (AFTER optional re-coding (z = 1), the pixel value that is missing. Default = 0)
+;; SpatCon parameters for all rules (some rules use only a subset of all parameters)
+;;  R x = mapping rule, x in {1,6,7,10,20,21,51,52,53,54,71,72,73,74,75,76,77,78,81,82,83}
+;;  W x = window size - minimum 3, maximum < x or y dimension of input map
+;;  A x = first target code - required for mapping rules 75, 76, 77, 78, 81, 82, 83. Default = 0
+;;  B x = second target code - required for mapping rules 76, 78, 82, 83. Default = 0
+;;  H x = handling of missing values or adjacencies: 1-ignore. 2-include;  -no effect for mapping rules 21, 82, 83. Default = 1
+;;  F x = output precision: 0 = 8-bit byte. 1 = 32-bit float. Float is not available for mapping rules 1, 6, 7, 10. Default = 0
+;;  Z x = Request re-code of input pixels. 0 = No. 1 = Yes. Default = 0
+;;  Mx = AFTER optional re-coding (z = 1), the pixel value that is missing. Default = 0
 ;;
 ;; NOTE: parameters R and W are mandatory. Parameters that are not specified will use their default value.
-;; Example parameter file for running spatcon rule Majority and using a 27x27 window:
+;; Example parameter file for running SpatCon rule Majority and using a 27x27 window:
 ;; R 1
 ;; W 27
 ****************************************************************************

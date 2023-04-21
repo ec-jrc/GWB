@@ -28,6 +28,7 @@ e) subdirectory: tools/external_sources
 GWB-required C-source and python code of external programs:
 -   fsp: directory with source files and instructions needed to compile GTB/GWB-amended version of mspa requiring miallib: https://github.com/ec-jrc/jeolib-miallib
 -   recode: recode.c
+-   grayspatcon: grayspatcon.c
 -   spatcon: spatcon.c
 -   gdalcopyproj.py
 

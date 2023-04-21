@@ -17,21 +17,22 @@
 ;; line 32: FAC_5 (default)  or  FAC_6, FAC-APP_2, FAC_APP_5, FAD_5, FAD_6, FAD-APP_2  or  FAD-APP_5
 ;; line 33: Foreground connectivity: 8 (default) or 4
 ;; line 34: pixel resolution [meters]
-;; line 35: up to 10 window sizes (unit: pixels, uneven within [3, 501] )
-;;          in increasing order and separated by a single space.
-;; line 36: high-precision: 1 (default) or 0
-;;          (1-float precision, 0-rounded byte)
+;; line 35: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
+;; line 36: high-precision: 1-float precision  (default)  or 0-rounded byte
+;; line 37: statistics: 0 (default) or 1 (add summary statistics)
 ;;
-;; an example parameter file using the default FAC5 and 8-connected foreground:
+;; an example parameter file using the default settings:
 ;; FAC_5
 ;; 8
 ;; 100
 ;; 27
 ;; 1
+;; 0
 ****************************************************************************
 FAC_5
 8
 100
 27
+1
 1
 ****************************************************************************

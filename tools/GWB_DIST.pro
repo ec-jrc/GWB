@@ -20,9 +20,10 @@ PRO GWB_DIST
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_DIST (version 1.9.0)'
+GWB_mv = 'GWB_DIST (version 1.9.1)'
 ;;
 ;; Module changelog:
+;; 1.9.1: added image size info, SW tag
 ;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -104,8 +105,8 @@ mod_params = dir_input + '/dist-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -118,8 +119,8 @@ fl = file_lines(mod_params)
 IF fl LT 2 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -133,8 +134,8 @@ q = where(strlen(strtrim(finp,2)) GT 0, ct)
 IF ct LT 2 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -147,7 +148,9 @@ endif else if c_FGconn eq '4' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -156,7 +159,9 @@ true = (addhmc eq '1') + (addhmc eq '2')
 IF true EQ 0 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "EuclDist-HMC switch must be 1 or 2."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -165,6 +170,11 @@ ENDIF
 ;; run DIST in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
+desc = 'GTB_EUCL, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+
 fn_logfile = dir_output + '/dist.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
@@ -175,17 +185,34 @@ printf, 9, 'DIST batch processing logfile: ', systime()
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_dist_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
   counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  input = dir_input + '/' + list[fidx] 
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
+
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 18x RAM needed [GB]: ' + strtrim(imsizeGB*18.0,2)
+  close, 9
   
-  input = dir_input + '/' +list[fidx] & res = strpos(input,' ') ge 0
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
@@ -193,9 +220,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (not a TIF image): ', input
+    printf, 9, 'Skipping invalid input (not a TIF image)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
@@ -203,38 +228,31 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
 
   ;; read it
   geotiff = 0
-  im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
-  image0 = rotate(temporary(im),7)
-  IF nocheck EQ 1b THEN goto, good2go
-
+  image0 = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
 
   ;; check for single channel image
   ;;===========================
   IF size(image0, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
+
+  IF nocheck EQ 1b THEN goto, good2go
 
   ;; check for byte array
   ;;===========================
   IF size(image0, / type) NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
@@ -244,29 +262,24 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   mxx = max(image0, min = mii)
   IF mxx GT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image maximum is larger than 2 BYTE): ', input
+    printf, 9, 'Skipping invalid input (Image maximum is larger than 2 BYTE)'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF ELSE IF mxx LT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE))'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
   IF mii GT 1b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE))'
     close, 9
     GOTO, skip_dist  ;; invalid input
   ENDIF
 
   good2go:
+  image0 = rotate(temporary(image0),7)
   ;;==============================================================================
   ;; 2) process for Euclidean Distance
   ;;==============================================================================
@@ -313,19 +326,19 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   fbn = file_basename(list[fidx], '.tif')
   outdir = dir_output + '/' + fbn + '_dist' & file_mkdir, outdir
   fn_out = outdir + '/' + fbn + '_dist_viewport.tif'
-  desc = 'GTB_EUCL, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
-  ;; add the geotiff info if available
-  IF is_geotiff GT 0 THEN $
-    write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, geotiff = geotiff, description = desc, compression = 1 ELSE $
-    write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, description = desc, compression = 1
-  im = 0 
-  fn_out = outdir + '/' + fbn + '_dist.tif'
-  desc = 'GTB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
-  ;; add the geotiff info if available
-  IF is_geotiff GT 0 THEN $
-    write_tiff, fn_out, rotate(morphdist,7), geotiff = geotiff, description = desc, compression = 1, /float ELSE $
-    write_tiff, fn_out, rotate(morphdist,7), description = desc, compression = 1, /float
 
+  ;; add the geotiff info if available
+  IF is_geotiff GT 0 THEN $
+    write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, geotiff = geotiff, compression = 1 ELSE $
+    write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, compression = 1
+  spawn, gedit + fn_out + ' > /dev/null 2>&1' & im = 0 
+  
+  fn_out = outdir + '/' + fbn + '_dist.tif'
+  ;; add the geotiff info if available
+  IF is_geotiff GT 0 THEN $
+    write_tiff, fn_out, rotate(morphdist,7), geotiff = geotiff, compression = 1, /float ELSE $
+    write_tiff, fn_out, rotate(morphdist,7), compression = 1, /float
+  spawn, gedit + fn_out + ' > /dev/null 2>&1'
   ;; add barplot of distance distribution
   image0 = round(temporary(morphdist))
 
@@ -472,9 +485,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; update the log-file
   okfile = okfile + 1
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
   printf, 9, 'DIST comp.time [sec]: ', systime( / sec) - time0
   close, 9
 

@@ -20,9 +20,10 @@ PRO GWB_REC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.9.0)'
+GWB_mv = 'GWB_REC (version 1.9.1)'
 ;;
 ;; Module changelog
+;; 1.9.1: added image size info
 ;; 1.9.0: added note to restore files, simplify to read values to be recoded only, IDL 8.8.3
 ;; 1.8.8: use gdal only for recoding, added BIGTIFF switch, flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -96,8 +97,8 @@ mod_params = dir_input + '/rec-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -118,8 +119,8 @@ IF ctrec LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "(Recode table must have at least 1 row and no more than 256 rows)"
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -131,8 +132,8 @@ if ct gt 0 then begin
   print, "The file: " + mod_params + " is invalid:"
   print, "Row without 2 entries separated by a space detected"
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
@@ -143,8 +144,8 @@ for i = 0, ctrec-1 do begin
     print, "The file: " + mod_params + " is invalid:"
     print, "Row with more than 2 entries detected"
     print, "Please copy the respective backup file into your input directory:"
-    print, dir_inputdef + "/input/backup/*parameters.txt"
-    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
@@ -153,16 +154,20 @@ for i = 0, ctrec-1 do begin
   if a ne cc then begin
     print, "The file: " + mod_params + " is invalid:"
     print, 'First column (original value) has a wonky value of: ' + a
-    print, 'Correct to have values in [0, 255] only.'
-    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, 'Correct to have values in [0, 255] only, or'
+    print, "copy the respective backup file into your input directory:"
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
   if vx gt 255 then begin
     print, "The file: " + mod_params + " is invalid"
     print, 'First column (original value) has incorrect value of: ' + cc
-    print, 'Correct to have values in [0, 255] only.'
-    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, 'Correct to have values in [0, 255] only, or'
+    print, 'copy the respective backup file into your input directory:'
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
@@ -171,18 +176,20 @@ for i = 0, ctrec-1 do begin
   if b ne cc then begin
     print, "The file: " + mod_params + " is invalid:"
     print, 'Second column (recoded_value) has a wonky value of: ' + b
-    print, 'Correct to have new values in [0, 255] only, or'
+    print, 'Correct to have values in [0, 255] only, or.'
     print, 'copy the respective backup file into your input directory:'
-    print, dir_inputdef + "/input/backup/*parameters.txt"
-    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
   if vx gt 255 then begin
     print, "The file: " + mod_params + " is invalid"
     print, 'Second column (recoded_value) has incorrect value of: ' + cc
-    print, 'Correct to have values in [0, 255] only.'
-    print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, 'Correct to have values in [0, 255] only, or.'
+    print, 'copy the respective backup file into your input directory:'
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
     print, "Exiting..."
     goto,fin
   endif
@@ -217,6 +224,11 @@ spawn, 'gdalinfo --version', res & res = res[0]
 res = strmid(res, 5, strpos(res,',')-5) & res = strmid(res, 0, strpos(res,'.',/reverse_search))
 res = float(res)
 IF res GE 2.1 THEN CCPU = ' -co "NUM_THREADS=ALL_CPUS" ' ELSE CCPU = ''
+desc = 'GTB_REC, https://forest.jrc.ec.europa.eu/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+
 
 fn_logfile = dir_output + '/rec.log' 
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
@@ -227,17 +239,34 @@ printf, 9, 'Recode batch processing logfile: ', systime()
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_rec_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
   counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  input = dir_input + '/' + list[fidx]
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
+
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 2x RAM needed [GB]: ' + strtrim(imsizeGB*2.0,2)
+  close, 9
   
-  input = dir_input + '/' + list[fidx] & res = strpos(input,' ') ge 0
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename) '
     close, 9
     GOTO, skip_p  ;; invalid input
   ENDIF
@@ -245,9 +274,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (not a TIF image): ', input
+    printf, 9, 'Skipping invalid input (not a TIF image) '
     close, 9
     GOTO, skip_p  ;; invalid input
   ENDIF
@@ -255,9 +282,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image) '
     close, 9
     GOTO, skip_p  ;; invalid input
   ENDIF
@@ -266,9 +291,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF inpinfo.channels GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image) '
     close, 9
     GOTO, skip_p  ;; invalid input
   ENDIF
@@ -277,9 +300,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===========================
   IF inpinfo.pixel_type NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
     close, 9
     GOTO, skip_p  ;; invalid input
   ENDIF
@@ -329,13 +350,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   file_move, 'recinput.aux.xml','recoutput.aux.xml', /overwrite
   spawn, 'gdal_translate -of GTiff -co "COMPRESS=LZW"' + CCPU + BTIFF + ' recoutput ' + fn_out + ' > /dev/null 2>&1'
   spawn, './gdalcopyproj.py ' + input + ' ' + fn_out  + ' > /dev/null 2>&1'
+  spawn, gedit + fn_out + ' > /dev/null 2>&1'
   popd
   okfile = okfile + 1
 
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
   printf, 9, 'Recode comp.time [sec]: ', systime( / sec) - time0
   close, 9
   
@@ -360,7 +379,7 @@ IF proct LT 60.0 THEN proctstr = strtrim(round(proct),2) + ' secs'
 openw, 9, fn_logfile, /append
 printf, 9, ''
 printf, 9, '==============================================='
-printf, 9, 'Recode Batch Processing total comp.time: ', proctstr
+printf, 9, 'REC Batch Processing total comp.time: ', proctstr
 printf, 9, 'Successfully processed files: ', strtrim(okfile,2)+'/'+ strtrim(nr_im_files,2)
 printf, 9, '==============================================='
 close, 9

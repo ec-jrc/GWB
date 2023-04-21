@@ -4,11 +4,11 @@
 if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
 
 # check for system or standalone mode and set default parameters
-if [ "$0" == "/usr/bin/GWB_LM" ] &&  [ -f "/opt/GWB/tools/GWB_version.txt" ]; then
+if [ "$0" == "/usr/bin/GWB_GSC" ] &&  [ -f "/opt/GWB/tools/GWB_version.txt" ]; then
   v_installed=$(cat /opt/GWB/tools/GWB_version.txt)
   standalone=0
   topdir=/opt/GWB
-elif  [ "$0" == "./GWB_LM" ] &&  [ -f "tools/GWB_version.txt" ]; then
+elif  [ "$0" == "./GWB_GSC" ] &&  [ -f "tools/GWB_version.txt" ]; then
   v_installed=$(cat tools/GWB_version.txt)
   standalone=1
   topdir=$PWD
@@ -38,7 +38,7 @@ fi
 options="$*"
 # if no option is provided in system-mode:
 if [ "$standalone" -eq 0 ] && [  "$options" == "" ]; then
-    echo "usage: GWB_LM --help"
+    echo "usage: GWB_GSC --help"
     exit 1
 fi
 
@@ -71,7 +71,7 @@ do
        echo "----------------------------------------------------------------------------------"
        echo " 1) System mode - you MUST specify custom directories:"
        echo "----------------------------------------------------------------------------------"
-       echo "GWB_LM -i=<your dir_input> -o=<your dir_output>"
+       echo "GWB_GSC -i=<your dir_input> -o=<your dir_output>"
        echo "-i=<full path to directory 'input'> "
        echo "     (with your input images and parameter files)"
        echo "-o=<full path to directory 'output'> "
@@ -81,7 +81,7 @@ do
        echo " 2) Standalone mode - fixed directory setup:"
        echo "----------------------------------------------------------------------------------"
        echo "cd into: $HOME/GWB$v_installed/GWB"
-       echo "then run the command: ./GWB_LM"
+       echo "then run the command: ./GWB_GSC"
        echo "Note: standalone mode enforces using the default standalone"
        echo "- input directory: $HOME/GWB$v_installed/GWB/input "
        echo "  (with your input images and parameter files);"
@@ -98,8 +98,8 @@ do
        *)
        # unknown option
        echo "Error: unknown option $i"
-       echo "usage: GWB_LM --help"
-       exit
+       echo "usage: GWB_GSC --help"
+       exit 1
        ;;
    esac
 done
@@ -244,9 +244,9 @@ if [ "$standalone" -eq 0 ];then
   echo "$DIR_INPUT" > "$GWBCONF"gwb_dirs.txt
   echo "$DIR_OUTPUT" >> "$GWBCONF"gwb_dirs.txt
   # copy parameter files if not already there
-  fparam="$DIR_INPUT"/lm-parameters.txt
+  fparam="$DIR_INPUT"/gsc-parameters.txt
   if [ ! -e "$fparam" ];then
-   cp -f $topdir/input/backup/lm-parameters.txt "$fparam"
+   cp -f $topdir/input/backup/gsc-parameters.txt "$fparam"
    cp -fr $topdir/input/backup "$DIR_INPUT"/
    cp -f $topdir/input/readme.txt "$DIR_INPUT"/
    echo "***** Attention *****"
@@ -258,7 +258,7 @@ fi
 
 # Specify the path to the IDL SAVE file that launches
 # the application, relative to $topdir.
-idlapp=$topdir/tools/GWB_LM.sav
+idlapp=$topdir/tools/GWB_GSC.sav
 
 # Specify the path to the top directory of the IDL
 # distribution, relative to $topdir.
@@ -266,7 +266,8 @@ idl_install_dir=$topdir/tools/idl
 IDL_DIR=$idl_install_dir ; export IDL_DIR
 
 # Run the application
-logram="$GWBCONF"gwb_lm_pram.txt
+logram="$GWBCONF"gwb_gsc_pram.txt
+
 # output Peak RAM usage (kb) if /usr/bin/time is available
 cmd1=' '
 if [[ -f "/usr/bin/time" ]];then cmd1=(command time --output="$logram" --format="%M"); fi
@@ -279,7 +280,7 @@ fi
 
 # convert the peak RAM usage from kb into GB and add it to the end of the log-file
 if [[ -f "/usr/bin/time" ]];then
-  logidl="$GWBCONF"gwb_lm_log.txt
+  logidl="$GWBCONF"gwb_gsc_log.txt
   logfile=$(cat "$logidl")
   pruse=$(awk "BEGIN {print $(cat "$logram")/1024^2}")
   echo 'Peak RAM use [GB]: '"$pruse" >> "$logfile"

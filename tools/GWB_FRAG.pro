@@ -20,9 +20,11 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.0)'
+GWB_mv = 'GWB_FRAG (version 1.9.1)'
 ;;
 ;; Module changelog:
+;; 1.9.1: added image size info, statistic output option, SW tag, fixed multiscale statistic output, 
+;;        FRAG now replaces the obsolete multiscale FAD 
 ;; 1.9.0: added note to restore files, added FAC analysis, fixed loop bug, fixed spatcon binary, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -119,8 +121,8 @@ mod_params = dir_input + '/frag-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -131,11 +133,11 @@ ENDIF
 ;;==============================================================================
 ;; read frag settings, we need at least 5 valid lines
 fl = file_lines(mod_params)
-IF fl LT 5 THEN BEGIN
+IF fl LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -146,15 +148,17 @@ openr, 1, mod_params & readf, 1, finp & close, 1
 q = where(strmid(finp,0,1) eq ';', ct) & IF ct GT 0 THEN finp[q] = ' '
 q = where(strmid(finp,0,1) eq '*', ct) & IF ct GT 0 THEN finp[q] = ' '
 q = where(strlen(strtrim(finp,2)) GT 0, ct)
-IF ct LT 5 THEN BEGIN
+IF ct LT 6 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
+
 ;; get and check parameters
+;; 1) frag type
 fragtype = strtrim(finp(q[0]), 2)
 fragarray = ['FAC_5', 'FAC_6', 'FAC-APP_2', 'FAC-APP_5', 'FAD_5', 'FAD_6', 'FAD-APP_2', 'FAD-APP_5']
 qq = where(fragtype eq fragarray)
@@ -162,7 +166,9 @@ IF qq LT 0 THEN  BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, 'The selected option is not correct: ' + fragtype
   print, "Select either of: FAC_5, FAC_6, FAC-APP_2, FAC-APP_5, FAD_5, FAD_6, FAD-APP_2, FAD-APP_5."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
 goto,fin
 ENDIF
@@ -175,7 +181,9 @@ endif else if strmid(fragtype,4) eq 'APP_2' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Select either of: FAC_5, FAC_6, FAC-APP_2, FAC-APP_5, FAD_5, FAD_6, FAD-APP_2, FAD-APP_5."
-  print, "Or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -186,7 +194,7 @@ repstyle = method + ' at pixel level'
 IF fosg eq 'FOS-APP' then repstyle = method + ' at patch level (APP: average per patch)'
 IF fosg eq 'FOS-APP' then repclass = strmid(fragtype,8,1) ELSE repclass = strmid(fragtype,4,1)
 
-;; FG-connectivity
+;; 2) FG-connectivity
 c_FGconn = strtrim(finp(q[1]), 2)
 if c_FGconn eq '8' then begin
   conn_str = '8-conn FG' & conn8 = 1
@@ -195,17 +203,21 @@ endif else if c_FGconn eq '4' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
 
-;; Pixel resolution
+;; 3) Pixel resolution
 pixres_str = strtrim(finp(q[2]), 2) & pixres = abs(float(pixres_str))
 if pixres le 0.000001 then begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Pixel resolution [m] seems wonky: " + pixres_str
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
@@ -214,18 +226,37 @@ pixres_str = strtrim(pixres, 2)
 pix2hec = ((pixres)^2) / 10000.0
 pix2acr = pix2hec * 2.47105
 
-;; high precision?
+;; 5) high precision?
 hprec = strtrim(finp(q[4]), 2) & condition = hprec EQ '0' or hprec EQ '1'
 IF condition NE 1b THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "High precision switch is not 0 or 1."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
 if hprec eq '1' then prec = method+'_av: ' else prec = '(byte)'+method+'_av: '
 
-;; observation scales, maximum 10
+;; 6) statistics ?
+c_stats = strtrim(finp(q[5]), 2)
+if c_stats eq '1' then begin
+  tstats = 1b & dostats = 'yes'
+endif else if c_stats eq '0' then begin
+  tstats = 0b & dostats = 'no'
+endif else begin
+  print, "The file: " + mod_params + " is in a wrong format."
+  print, "Statistics is not 1 or 0."
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Exiting..."
+  goto,fin
+endelse
+
+
+;; 4) observation scales, maximum 10
 ath = strtrim(finp(q[3]), 2)
 res = strsplit(ath,' ',/extract) & nr_res = n_elements(res)
 cl1 = 0 & cl2 = 0 & cl3 = 0 & cl4 = 0 & cl5 = 0
@@ -264,7 +295,9 @@ q = where(cat ge 3,ct)
 if ct eq 0 then begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Invalid kernel window size settings."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif else begin
@@ -281,16 +314,16 @@ nr_cat = n_elements(cat)
 
 
 dir_proc = dir_output + '/.proc'
-;; cleanup temporary proc directory
-file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
-file_mkdir, dir_proc
-
 ;;==============================================================================
 ;;==============================================================================
 ;; apply frag settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
 desc = 'GTB_FOS, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+
 fn_logfile = dir_output + '/' + 'frag.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
@@ -305,19 +338,38 @@ cat3 = strtrim(round(float(cat)^2 * pix2hec),2)+',' & cc = '' & for i = 0, nr_ca
 printf, 9, 'Observation scale [ha]: ' + cc
 cat3 = strtrim(round(float(cat)^2 * pix2acr),2)+',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat3[i]
 printf, 9, 'Observation scale [ac]: ' + cc
+printf, 9, 'Statistics: ' + dostats
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_frag_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
+
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
-  counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2) 
+  input = dir_input + '/' + list[fidx]
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0 
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
   
-  input = dir_input + '/' + list[fidx] & res = strpos(input,' ') ge 0
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 13x RAM needed [GB]: ' + strtrim(imsizeGB*13.0,2)
+  close, 9
+  
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename)'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -325,9 +377,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (not a TIF image): ', input
+    printf, 9, 'Skipping invalid input (not a TIF image)'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -335,23 +385,18 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image) '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
   
   ;; get uncompressed image size in MB and check for sufficient disk space for processing
-  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
   ;; make sure there is at least 6 times that size left, else exit
   IF hprec EQ '1' THEN reqsize = 8*inpsize ELSE reqsize = 4*inpsize
   spawn, 'df -BM --output=avail ' + dir_output, res
   IF n_elements(res) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Problems determining image size and/or available disk space: ', input
+    printf, 9, 'Problems determining available disk space '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -359,9 +404,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = res [1] & res = strmid(res, 0,strlen(res)-1) & resf=float(res)
   IF resf LT reqsize then BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Insufficent free disk space, ' + res + 'MB needed for: ', input
+    printf, 9, 'Insufficent free disk space, ' + res + 'MB needed.'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -370,27 +413,25 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; read it
   geotiff = 0
   im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
-  im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1] & imgminsize=(xdim<ydim)
-  IF nocheck EQ 1b THEN goto, good2go
-
+  
   ;; check for single channel image
   ;;===========================
   IF size(im, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image) '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
+  
+  im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1] & imgminsize=(xdim<ydim)
+  IF nocheck EQ 1b THEN goto, good2go
+
 
   ;; check for byte array
   ;;===========================
   IF size(im, / type) NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -399,9 +440,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;===================================
   IF imgminsize LT 250 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Image dimension LT 250 pixels in x or y image dimension.', input
+    printf, 9, 'Image dimension LT 250 pixels in x or y image dimension'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -411,24 +450,18 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   mxx = max(im, min = mii)
   IF mxx GT 4b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE): ', input
+    printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE)'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF ELSE IF mxx LT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE))'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
   IF mii GT 1b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)) '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -437,18 +470,14 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   q=where(upv eq 2, ct)
   IF ct NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found: ', input
+    printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found'
     close, 9
     GOTO, skip_fos  ;; invalid input    
   ENDIF
   q=where(upv eq 1, ct)
   IF ct NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found: ', input
+    printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found '
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
@@ -457,12 +486,18 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;==============================================================================
   ;; 2) process for fragtype
   ;;==============================================================================
+  ;; cleanup temporary proc directory
+  file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
+  file_mkdir, dir_proc
   time0 = systime( / sec)
   
   ;; image properties
-  image0 = temporary(im)
-  qmiss = where(image0 eq 0b, ctmiss, /l64) & q3b = where(image0 eq 3b, ct3b, /l64) & q4b = where(image0 eq 4b, ct4b, /l64)
-  BGmask = where(image0 EQ 1b, /l64) & qFG = where(image0 eq 2b, /l64, fgarea) & obj_last = -1
+  image0 = temporary(im) & obj_last = -1
+  qmiss = where(image0 eq 0b, ctmiss, /l64) 
+  q3b = where(image0 eq 3b, ct3b, /l64) 
+  q4b = where(image0 eq 4b, ct4b, /l64)
+  BGmask = where(image0 EQ 1b, /l64)   
+  if tstats eq 1 then qFG = where(image0 eq 2b, /l64, fgarea)
 
   if fosg eq 'FOS-APP' then begin
     ;; for FOS_APP we need the patch sizes
@@ -478,22 +513,28 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   endif
   
   ;; FOS loop over observation scales
-  kdim = cat 
+  kdim_cat = cat 
   
-  ;; define arrays for cummulative values in summary barplot in popup window
-  intact = fltarr(nr_cat) & interior = intact & dominant = intact & transitional = intact
-  patchy = intact & rare = intact & separated = intact & continuous = intact & fad_av = intact
+  if tstats eq 1 then begin
+    ;; define arrays for cummulative values in summary barplot in popup window
+    intact_cat = fltarr(nr_cat) & interior_cat = intact_cat & dominant_cat = intact_cat & transitional_cat = intact_cat
+    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat  
+  endif 
   
   ;; define output already here to write out each scale image
   fbn = file_basename(list[fidx], '.tif')
   outdir = dir_output + '/' + fbn + '_frag' & file_mkdir, outdir
+  
+  ;; loop over specified scales
+  ;;=========================================================================
   
   for isc = 0, nr_cat-1 do begin
     if isc eq 0 then begin ;; initialise scinput image
       tmp = temporary(image0)
       IF ct4b GT 0 THEN tmp[q4b] = 0b
     endif
-    kdim_str = strtrim(kdim[isc],2)
+    kdim_str = strtrim(kdim_cat[isc],2)
+    kdim = kdim_cat[isc]
     
     ;; run spatcon Density (PF) or Clustering (Spatial Convolution metrics by K. Riitters)
     pushd, dir_proc
@@ -532,7 +573,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     openr, 1, 'scoutput' & readu,1, im & close,1
 
     ;; clean up
-    file_delete, 'scoutput', 'scpars.txt', 'scsize.txt',/allow_nonexistent,/quiet
+    file_delete, 'scoutput', 'scpars.txt', 'scsize.txt',/allow_nonexistent,/quiet   
     popd
 
     ;; rescale to normalized byte range
@@ -541,13 +582,15 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       ;; the potential max value from spatcon is 255b and *only* those pixels can have a remapped value of 100b
       ; we must prevent that the value 254b will get rounded to 100b so mask the 255b pixels
       q = where(im eq 255b, ct, /l64)
-      im = (temporary(im) - 1b)/254.0 & im = 0.994999 < temporary(im) > 0.0
+      im = (temporary(im) - 1b)*(1.0/254.0) & im = 0.994999 < temporary(im) > 0.0
       im = byte(round(temporary(im) * 100.0))
       if ct gt 0 then im[q] = 100b
     endif else begin
       im = byte(round(temporary(im) * 100.0))
     endelse
-    fad_av(isc) = mean(im(qFG))
+    if tstats eq 1 then begin
+      fad_av = mean(im(qFG)) & fad_av_cat[isc] = fad_av
+    endif
     
     ;; do we want APP?
     if fosg eq 'FOS-APP' then begin
@@ -560,47 +603,64 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       im = extim[1:sz[0], 1:sz[1]] & extim=0
     endif
 
-    ;; add specialBG (105b), specialBG-Nf (106b), Missing (102b), background (101b)
-    if ct3b gt 0 then im[q3b] = 105b
+    ;; add specialBG (105b), specialBG-Nf (106b), Missing (102b), background (101b)   
+    if ct3b gt 0 then im[q3b] = 105b        
     if ct4b gt 0 then im[q4b] = 106b
-    if ctmiss gt 0 then im[qmiss] = 102b
-    im[BGmask] = 101b
-
-    ;; the statistics
-    if fosg eq 'FOS' then begin
-      ;; get the 5 fragmentation proportions (the 6th, rare, is always 100.0%)
-      if strmid(fragtype,4,1) eq '6' then begin
-        zz = (im EQ 100b) & intact(isc) = total(zz)/fgarea*100.0
-        zz = (im GE 90b) AND (im LT 100b) & interior(isc) = total(zz)/fgarea*100.0
-      endif else begin
-        zz = (im GE 90b) AND (im LE 100b) & interior(isc) = total(zz)/fgarea*100.0
-      endelse                  
-      zz = (im GE 60b) AND (im LT 90b) & dominant(isc) = total(zz)/fgarea*100.0
-      zz = (im GE 40b) AND (im LT 60b) & transitional(isc) = total(zz)/fgarea*100.0
-      zz = (im GE 10b) AND (im LT 40b) & patchy(isc) = total(zz)/fgarea*100.0
-      zz = (im LT 10b) & rare(isc) = total(zz)/fgarea*100.0 & zz = 0
-    endif else begin ;; output 5-class as well as 2-class
-      zz = (im GE 90b) AND (im LE 100b) & interior(isc) = total(zz)/fgarea*100.0
-      zz = (im GE 60b) AND (im LT 90b) & dominant(isc) = total(zz)/fgarea*100.0
-      zz = (im GE 40b) AND (im LT 60b) & transitional(isc) = total(zz)/fgarea*100.0
-      zz = (im GE 10b) AND (im LT 40b) & patchy(isc) = total(zz)/fgarea*100.0
-      zz = (im LT 10b) & rare(isc) = total(zz)/fgarea*100.0 
-      zz = (im GE 40b) AND (im LE 100b) & continuous(isc) = total(zz)/fgarea*100.0
-      zz = (im LT 40b) & separated(isc) = total(zz)/fgarea*100.0 & zz = 0
-    endelse
-       
+    if ctmiss gt 0 then im[qmiss] = 102b 
+    im[BGmask] = 101b 
+    
     ;; write out the single scale image
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.tif'
     ;; add the geotiff info if available
     IF is_geotiff GT 0 THEN $
-      write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, geotiff = geotiff, description = desc, compression = 1 ELSE $
-      write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, description = desc, compression = 1    
-        
-  endfor    
-  file_delete, dir_proc + '/scoutput',/allow_nonexistent,/quiet
+      write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, geotiff = geotiff, compression = 1 ELSE $
+      write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, compression = 1
+    spawn, gedit + fn_out + ' > /dev/null 2>&1'
+
+    ;; do we want the statistics?
+    if tstats eq 1 then begin
+      ;; initialize
+      intact = -1.0 & interior = intact & dominant = intact & transitional = intact  & patchy = intact  
+      rare = intact & continuous = intact & separated = intact
+      
+      if fosg eq 'FOS' then begin
+        ;; get the 5 fragmentation proportions (the 6th, rare, is always 100.0%)
+        if strmid(fragtype,4,1) eq '6' then begin
+          zz = (im EQ 100b) & intact = total(zz)/fgarea*100.0 & intact_cat[isc] = intact
+          zz = (im GE 90b) AND (im LT 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+        endif else begin
+          zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+        endelse
+        zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
+        zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
+        zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
+        zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & zz = 0 & rare_cat[isc] = rare
+      endif else begin ;; output 5-class as well as 2-class
+        zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+        zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
+        zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
+        zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
+        zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & rare_cat[isc] = rare
+        zz = (im GE 40b) AND (im LE 100b) & continuous = total(zz)/fgarea*100.0 & continuous_cat[isc] = continuous
+        zz = (im LT 40b) & separated = total(zz)/fgarea*100.0 & zz = 0 & separated_cat[isc] = separated
+      endelse     
+      ;; save stats summary in idl sav format for potential change analysis at some later point      
+      hec = ((pixres * kdim)^2) / 10000.0 & acr = hec * 2.47105 & geotiff_log = ''
+      IF is_geotiff GT 0 then spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
+      fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
+      save, filename = fn_out, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
+        separated, continuous, fad_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim, hec, acr        
+    endif ;; end of statistics output
+    
+  endfor    ;; end of isc scale loop  
   
+  ;; cleanup temporary proc directory and the masks for the current image
+  file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
+  qmiss = 0 & q3b = 0 & q4b = 0 & BGmask = 0
+  
+  if tstats eq 0 then goto, skipstats 
   ;; write out the statistics table
-  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.txt'
+  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.txt'
 
   openw,12,fn_out
   printf, 12, 'Fragmentation analysis using Fixed Observation Scale (FOS)'
@@ -630,8 +690,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, format = '(a18, 10(A))', 'Neighborhood area:',cat2
 
   ;; area conversions
-  hec = ((pixres * kdim)^2) / 10000.0
-  acr = hec * 2.47105
+  hec = ((pixres * kdim_cat)^2) / 10000.0 & acr = hec * 2.47105
   printf, 12, format = '(a15, 10(f11.2))', '[hectare]:', hec
   printf, 12, format = '(a15, 10(f11.2))', '[acres]:', acr
   printf, 12, '================================================================================'
@@ -648,82 +707,77 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   if fosg eq 'FOS' then begin    
     ;if fragtype eq 'FOS6' then printf, 12, 'FOS 6-class:' else printf, 12, 'FOS 5-class:'    
     printf, 12, repstyle  + ': ' + repclass + ' classes'
-    printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare
-    printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy
-    printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional
-    printf, 12, format=fmt, 'Dominant (' + method + '-pixel value within: [60 - 89]): ', dominant    
+    printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare_cat
+    printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy_cat
+    printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional_cat
+    printf, 12, format=fmt, 'Dominant (' + method + '-pixel value within: [60 - 89]): ', dominant_cat 
     if repclass eq '5' then begin
-      printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 100]): ', interior
+      printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 100]): ', interior_cat
     endif else begin
-      printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 99]): ', interior
-      printf, 12, format=fmt, 'Intact (' + method + '-pixel value: 100): ', intact
+      printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 99]): ', interior_cat
+      printf, 12, format=fmt, 'Intact (' + method + '-pixel value: 100): ', intact_cat
     endelse
   endif else begin
     printf, 12, 'FOS-' + strmid(fragtype,0,7)  + ': 5 classes:'
-    printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare
-    printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy
-    printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional
-    printf, 12, format=fmt, 'Dominant (' + method + '-pixel value within: [60 - 89]): ', dominant
-    printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 100]): ', interior
+    printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare_cat
+    printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy_cat
+    printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional_cat
+    printf, 12, format=fmt, 'Dominant (' + method + '-pixel value within: [60 - 89]): ', dominant_cat
+    printf, 12, format=fmt, 'Interior (' + method + '-pixel value within: [90 - 100]): ', interior_cat
     printf, 12, 'FOS-' + strmid(fragtype,0,7)  + ': 2 classes:'
-    printf, 12, format=fmt, 'Separated  (' + method + '-pixel value within: [0 - 39]): ', separated
-    printf, 12, format=fmt, 'Continuous (' + method + '-pixel value within: [40 - 100]): ', continuous
+    printf, 12, format=fmt, 'Separated  (' + method + '-pixel value within: [0 - 39]): ', separated_cat
+    printf, 12, format=fmt, 'Continuous (' + method + '-pixel value within: [40 - 100]): ', continuous_cat
   endelse
   printf, 12, '================================================================================'
   if hprec eq '1' then printf, 12, 'Precision: floating point' else printf, 12, 'Precision: rounded byte'
-  printf, 12, format=fmt2, 'Average pixel value across all foreground pixels using ' + method + '-method: ', strtrim(fad_av,2)
-  printf, 12, format=fmt2, 'Equivalent to average foreground connectivity: ', strtrim(fad_av,2)
-  printf, 12, format=fmt2, 'Equivalent to average foreground fragmentation: ', strtrim(100.0-fad_av,2)
+  printf, 12, format=fmt2, 'Average pixel value across all foreground pixels using ' + method + '-method: ', strtrim(fad_av_cat,2)
+  printf, 12, format=fmt2, 'Equivalent to average foreground connectivity: ', strtrim(fad_av_cat,2)
+  printf, 12, format=fmt2, 'Equivalent to average foreground fragmentation: ', strtrim(100.0-fad_av_cat,2)
   close, 12
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; save stats summary in idl sav format for potential change analysis at some later point
-  ;; check if we have a geotiff image
-  geotiff_log = '' ;; gdal geotiff-information
-  IF is_geotiff GT 0 then spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
-  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
-  save, filename = fn_out, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
-    separated, continuous, fad_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim_str, hec, acr
-  
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; write csv output
-  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.csv'
+  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.csv'
   openw,12,fn_out
   w = indgen(nr_cat+1, /string) +',' & w = w[1:*] & cc = '' & for i = 0, nr_cat-1 do cc = cc + w[i]
   printf,12, fragtype + ': FragmClass\ObsScale:, ' + cc
   cat2 = strtrim(cat2, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat2[i]
-  printf,12, 'Neighborhood area:,', cc
+  printf,12, 'Neighborhood area [pixels]:,', cc  
+  hec = strtrim(hec, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + hec[i]
+  printf,12, 'Neighborhood area [hectares]:,', cc
+  acr = strtrim(acr, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + acr[i]
+  printf,12, 'Neighborhood area [acres]:,', cc
 
-  z = strtrim(rare,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+  z = strtrim(rare_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   if fosg eq 'FOS' then begin
     printf, 12, repstyle  + ': ' + repclass + ' classes'
-    printf, 12, 'Rare:, ' + cc & z = strtrim(patchy,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Patchy:, ' + cc & z = strtrim(transitional,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Transitional:, ' + cc & z = strtrim(dominant,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Dominant:, ' + cc & z = strtrim(interior,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Interior:, ' + cc & z = strtrim(intact,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Rare:, ' + cc & z = strtrim(patchy_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Patchy:, ' + cc & z = strtrim(transitional_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Transitional:, ' + cc & z = strtrim(dominant_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Dominant:, ' + cc & z = strtrim(interior_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Interior:, ' + cc & z = strtrim(intact_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
     if repclass eq '6' then printf, 12, 'Intact:, ' + cc
   endif else begin
     printf, 12, strmid(fragtype,0,7)  + ': 5 classes:'
-    printf, 12, 'Rare:, ' + cc & z = strtrim(patchy,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Patchy:, ' + cc & z = strtrim(transitional,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Transitional:, ' + cc & z = strtrim(dominant,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Dominant:, ' + cc & z = strtrim(interior,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Rare:, ' + cc & z = strtrim(patchy_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Patchy:, ' + cc & z = strtrim(transitional_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Transitional:, ' + cc & z = strtrim(dominant_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Dominant:, ' + cc & z = strtrim(interior_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
     printf, 12, 'Interior:, ' + cc
-    printf, 12, strmid(fragtype,0,7)  + ': 2 classes:' & z = strtrim(separated,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-    printf, 12, 'Separated:, ' + cc & z = strtrim(continuous,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, strmid(fragtype,0,7)  + ': 2 classes:' & z = strtrim(separated_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+    printf, 12, 'Separated:, ' + cc & z = strtrim(continuous_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
     printf, 12, 'Continuous:, ' + cc 
   endelse
-  z = strtrim(fad_av,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-  printf, 12, prec + ', ' + cc
+  z = strtrim(fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+  printf, 12, 'Average connectivity: ' + prec + ', ' + cc
+  z = strtrim(100.0-fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+  printf, 12, 'Average fragmentation: 100-' + prec + ', ' + cc
   close,12
+  
+  skipstats:
   okfile = okfile + 1
 
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
   printf, 9, strupcase(fragtype) + ' comp.time [sec]: ', systime( / sec) - time0
   close, 9
   
@@ -731,8 +785,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   print, 'Done with: ' + file_basename(input)
   
 ENDFOR
-;; cleanup temporary proc directory
-file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
 
 ;; inform that batch is done
 proct = systime( / sec) - time00
@@ -748,7 +800,7 @@ IF proct LT 60.0 THEN proctstr = strtrim(round(proct),2) + ' secs'
 openw, 9, fn_logfile, /append
 printf, 9, ''
 printf, 9, '==============================================='
-printf, 9, strupcase(fragtype) + ' Batch Processing total comp.time: ', proctstr
+printf, 9, 'FRAG Batch Processing total comp.time: ', proctstr
 printf, 9, 'Successfully processed files: ',strtrim(okfile,2)+'/'+ strtrim(nr_im_files,2)
 printf, 9, '==============================================='
 close, 9

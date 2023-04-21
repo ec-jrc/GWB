@@ -2,7 +2,7 @@
 ;; GWB_MSPA parameter file:
 ;; NOTE: do NOT delete or add any lines in this parameter file!
 ;;
-;; MSPA: Morphological Spatial Pattern Analysis (up to 25 classes)
+;; MSPA: Morphological Spatial Pattern Analysis (up to 23 classes)
 ;; Input image requirements: 1b-background, 2b-foreground, optional: 0b-missing
 ;;
 ;; MSPA will provide one (1) image and summary statistics.

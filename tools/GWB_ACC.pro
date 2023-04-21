@@ -20,9 +20,10 @@ PRO GWB_ACC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_ACC (version 1.9.0)'
+GWB_mv = 'GWB_ACC (version 1.9.1)'
 ;;
 ;; Module changelog:
+;; 1.9.1: added image size info, statistic output option, SW tag
 ;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -117,8 +118,8 @@ mod_params = dir_input + '/acc-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -131,8 +132,8 @@ fl = file_lines(mod_params)
 IF fl LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -146,8 +147,8 @@ q = where(strlen(strtrim(finp,2)) GT 0, ct)
 IF ct LT 5 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -157,7 +158,9 @@ true = (conn8_str eq '8') + (conn8_str eq '4')
 IF true EQ 0 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -167,7 +170,9 @@ pixres_str = strtrim(finp(q[1]), 2) & pixres = abs(float(pixres_str))
 if pixres le 0.000001 then begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Pixel resolution [m] seems wonky: " + pixres_str
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif
@@ -179,7 +184,9 @@ true = (outopt EQ 'default') + (outopt EQ 'detailed')
 IF true EQ 0 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "output option is not 'default' or 'detailed'."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -190,7 +197,9 @@ true = (big3pink eq '0') + (big3pink eq '1')
 IF true EQ 0 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "big3pink is not '0' or '1'."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -227,7 +236,9 @@ if ct eq 0 then begin
   print, "Invalid accouting threshold settings."
   print, "Threshold(s) must be integers within"
   print, "[1, 1000000000000000000]."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endif else begin
@@ -240,7 +251,9 @@ IF total(cat) LT 1.0 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Threshold(s) must be integers within"
   print, "[1, 1000000000000000000]."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -254,6 +267,10 @@ cat_idlast = 0 & cat_arealast = 0
 ;;==============================================================================
 ;;==============================================================================
 desc = 'GTB_ACC, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
+gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+
 fn_logfile = dir_output + '/acc.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
 nocheck = file_info(dir_input + '/nocheck.txt') & nocheck = nocheck.exists
@@ -264,17 +281,35 @@ printf, 9, 'Accounting batch processing logfile: ', systime()
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_acc_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
   counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
+  input = dir_input + '/' +list[fidx]
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
+
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 30x RAM needed [GB]: ' + strtrim(imsizeGB*30.0,2)
+  close, 9
   
-  input = dir_input + '/' +list[fidx] & res = strpos(input,' ') ge 0
+
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename) '
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
@@ -282,9 +317,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (not a TIF image): ', input
+    printf, 9, 'Skipping invalid input (not a TIF image) '
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
@@ -292,9 +325,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image) '
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
@@ -302,27 +333,23 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; read it
   geotiff = 0
   im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
-  im = rotate(temporary(im),7) & sz=size(im,/dim)
-  IF nocheck EQ 1b THEN goto, good2go
   
   ;; check for single channel image
   ;;===========================
   IF size(im, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image) '
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
+
+  IF nocheck EQ 1b THEN goto, good2go
 
   ;; check for byte array
   ;;===========================
   IF size(im, / type) NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
@@ -332,24 +359,18 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   mxx = max(im, min = mii)
   IF mxx GT 4b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE): ', input
+    printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE)'
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF ELSE IF mxx LT 2b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE))'
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
   IF mii GT 1b THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)): ', input
+    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE))'
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
@@ -358,23 +379,20 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   q=where(upv eq 2, ct)
   IF ct NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found: ', input
+    printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found'
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
   q=where(upv eq 1, ct)
   IF ct NE 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found: ', input
+     printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found'
     close, 9
     GOTO, skip_acc  ;; invalid input
   ENDIF
 
   good2go:
+  im = rotate(temporary(im),7) & sz=size(im,/dim)
   ;;==============================================================================
   ;; 2) process for Accounting
   ;;==============================================================================
@@ -626,35 +644,33 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   outbase = outdir + '/' + file_basename(list[fidx], '.tif') + '_acc'
 
   ;; a) the viewport image
-  outf = outbase + '.tif' 
+  fn_out = outbase + '.tif' 
   IF is_geotiff EQ 0b THEN $
-    write_tiff, outf, rotate(ext,7), red=r, green=g, blue=b, compression=1, description=desc ELSE $
-    write_tiff, outf, rotate(ext,7), red=r, green=g, blue=b, geotiff=geotiff, compression=1, description=desc
-    ext = 0
+    write_tiff, fn_out, rotate(ext,7), red=r, green=g, blue=b, compression=1 ELSE $
+    write_tiff, fn_out, rotate(ext,7), red=r, green=g, blue=b, geotiff=geotiff, compression=1 
+    spawn, gedit + fn_out + ' > /dev/null 2>&1'
+  ext = 0
 
   IF outopt NE 'default' THEN BEGIN ;; output images showing ID and area per ID
     ;; b) image of IDs
-    outf = outbase + '_ids.tif'
+    fn_out = outbase + '_ids.tif'
     IF is_geotiff EQ 0b THEN $
-      write_tiff, outf, rotate(ext2,7), /long, /signed, compression=1, description=desc ELSE $
-      write_tiff, outf, rotate(ext2,7), /long, /signed, geotiff=geotiff, compression=1, description=desc
+      write_tiff, fn_out, rotate(ext2,7), /long, /signed, compression=1 ELSE $
+      write_tiff, fn_out, rotate(ext2,7), /long, /signed, geotiff=geotiff, compression=1
+    spawn, gedit + fn_out + ' > /dev/null 2>&1'
     ext2 = 0
       
     ;; c) image of area per ID
-    outf = outbase + '_pixels.tif'
+    fn_out = outbase + '_pixels.tif'
     IF is_geotiff EQ 0b THEN $
-      write_tiff, outf, rotate(ext3,7), /long, /signed, compression=1, description=desc ELSE $
-      write_tiff, outf, rotate(ext3,7), /long, /signed, geotiff=geotiff, compression=1, description=desc
+      write_tiff, fn_out, rotate(ext3,7), /long, /signed, compression=1 ELSE $
+      write_tiff, fn_out, rotate(ext3,7), /long, /signed, geotiff=geotiff, compression=1
+    spawn, gedit + fn_out + ' > /dev/null 2>&1'
     ext3 = 0
   ENDIF
   
   okfile = okfile + 1
-  z20 = input + ' (' + strtrim(allid,2) + ' objects)'
   openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
-  printf, 9, 'Accounting: ' + z20
   printf, 9, 'Accounting comp.time [sec]: ', systime( / sec) - time0
   close, 9
 
@@ -677,7 +693,7 @@ IF proct LT 60.0 THEN proctstr = strtrim(round(proct),2) + ' secs'
 openw, 9, fn_logfile, /append
 printf, 9, ''
 printf, 9, '==============================================='
-printf, 9, 'Accounting Batch Processing total comp.time: ', proctstr
+printf, 9, 'ACC Batch Processing total comp.time: ', proctstr
 printf, 9, 'Successfully processed files: ',strtrim(okfile,2)+'/'+ strtrim(nr_im_files,2)
 printf, 9, '==============================================='
 close, 9

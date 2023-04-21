@@ -20,9 +20,10 @@ PRO GWB_PARC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_PARC (version 1.9.0)'
+GWB_mv = 'GWB_PARC (version 1.9.1)'
 ;;
 ;; Module changelog:
+;; 1.9.1: added image size info
 ;; 1.9.0: added note to restore files, IDL 8.8.3
 ;; 1.8.8: flexible input reading
 ;; 1.8.7: IDL 8.8.2
@@ -98,8 +99,8 @@ mod_params = dir_input + '/parc-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -112,8 +113,8 @@ fl = file_lines(mod_params)
 IF fl LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -127,8 +128,8 @@ q = where(strlen(strtrim(finp,2)) GT 0, ct)
 IF ct LT 1 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
-  print, dir_inputdef + "/input/backup/*parameters.txt"
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 ENDIF
@@ -141,7 +142,9 @@ endif else if c_FGconn eq '4' then begin
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Foreground connectivity is not 8 or 4."
-  print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
   goto,fin
 endelse
@@ -162,17 +165,34 @@ printf, 9, 'Parcellation batch processing logfile: ', systime()
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
+;; write out the path to the logfile to append RAM usage later on
+fn_dirs2 = strmid(fn_dirs,0,strlen(fn_dirs)-12) + 'gwb_parc_log.txt'
+close, 1 & openw, 1, fn_dirs2 & printf, 1, fn_logfile & close, 1
 
 
 FOR fidx = 0, nr_im_files - 1 DO BEGIN
   counter = strtrim(fidx + 1, 2) + '/' + strtrim(nr_im_files, 2)
-  
-  input = dir_input + '/' +list[fidx] & res = strpos(input,' ') ge 0
+  input = dir_input + '/' + list[fidx]
+  res = query_tiff(input, inpinfo)
+  inpsize = float(inpinfo.dimensions[0]) * inpinfo.dimensions[1]/1024/1024 ;; size in MB
+  imsizeGB = inpsize/1024.0
+  ;; current free RAM exclusive swap space
+  spawn,"free|awk 'FNR == 2 {print $7}'", mbavail & mbavail = float(mbavail[0])/1024.0 ;; available
+  GBavail = mbavail/1024.0
+
+  openw, 9, fn_logfile, /append
+  printf, 9, ' '
+  printf, 9, '==============   ' + counter + '   =============='
+  printf, 9, 'File: ' + input
+  printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
+  printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
+  printf, 9, 'up to 22x RAM needed [GB]: ' + strtrim(imsizeGB*22.0,2)
+  close, 9
+
+  res = strpos(input,' ') ge 0
   IF res EQ 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (empty space in directory path or input filename): ', input
+    printf, 9, 'Skipping invalid input (empty space in directory path or input filename)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -180,9 +200,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (not a TIF image): ', input
+    printf, 9, 'Skipping invalid input (not a TIF image)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -190,9 +208,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; check for single image in file
   IF inpinfo.num_images GT 1 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 image in the TIF image)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -200,16 +216,13 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; read it
   geotiff = 0
   im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
-  im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1]
   IF nocheck EQ 1b THEN goto, good2go
 
   ;; check for single channel image
   ;;===========================
   IF size(im, / n_dim) NE 2 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image): ', input
+    printf, 9, 'Skipping invalid input (more than 1 band in the TIF image)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -221,9 +234,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   q = where(tt eq bi, ct, /l64)
   IF ct eq 0 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image is not of type BYTE or INTEGER): ', input
+    printf, 9, 'Skipping invalid input (image is not of type BYTE or INTEGER)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -231,9 +242,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   mi = min(im, / nan, max=ma)
   IF mi EQ ma THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, ' '
-    printf, 9, '==============   ' + counter + '   =============='
-    printf, 9, 'Skipping invalid input (image has only one class): ', input
+    printf, 9, 'Skipping invalid input (image has only one class)'
     close, 9
     GOTO, skip_par  ;; invalid input
   ENDIF
@@ -241,6 +250,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   
   
   good2go:
+  im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1]
   ;;==============================================================================
   ;; 2) process for PARC
   ;;==============================================================================
@@ -352,18 +362,10 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   if conn8 eq 1 then pp1 = '8-conn. Parcels: ' else pp1 = '4-conn. Parcels: '
   printf, 12, format = '(a16, a12, i14, f14.4, a14, 3(f14.4))', pp1, z10, data_area, aps, ' ', aaps, div_im, parc
   close, 12
-  
-  ;; for the log-file
-  if conn8 eq 1 then pp1 = '8-conn. Parcels/APS/PARC: ' else pp1 = '4-conn. Parcels/APS/PARC: '
-  ppl = pp1 + z10 + ' / ' + strtrim(aps,2) + ' / ' + strtrim(parc,2) 
-  
+    
   okfile = okfile + 1
 
-  openw, 9, fn_logfile, /append
-  printf, 9, ' '
-  printf, 9, '==============   ' + counter + '   =============='
-  printf, 9, 'File: ' + input
-  printf, 9, ppl
+  openw, 9, fn_logfile, /append 
   printf, 9, 'Parcellation comp.time [sec]: ', systime( / sec) - time0
   close, 9
   
@@ -386,7 +388,7 @@ IF proct LT 60.0 THEN proctstr = strtrim(round(proct),2) + ' secs'
 openw, 9, fn_logfile, /append
 printf, 9, ''
 printf, 9, '==============================================='
-printf, 9, 'Parcellation Batch Processing total comp.time: ', proctstr
+printf, 9, 'PARC Batch Processing total comp.time: ', proctstr
 printf, 9, 'Successfully processed files: ',strtrim(okfile,2)+'/'+ strtrim(nr_im_files,2)
 printf, 9, '==============================================='
 close, 9
