@@ -20,9 +20,10 @@ PRO GWB_REC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.9.1)'
+GWB_mv = 'GWB_REC (version 1.9.2)'
 ;;
 ;; Module changelog
+;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info
 ;; 1.9.0: added note to restore files, simplify to read values to be recoded only, IDL 8.8.3
 ;; 1.8.8: use gdal only for recoding, added BIGTIFF switch, flexible input reading

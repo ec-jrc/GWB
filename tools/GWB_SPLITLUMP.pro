@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 1.9.1)'
+GWB_mv = 'GWB_SPLITLUMP (version 1.9.2)'
 ;;
 ;; Module changelog:
+;; 1.9.2: IDL 8.9.0, enforec working directory splitlump
 ;; 1.9.1: initial release
 ;;
 ;;==============================================================================
@@ -339,6 +340,7 @@ printf, 1, '# splitter.sh: cut buffered stripes of a large input image for GWB-p
 printf, 1, '#############################################################'
 printf, 1, '# Settings used:'
 printf, 1, '# ' + fbn + ' : large image'
+printf, 1, '# ' + dir_splitlump + ' : splitlump working directory'
 printf, 1, '# ' + strtrim(nr_stripes,2) + ' : number of buffered stripes'
 printf, 1, '# ' + strtrim(buffer,2) + ' : buffer width in pixels, to be added on both sides of the stripes'
 printf, 1, '# ' + orient + ' : orientation of buffered stripes'
@@ -347,6 +349,7 @@ printf, 1, '# ' + strtrim(inpsizeGB, 2) + ' : uncompressed large image size [GB]
 printf, 1, '# ' + strtrim(buffsizeGB, 2)  + ' : uncompressed buffered stripe size [GB]' 
 printf, 1, '#############################################################'
 printf, 1, '# cut the ' + orient + ' buffered stripes according to the settings above:'
+printf, 1, 'cd ' + dir_splitlump
 IF orient EQ 'horizontal' THEN BEGIN
   printf, 1, 'f_inp='+input
   ;; first horizontal stripe
@@ -399,6 +402,7 @@ printf, 1, '# lumper.sh: cut GWB-processed buffered stripes and merge into final
 printf, 1, '#############################################################'
 printf, 1, '# Settings used:'
 printf, 1, '# ' + fbn + ' : large image'
+printf, 1, '# ' + dir_splitlump + ' : splitlump working directory'
 printf, 1, '# ' + strtrim(nr_stripes,2) + ' : number of buffered stripes'
 printf, 1, '# ' + strtrim(buffer,2) + ' : buffer width in pixels on both sides of the stripes'
 printf, 1, '# ' + orient + ' : orientation of buffered stripes'
@@ -407,6 +411,7 @@ printf, 1, '# ' + strtrim(inpsizeGB, 2) + ' : uncompressed large image size [GB]
 printf, 1, '# ' + strtrim(buffsizeGB, 2)  + ' : uncompressed buffered stripe size [GB]'
 printf, 1, '#############################################################'
 printf, 1, '# first test if the required files are here:' 
+printf, 1, 'cd ' + dir_splitlump
 cmd = 'ct=$(ls ' + stripe + '* 2>/dev/null|wc -l)'
 printf, 1, cmd
 printf, 1, 'if [ $ct != ' + strtrim(nr_stripes,2) + ' ];then 
@@ -440,7 +445,7 @@ printf, 1, 'gdal_translate -co BIGTIFF=YES -co COMPRESS=LZW tmp.vrt ' + fn_out
 printf, 1, gedit + '-mo TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" ' + fn_out
 printf, 1, '#############################################################'
 printf, 1, 'echo The script "lumper.sh" has finished, please verify your output file:'
-printf, 1, 'echo ' + fn_out
+printf, 1, 'echo ' + dir_splitlump + '/' + fn_out
 printf, 1, 'exit'
 close, 1
 file_chmod, dir_splitlump + '/lumper.sh', /A_EXECUTE

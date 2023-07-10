@@ -19,9 +19,10 @@ PRO GWB_GSC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_GSC (version 1.9.1)'
+GWB_mv = 'GWB_GSC (version 1.9.2)'
 ;;
 ;; Module changelog:
+;; 1.9.2: IDL 8.9.0, added metric 52 Clustering
 ;; 1.9.1: initial release       
 ;;
 ;;==============================================================================
@@ -132,7 +133,7 @@ finp = strtrim(finp[q],2)
 ;; ['m ', 'f ', 'g ', 'p ', 'w ', 'a ', 'b ', 'x ', 'y ', 'k '] ;; GraySpatCon parameters to check for
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 1) M: get the GraySpatCon metric
-;; valid entries: [1, 51]
+;; valid entries: [1, 52]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 q = where(strlowcase(strmid(finp,0,2)) eq 'm ') & q = q[0]
 if q lt 0 then begin
@@ -302,9 +303,12 @@ case gsc_m of
   '51': BEGIN
     gsc_m_str = 'GSC-metric 51: Kurtosis'
   END
+  '52': BEGIN
+    gsc_m_str = 'GSC-metric 52: Clustering'
+  END
   ELSE: BEGIN
     print, "The file: " + mod_params + " is in a wrong format."
-    print, "M: GraySpatCon metric is not in [1, 51]."
+    print, "M: GraySpatCon metric is not in [1, 52]."
     print, "Please copy the respective backup file into your input directory:"
     print, dir_inputdef + "/input/backup/*parameters.txt"
     print, "or restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -453,8 +457,8 @@ gsc_b = '0' ;; fake value
 IF gsc_f EQ '2' THEN GOTO, skip_b ;; no need to deal with float output
 
 ;; we have 3 conditions to deal with
-;; 1) bounded metrics: 2, 3, 6, 8, 10-15, 20-24, 31-38, 40, 42, 49
-marr1 = strtrim([2,3,6,8,10,11,12,13,14,15,20,21,22,23,24,31,32,33,34,35,36,37,38,40,42,49],2)
+;; 1) bounded metrics in [0, 1]: 2, 3, 6, 8, 10-15, 20-24, 31-38, 40, 42, 49
+marr1 = strtrim([2,3,6,8,10,11,12,13,14,15,20,21,22,23,24,31,32,33,34,35,36,37,38,40,42,49,52],2)
 ;; 3) no-stretch metrics: 1, 9, 16, 17, 18, 19, 25, 27
 marr3 = strtrim([1,9,16,17,18,19,25,27],2)
 ;; 2) unbounded metrics: those not in arr1 or arr3: 4, 5, 7, 26, 28-30, 39, 41, 43-48, 50, 51

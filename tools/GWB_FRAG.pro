@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.1)'
+GWB_mv = 'GWB_FRAG (version 1.9.2)'
 ;;
 ;; Module changelog:
+;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info, statistic output option, SW tag, fixed multiscale statistic output, 
 ;;        FRAG now replaces the obsolete multiscale FAD 
 ;; 1.9.0: added note to restore files, added FAC analysis, fixed loop bug, fixed spatcon binary, IDL 8.8.3

@@ -74,6 +74,7 @@ processing options are stored in the file :code:`input/gsc-parameters.txt`.
     ;; 49 = kContagion
     ;; 50 = Skewness
     ;; 51 = Kurtosis
+    ;; 52 = Clustering
     ;;
     ;; for more details on GraySpatCon, see the Guide and/or the source code at:
     ;; https://github.com/ec-jrc/GWB/tree/main/tools/external_sources/
@@ -103,6 +104,8 @@ processing options are stored in the file :code:`input/gsc-parameters.txt`.
     ;;                  3.  From metric value in [Min, Max] to byte in [0, 254]
     ;;                  4.  From metric value in [0.0, Max] to byte in [0, 254]
     ;;                  5.  From metric value in [0.0, Max] to byte in [0, 100]
+    ;;                  Where Min and Max are the observed minimum and observed maximum values
+    ;;                  over the entire output image
     ;;              For metrics 1, 9, 16, 17, 18, 19, 25, 27 only:
     ;;                  6.  No stretch allowed; the metric value is converted to byte
     ;; Required for metrics 21, 22, 23, 24:
@@ -138,7 +141,7 @@ processing options are stored in the file :code:`input/gsc-parameters.txt`.
     ****************************************************************************
     M 20
     F 1
-    G 1
+    G 0
     P 0
     W 7
     A 1
