@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 1.9.2)'
+GWB_mv = 'GWB_SPLITLUMP (version 1.9.3)'
 ;;
 ;; Module changelog:
+;; 1.9.3: fixed standalone execution
 ;; 1.9.2: IDL 8.9.0, enforec working directory splitlump
 ;; 1.9.1: initial release
 ;;
@@ -86,11 +87,7 @@ IF res.exists EQ 1b THEN BEGIN
   close, 1 & openr, 1, fn & readf,1,q & close,1
   dir_input = strtrim(file_dirname(q),2) 
   standalone = 0
-ENDIF ELSE BEGIN
-  print, "Please run the setup and agree to the license"
-  print, "Exiting..."
-  goto,fin
-ENDELSE
+ENDIF 
 
 ;; get full path of dir_input
 pushd, dir_input & cd, current = dir_inputdef & popd
@@ -169,6 +166,16 @@ input = strtrim(finp(q[1]), 2) & fbn = file_basename(input)
 res = strpos(input,' ') ge 0
 IF res EQ 1 THEN BEGIN
   print, "Empty space in pathname of large input image: " + fbn
+  print, "Exiting..."
+  GOTO, fin
+ENDIF
+;; first check that file path actually exists
+res = file_info(input) & res = res.exists eq 1b
+IF res eq 0b THEN BEGIN
+  print, "The full path to the specified large input image: " 
+  print, input
+  print, "was not found. Verify the full pathname in: " 
+  print, mod_params
   print, "Exiting..."
   GOTO, fin
 ENDIF

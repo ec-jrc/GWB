@@ -4,12 +4,12 @@
 ;;
 ;; LM will provide one (1) image and summary statistics.
 ;; Please specify entries at line 14 ONLY using the following options:
-;; line 14: kdim: square window size [pixels], uneven in [3, 5, ...501]
+;; line 14: kdim: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
 ;;          obs_scale [hectare] = (pixres[m] * kdim)^2 / 10000
 ;;
 ;; example parameter file 
 ;; (assuming a pixel resolution of 30m, a 11x11 window ~ 10.9 ha):
 ;; 11
 ****************************************************************************
-23
+11
 ****************************************************************************

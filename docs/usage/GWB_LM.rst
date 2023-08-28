@@ -1,8 +1,8 @@
 Landscape Mosaic (GWB_LM)
 =========================
 
-This module conducts the **Landscape Mosaic** analysis at a **user-selected 
-observation scale**. The Landscape Mosaic measures land cover heterogeneity, or human 
+This module conducts the **Landscape Mosaic** analysis at up to 10 **user-selected 
+observation scales**. The Landscape Mosaic measures land cover heterogeneity, or human 
 influence, in a tri-polar classification of a location accounting for the relative 
 contributions of the three land cover types **Agriculture**, **Natural**, **Developed** 
 in the area surrounding that location. The result are spatially explicit maps and tabular 
@@ -32,9 +32,9 @@ Processing parameter options are stored in the file :code:`input/lm-parameters.t
     ;; GTB_LM parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
-    ;; LM will provide an image and summary statistics.
+    ;; LM will provide up to 10 images and summary statistics.
     ;; Please specify entries at line 14 ONLY using the following options:
-    ;; line 14: kdim: square window size [pixels], uneven in [3, 5, ...501]
+    ;; line 14: kdim: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
     ;;          obs_scale [hectare] = (pixres[m] * kdim)^2 / 10000
     ;;
     ;; example parameter file
