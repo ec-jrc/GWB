@@ -38,7 +38,7 @@ html_context = {
 
 html_theme_options = {
     "logo": {
-        "text": "GuidosToolbox Workbench (GWB)",
+        "text": "GWB",
         "image_light": "https://forest.jrc.ec.europa.eu/static/forest/images/logos/eu/logo-ec--en.svg",
         "image_dark": "https://forest.jrc.ec.europa.eu/static/forest/images/logos/eu/logo-ec--en.svg",
     },
