@@ -20,10 +20,11 @@ be installed in either:
 System-wide mode:
 -----------------
 
-As root, install GWB into the system by using one of the following options:
+As root, install GWB into the updated current version of your operating system 
+by using one of the following options:
 
 * PCLinuxOS: Open Synaptic and search for/install: :code:`GWB`
-* Fedora/RedHat/CentOS: Download the package 
+* Fedora: Download the package 
   `GWB-Fedora.x86_64.rpm <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB-Fedora.x86_64.rpm>`_ 
   to a local directory. From a root-terminal enter the command:
   
@@ -31,7 +32,6 @@ As root, install GWB into the system by using one of the following options:
 
     $ yum install <full path to the downloaded GWB-Fedora.x86_64.rpm>
   
-  Note: CentOS 7 requires the additional installation of :code:`gdal-python`
   
 * Mageia: Download the package 
   `GWB-Mageia.x86_64.rpm <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB-Mageia.x86_64.rpm>`_ 
@@ -77,6 +77,15 @@ As root, install GWB into the system by using one of the following options:
   The script will copy the standalone directory :code:`GWB` under :code:`/opt/` and setup 
   symlinks to each GWB-module in :code:`/usr/bin/`. 
   
+.. note::
+
+   on older systems such as Ubuntu LTS, RedHat/CentOS, 
+   starting the program may fail with a segfault, glibc-error, or bus error. If so, try 
+   installing the legacy package 
+   `GWB_legacyFedora.x86_64.rpm <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_legacyFedora.x86_64.rpm>`_, 
+   `gwb_legacy_amd64.deb <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/gwb_legacy_amd64.deb>`_, 
+   or the generic installer `GWB_legacy_linux64.run <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_legacy_linux64.run>`_. 
+   CentOS 7 requires the additional installation of :code:`gdal-python`
 
 
 Standalone mode:
