@@ -7,7 +7,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 # -- Project information -----------------------------------------------------
 
 project = "GWB"
-copyright = "European Union, 2023, Peter Vogt"
+copyright = "European Union, 2024, Peter Vogt"
 author = "Vogt Peter"
 release = "1.9.4"
 
