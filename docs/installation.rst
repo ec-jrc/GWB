@@ -79,7 +79,7 @@ by using one of the following options:
   
 .. note::
 
-   CentOS 7 requires the additional installation of :code:`gdal-python`
+   CentOS 7 requires the additional installation of :code:`gdal-python` 
 
 
 Standalone mode:
