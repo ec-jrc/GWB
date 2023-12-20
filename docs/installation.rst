@@ -79,12 +79,6 @@ by using one of the following options:
   
 .. note::
 
-   on older systems such as Ubuntu LTS, RedHat/CentOS, 
-   starting the program may fail with a segfault, glibc-error, or bus error. If so, try 
-   installing the legacy package 
-   `GWB_legacyFedora.x86_64.rpm <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_legacyFedora.x86_64.rpm>`_, 
-   `gwb_legacy_amd64.deb <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/gwb_legacy_amd64.deb>`_, 
-   or the generic installer `GWB_legacy_linux64.run <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_legacy_linux64.run>`_. 
    CentOS 7 requires the additional installation of :code:`gdal-python`
 
 
