@@ -19,9 +19,10 @@ PRO GWB_SC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SC (version 1.9.3)'
+GWB_mv = 'GWB_SC (version 1.9.4)'
 ;;
 ;; Module changelog:
+;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: SpatCon bugfix, SW tag, rename to GWB_SC
 ;; 1.9.0: initial release of GWB_SPATCON: extended from GWB_P223 to provide full SpatCon access,

@@ -395,9 +395,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.9.3)'
+GWB_mv = 'GWB_MSPA (version 1.9.4)'
 ;;
 ;; Module changelog:
+;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info, SW tag
 ;; 1.9.0: added note to restore files, fixed metadata description on loop, IDL 8.8.3

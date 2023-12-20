@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 1.9.3)'
+GWB_mv = 'GWB_SPLITLUMP (version 1.9.4)'
 ;;
 ;; Module changelog:
+;; 1.9.4: IDL 9.0.0
 ;; 1.9.3: fixed standalone execution
 ;; 1.9.2: IDL 8.9.0, enforec working directory splitlump
 ;; 1.9.1: initial release
