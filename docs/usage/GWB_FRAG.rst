@@ -11,48 +11,63 @@ product sheet.
 Requirements
 ------------
 
-A single band (Geo)TIFF image in data format byte:
+A single band (Geo)TIFF image in data format byte and either:
+
+**Binary:**
 
 -   0 byte: missing (optional)
 -   1 byte: background
 -   2 byte: foreground (forest)
--   3 byte: specific background (optional)
--   4 byte: non-fragmenting background (optional)
+-	3 byte: specific background (optional)
+-	4 byte: non-fragmenting background (optional)
+
+**Grayscale:** (grayt = grayscale threshold in [1,100])
+
+-	[0, grayt-1] byte: background
+-	[grayt, 100] byte: foreground
+-	103 byte: specific background (optional)
+-	104 byte: non-fragmenting background (optional)
+-	255 byte: missing (optional)
 
 Processing parameter options are stored in the file :code:`input/frag-parameters.txt`.
 
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_FRAG parameter file:
+    ;; GWB_FRAG parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;; Fragmentation analysis at up to 10 user-selected Fixed Observation Scales (FOS):
-    ;; FAC (Foreground Area Clustering); FAD (Foreground Area Density)
+    ;; GWB_FRAG will provide one (1) image and summary statistics per observation scale
     ;;
-    ;; Options:
-    ;; FAC(FAD)5/6: per-pixel clustering (density), color-coded into 5/6 fragmentation classes
-    ;; FAC(FAD)-APP2/5: average per-patch clustering (density), color-coded into 2/5 classes
+    ;; Method_Reporting: choose one of the following 3 methods to analyze the Foreground (FG) pixels:
+    ;;    FAD (FG Area Density); FED (FG Edge Density); FAC (FG Area Clustering):
+    ;; combined with one of the follwing 2 reporting options, per-pixel or average per-patch (APP):
+    ;;    FAD/FED/FAC_5/6: per-pixel reporting, color-coded into 5 or 6 fragmentation classes
+    ;;    FAD-APP/FED-APP/FAC-APP_2/5: per-patch reporting, color-coded into 2 or 5 classes
+    ;;
+    ;; Input map type (byte) and requirements: binary OR grayscale
+    ;; - Binary: 1-background, 2-foreground, optional:
+    ;;       0-missing, 3-special background, 4-non-fragmenting background
+    ;; - Grayscale: [0, grayt-1]-background, [grayt, 100]-foreground (grayt = grayscale threshold in [1,100]), optional:
+    ;;       255-missing, 103-special background, 104-non-fragmenting background
     ;; 
-    ;; Input image requirements: 1b-background, 2b-foreground, optional: 
-    ;;    0b-missing, 3b-special background, 4b-non-fragmenting background
+    ;; Please specify entries at lines 37-43 ONLY using the following syntax:
+    ;; line 37: Method/reporting: FAD_5 (default) or FAD_6, FAD-APP_2, FAD-APP_5 (same for FED or FAC)
+    ;; line 38: Foreground connectivity: 8 (default) or 4
+    ;; line 39: pixel resolution [meters]
+    ;; line 40: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
+    ;; line 41: high-precision: 1-float precision  (default)  or 0-rounded byte
+    ;; line 42: statistics: 0 (no statistics - default) or 1 (add summary statistics)
+    ;; line 43: input map type: Binary (default) or Grayscale grayt (e.g., Grayscale 30)
     ;;
-    ;; FRAG will provide one (1) image per observation scale and summary statistics.
-    ;; (method: FAC or FAD; reporting at pixel or patch (APP) level; # of reporting classes: 2, 5, 6)
-    ;; Please specify entries at lines 32-36 ONLY using the following options:
-    ;; line 32: FAC_5 (default)  or  FAC_6, FAC-APP_2, FAC_APP_5, FAD_5, FAD_6, FAD-APP_2  or  FAD-APP_5
-    ;; line 33: Foreground connectivity: 8 (default) or 4
-    ;; line 34: pixel resolution [meters]
-    ;; line 35: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
-    ;; line 36: high-precision: 1-float precision  (default)  or 0-rounded byte
-    ;; line 37: statistics: 0 (default) or 1 (add summary statistics)
-    ;;
-    ;; an example parameter file using the default settings:
-    ;; FAC_5
+    ;; an example parameter file using the default settings on a binary input map:
+    ;; FAD_5
     ;; 8
     ;; 100
     ;; 27
     ;; 1
     ;; 0
+    ;; Binary
     ****************************************************************************
     FAC_5
     8
@@ -60,6 +75,7 @@ Processing parameter options are stored in the file :code:`input/frag-parameters
     27
     1
     1
+    Binary
     ****************************************************************************
 
 Example
@@ -74,8 +90,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_FRAG -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_FRAG using:
     dir_input= $HOME/input
@@ -83,6 +99,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     Frag finished sucessfully
 
     $ ls -R output/
@@ -105,7 +122,7 @@ categories.
 .. code-block:: text
 
     Fragmentation analysis using Fixed Observation Scale (FOS)
-    Method options: FAC (Foreground Area Clustering); FAD (Foreground Area Density)
+    Method options: FAD - FG Area Density; FED - FG Edge Density; FAC - FG Area Clustering;
     Summary analysis for image: 
     example.tif
     ================================================================================
@@ -125,6 +142,8 @@ categories.
     ================================================================================
     Image foreground statistics:
     Foreground area [pixels]: 428490
+    Number of foreground patches: 2850
+    Average foreground patch size: 150.34737
     ================================================================================
     Proportion [%] of foreground area in foreground cover class:
     FAC at pixel level: 5 classes

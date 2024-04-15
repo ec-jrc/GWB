@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.4)'
+GWB_mv = 'GWB_FRAG (version 1.9.5)'
 ;;
 ;; Module changelog:
+;; 1.9.5: added FED and grayscale input
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info, statistic output option, SW tag, fixed multiscale statistic output, 
@@ -133,9 +134,9 @@ ENDIF
 ;;==============================================================================
 ;; 1a) verify parameter file 
 ;;==============================================================================
-;; read frag settings, we need at least 5 valid lines
+;; read frag settings, we need at least 6 valid lines
 fl = file_lines(mod_params)
-IF fl LT 6 THEN BEGIN
+IF fl LT 7 THEN BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
@@ -162,12 +163,12 @@ ENDIF
 ;; get and check parameters
 ;; 1) frag type
 fragtype = strtrim(finp(q[0]), 2)
-fragarray = ['FAC_5', 'FAC_6', 'FAC-APP_2', 'FAC-APP_5', 'FAD_5', 'FAD_6', 'FAD-APP_2', 'FAD-APP_5']
+fragarray = ['FAD_5', 'FAD_6', 'FAD-APP_2', 'FAD-APP_5', 'FED_5', 'FED_6', 'FED-APP_2', 'FED-APP_5', 'FAC_5', 'FAC_6', 'FAC-APP_2', 'FAC-APP_5']
 qq = where(fragtype eq fragarray)
 IF qq LT 0 THEN  BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, 'The selected option is not correct: ' + fragtype
-  print, "Select either of: FAC_5, FAC_6, FAC-APP_2, FAC-APP_5, FAD_5, FAD_6, FAD-APP_2, FAD-APP_5."
+  print, "Select either of: FAD_5,FAD_6,FAD-APP_2,FAD-APP_5,  FED_5,FED_6,FED-APP_2,FED-APP_5,  FAC_5,FAC_6,FAC-APP_2, FAC-APP_5."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
   print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -182,7 +183,7 @@ endif else if strmid(fragtype,4) eq 'APP_2' then begin
   restore, 'idl/fe47colors.sav'
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "Select either of: FAC_5, FAC_6, FAC-APP_2, FAC-APP_5, FAD_5, FAD_6, FAD-APP_2, FAD-APP_5."
+  print, "Select either of: FAD_5,FAD_6,FAD-APP_2,FAD-APP_5,  FED_5,FED_6,FED-APP_2,FED-APP_5,  FAC_5,FAC_6,FAC-APP_2, FAC-APP_5."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
   print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -195,6 +196,7 @@ method = strmid(fragtype,0,3)
 repstyle = method + ' at pixel level'
 IF fosg eq 'FOS-APP' then repstyle = method + ' at patch level (APP: average per patch)'
 IF fosg eq 'FOS-APP' then repclass = strmid(fragtype,8,1) ELSE repclass = strmid(fragtype,4,1)
+fosclass = fragtype
 
 ;; 2) FG-connectivity
 c_FGconn = strtrim(finp(q[1]), 2)
@@ -256,6 +258,37 @@ endif else begin
   print, "Exiting..."
   goto,fin
 endelse
+
+;; 7) input type?
+c_inp = strtrim(finp(q[6]), 2)
+IF strlowcase(strmid(c_inp,0,6)) EQ 'binary' THEN BEGIN
+  fosinp = 'Binary'
+ENDIF ELSE IF strlowcase(strmid(c_inp,0,9)) EQ 'grayscale' THEN BEGIN
+  fosinp = 'Grayscale'
+ENDIF ELSE BEGIN
+  print, "The file: " + mod_params + " is in a wrong format."
+  print, "input map type must be either Binary or Grayscale."
+  print, "Please copy the respective backup file into your input directory:"
+  print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+  print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+  print, "Exiting..."
+  goto,fin
+ENDELSE
+IF fosinp EQ 'Grayscale' THEN BEGIN
+  grayt_str  = strtrim(strmid(c_inp,9),2)
+  ;; test if in [1,100]
+  grayt = fix(abs(grayt_str))
+  IF (grayt EQ 0) OR (grayt GT 100) THEN BEGIN
+    print, "The file: " + mod_params + " is in a wrong format."
+    print, "The Grayscale threshold grayt is not in [1, 100]."
+    print, "Please copy the respective backup file into your input directory:"
+    print,  dir_inputdef + "/input/backup/*parameters.txt, or"
+    print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
+    print, "Exiting..."
+    goto,fin
+  ENDIF
+  grayt = byte(grayt)
+ENDIF
 
 
 ;; 4) observation scales, maximum 10
@@ -341,6 +374,8 @@ printf, 9, 'Observation scale [ha]: ' + cc
 cat3 = strtrim(round(float(cat)^2 * pix2acr),2)+',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat3[i]
 printf, 9, 'Observation scale [ac]: ' + cc
 printf, 9, 'Statistics: ' + dostats
+if fosinp eq 'Grayscale' then printf, 9, 'Input map type: ' + fosinp + ', Grayscale threshold: ' + $
+  grayt_str else printf, 9, 'Input map type: ' + fosinp
 printf, 9, 'Number of files to be processed: ', nr_im_files
 printf, 9, '==============================================='
 close, 9
@@ -365,7 +400,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 9, 'File: ' + input
   printf, 9, 'uncompressed image size [GB]: ' + strtrim(imsizeGB,2)
   printf, 9, 'available free RAM [GB]: ' + strtrim(GBavail,2)
-  printf, 9, 'up to 13x RAM needed [GB]: ' + strtrim(imsizeGB*13.0,2)
+  printf, 9, 'up to 20x RAM needed [GB]: ' + strtrim(imsizeGB*20.0,2)
   close, 9
   
   res = strpos(input,' ') ge 0
@@ -376,7 +411,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     GOTO, skip_fos  ;; invalid input
   ENDIF
   
-  res = query_tiff(input, inpinfo)
+ ;; res = query_tiff(input, inpinfo)
   IF inpinfo.type NE 'TIFF' THEN BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, 'Skipping invalid input (not a TIF image)'
@@ -410,8 +445,16 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
-
-
+  
+  ;; check for byte array
+  ;;===========================
+  IF inpinfo.bits_per_sample NE 8 THEN BEGIN
+    openw, 9, fn_logfile, /append
+    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
+    close, 9
+    GOTO, skip_fos  ;; invalid input
+  ENDIF
+  
   ;; read it
   geotiff = 0
   im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
@@ -427,62 +470,64 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   
   im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1] & imgminsize=(xdim<ydim)
   IF nocheck EQ 1b THEN goto, good2go
-
-
-  ;; check for byte array
-  ;;===========================
-  IF size(im, / type) NE 1 THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'Skipping invalid input (image is not of type BYTE) '
-    close, 9
-    GOTO, skip_fos  ;; invalid input
-  ENDIF
   
   ;; check for correct image dimension
   ;;===================================
   IF imgminsize LT 250 THEN BEGIN
     openw, 9, fn_logfile, /append
-    printf, 9, 'Image dimension LT 250 pixels in x or y image dimension'
+    printf, 9, 'Image dimension < 250 pixels in x or y image dimension'
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
 
-  ;; check min/max value in image
-  ;;===========================
-  mxx = max(im, min = mii)
-  IF mxx GT 4b THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE)'
-    close, 9
-    GOTO, skip_fos  ;; invalid input
-  ENDIF ELSE IF mxx LT 2b THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE))'
-    close, 9
-    GOTO, skip_fos  ;; invalid input
-  ENDIF
-  IF mii GT 1b THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)) '
-    close, 9
-    GOTO, skip_fos  ;; invalid input
-  ENDIF
-  ;; we must have foreground pixels (2) and we must have BG-pixels (1)
-  upv = where(histogram(im, /l64) GT 0)
-  q=where(upv eq 2, ct)
-  IF ct NE 1 THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found'
-    close, 9
-    GOTO, skip_fos  ;; invalid input    
-  ENDIF
-  q=where(upv eq 1, ct)
-  IF ct NE 1 THEN BEGIN
-    openw, 9, fn_logfile, /append
-    printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found '
-    close, 9
-    GOTO, skip_fos  ;; invalid input
-  ENDIF
+
+  IF fosinp EQ 'Binary' THEN BEGIN
+    ;; check min/max value in image
+    ;;===========================
+    mxx = max(im, min = mii)
+    IF mxx GT 4b THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'Skipping invalid input (Image maximum is larger than 4 BYTE)'
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF ELSE IF mxx LT 2b THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'Skipping invalid input (Image has no foreground (2 BYTE))'
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    IF mii GT 1b THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'Skipping invalid input (Image has no background (1 BYTE)) '
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    ;; we must have foreground pixels (2) and we must have BG-pixels (1)
+    upv = where(histogram(im, /l64) GT 0)
+    q=where(upv eq 2, ct)
+    IF ct NE 1 THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'No pixels with mandatory FG-data value 2 BYTE found'
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    q=where(upv eq 1, ct)
+    IF ct NE 1 THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'No pixels with mandatory BG-data value 1 BYTE found'
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF    
+  ENDIF ELSE BEGIN ;; grayscale
+    ;; clustering is not allowed for grayscale
+    IF strmid(fosclass,0,3) EQ 'FAC' THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'Clustering (FAC) is not applicale to grayscale input maps'
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    
+  ENDELSE
 
   good2go:
   ;;==============================================================================
@@ -493,39 +538,64 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   file_mkdir, dir_proc
   time0 = systime( / sec)
   
-  ;; image properties
   image0 = temporary(im) & obj_last = -1
-  qmiss = where(image0 eq 0b, ctmiss, /l64) 
-  q3b = where(image0 eq 3b, ct3b, /l64) 
-  q4b = where(image0 eq 4b, ct4b, /l64)
-  BGmask = where(image0 EQ 1b, /l64)   
-  if tstats eq 1 then qFG = where(image0 eq 2b, /l64, fgarea)
-
-  if fosg eq 'FOS-APP' then begin
-    ;; for FOS_APP we need the patch sizes
-    ext1 = bytarr(sz[0] + 2, sz[1] + 2)
-    ext1[1:sz[0], 1:sz[1]] = image0 eq 2b
-    ;; label FG only
-    ext1 = ulong(temporary(ext1)) & obj_area = histogram(ext1, /l64) 
-    ext1 = label_region(temporary(ext1), all_neighbors=conn8, / ulong)
-    obj_last = max(ext1) & z80 = strtrim(obj_last,2)
-    aps = total(obj_area[1:*]) / obj_last & z81 = strtrim(aps,2) 
-    ;; get pixel indices by patch
-    ext1 = histogram(temporary(ext1), reverse_indices = rev, /l64) & ext1=0
-  endif
-  
+  ;; image properties
+  IF fosinp EQ 'Binary' THEN BEGIN
+    qmiss = where(image0 eq 0b, ctmiss, /l64)
+    q3b = where(image0 eq 3b, ct3b, /l64)
+    q4b = where(image0 eq 4b, ct4b, /l64)
+    BGmask = where(image0 EQ 1b, /l64)
+    if tstats eq 1 then qFG = where(image0 eq 2b, /l64, fgarea)
+  ENDIF ELSE BEGIN ;; grayscale
+    ;; we must have foreground pixels and we must have BG-pixels
+    BGmask = where(image0 LT grayt, ctbg, /l64)
+    IF ctbg LT 1 THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'No BG pixels found when using grayscale threshold: ' + grayt_str
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    tt = image0 GE grayt AND image0 LT 101b & qFG = where(tt eq 1b, /l64, fgarea)
+    IF fgarea LT 1 THEN BEGIN
+      openw, 9, fn_logfile, /append
+      printf, 9, 'No FG pixels found when using grayscale threshold: ' + grayt_str
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    ENDIF
+    qmiss = where(image0 eq 255b,ctmiss, /l64) 
+    q3b = where(image0 eq 103b, ct3b, /l64) 
+    q4b = where(image0 eq 104b, ct4b, /l64)
+    IF ct3b GT 0 THEN image0[q3b] = 0b ;; set special BG to zero
+    IF ct4b GT 0 THEN image0[q4b] = 255b ;; non-fragmenting specialBG - assign to missing
+  ENDELSE
+    
   ;; FOS loop over observation scales
   kdim_cat = cat 
   
-  if tstats eq 1 then begin
-    ;; define arrays for cummulative values in summary barplot in popup window
+  IF (fosg eq 'FOS-APP') OR (tstats eq 1) THEN BEGIN
+    ext1 = bytarr(sz[0] + 2, sz[1] + 2)
+    IF fosinp EQ 'Binary' THEN BEGIN
+      ext1[1:sz[0], 1:sz[1]] = image0 eq 2b
+    ENDIF ELSE BEGIN
+      ext1[1:sz[0], 1:sz[1]] = long(temporary(tt))
+    ENDELSE
+    ;; label FG only
+    ext1 = ulong(temporary(ext1)) & obj_area = histogram(ext1, /l64)
+    ext1 = label_region(temporary(ext1), all_neighbors=conn8, / ulong)
+    obj_last = max(ext1) & z80 = strtrim(obj_last,2)
+    aps = total(obj_area[1:*]) / obj_last & z81 = strtrim(aps,2)
+    ;; get pixel indices by patch
+    ext1 = histogram(temporary(ext1), reverse_indices = rev, /l64) & ext1=0   
+    
+    ;; define arrays for cummulative values
     intact_cat = fltarr(nr_cat) & interior_cat = intact_cat & dominant_cat = intact_cat & transitional_cat = intact_cat
-    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat  
-  endif 
+    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat
+  ENDIF
   
   ;; define output already here to write out each scale image
   fbn = file_basename(list[fidx], '.tif')
   outdir = dir_output + '/' + fbn + '_frag' & file_mkdir, outdir
+  proc_spatcon = strmid(fosclass,0,3) EQ 'FAC' OR (strmid(fosclass,0,3) EQ 'FAD' AND fosinp EQ 'Binary')
   
   ;; loop over specified scales
   ;;=========================================================================
@@ -533,63 +603,141 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   for isc = 0, nr_cat-1 do begin
     if isc eq 0 then begin ;; initialise scinput image
       tmp = temporary(image0)
-      IF ct4b GT 0 THEN tmp[q4b] = 0b
+      IF fosinp EQ 'Binary' THEN BEGIN
+        IF ct4b GT 0 THEN tmp[q4b] = 0b
+      ENDIF ELSE BEGIN
+        IF ct4b GT 0 THEN tmp[q4b] = 255b
+      ENDELSE      
     endif
     kdim_str = strtrim(kdim_cat[isc],2)
     kdim = kdim_cat[isc]
     
     ;; run spatcon Density (PF) or Clustering (Spatial Convolution metrics by K. Riitters)
-    pushd, dir_proc
-    IF strmid(fragtype,0,3) eq 'FAC' then begin
-      mstr = '76' 
-      bstr = 'b 2'
-    ENDIF ELSE BEGIN
-      mstr = '81' 
-      bstr = 'b 0'
-    ENDELSE
-    resfloat = fix(hprec)
-    openw,1, 'scsize.txt'
-    printf,1,'nrows '+strtrim(sz[1],2)
-    printf,1,'ncols '+strtrim(sz[0],2)
-    close,1
-
-    openw,1, 'scpars.txt'
-    printf,1,'w ' + kdim_str
-    printf,1,'r ' + mstr
-    printf,1,'a 2'
-    printf,1,'h 1'
-    printf,1, bstr
-    printf,1,'m 0'
-    if resfloat eq 1 then printf,1,'f 1' else printf,1,'f 0'
-    close,1
     
-    if isc eq 0 then begin
-      openw, 1, 'scinput' & writeu,1, tmp & close, 1 & tmp = 0
-      file_copy, dir_gwb + '/spatcon_lin64', 'spatcon', /overwrite
-    endif 
-    spawn, './spatcon', log
+    IF proc_spatcon EQ 1 THEN BEGIN
+      ;; ***************  run spatcon PF (a) or FAC (e)  ***********************
+      pushd, dir_proc
+      IF strmid(fragtype,0,3) eq 'FAC' then begin
+        mstr = '76'
+        bstr = 'b 2'
+      ENDIF ELSE BEGIN
+        mstr = '81'
+        bstr = 'b 0'
+      ENDELSE
+      resfloat = fix(hprec)
+      openw,1, 'scsize.txt'
+      printf,1,'nrows '+strtrim(sz[1],2)
+      printf,1,'ncols '+strtrim(sz[0],2)
+      close,1
 
-    ;; get result
-    im = bytarr(sz(0),sz(1))
-    if resfloat eq 1 then im=float(temporary(im))
-    openr, 1, 'scoutput' & readu,1, im & close,1
+      openw,1, 'scpars.txt'
+      printf,1,'w ' + kdim_str
+      printf,1,'r ' + mstr
+      printf,1,'a 2'
+      printf,1,'h 1'
+      printf,1, bstr
+      printf,1,'m 0'
+      if resfloat eq 1 then printf,1,'f 1' else printf,1,'f 0'
+      close,1
 
-    ;; clean up
-    file_delete, 'scoutput', 'scpars.txt', 'scsize.txt',/allow_nonexistent,/quiet   
-    popd
+      if isc eq 0 then begin
+        openw, 1, 'scinput' & writeu,1, tmp & close, 1 & tmp = 0
+        file_copy, dir_gwb + '/spatcon_lin64', 'spatcon', /overwrite
+      endif
+      spawn, './spatcon', log
 
-    ;; rescale to normalized byte range
-    if resfloat eq 0 then begin
-      ;; normally the conversion to byte range would be: im=(im-1b)/254.0 > 0.0
-      ;; the potential max value from spatcon is 255b and *only* those pixels can have a remapped value of 100b
-      ; we must prevent that the value 254b will get rounded to 100b so mask the 255b pixels
-      q = where(im eq 255b, ct, /l64)
-      im = (temporary(im) - 1b)*(1.0/254.0) & im = 0.994999 < temporary(im) > 0.0
-      im = byte(round(temporary(im) * 100.0))
-      if ct gt 0 then im[q] = 100b
-    endif else begin
-      im = byte(round(temporary(im) * 100.0))
-    endelse
+      ;; get result
+      im = bytarr(sz(0),sz(1))
+      if resfloat eq 1 then im=float(temporary(im))
+      openr, 1, 'scoutput' & readu,1, im & close,1
+
+      ;; clean up
+      file_delete, 'scoutput', 'scpars.txt', 'scsize.txt',/allow_nonexistent,/quiet
+      popd
+
+      ;; rescale to normalized byte range
+      if resfloat eq 0 then begin
+        ;; normally the conversion to byte range would be: im=(im-1b)/254.0 > 0.0
+        ;; the potential max value from spatcon is 255b and *only* those pixels can have a remapped value of 100b
+        ; we must prevent that the value 254b will get rounded to 100b so mask the 255b pixels
+        q = where(im eq 255b, ct, /l64)
+        im = (temporary(im) - 1b)*(1.0/254.0) & im = 0.994999 < temporary(im) > 0.0
+        im = byte(round(temporary(im) * 100.0))
+        if ct gt 0 then im[q] = 100b
+      endif else begin
+        im = byte(round(temporary(im) * 100.0))
+      endelse
+    
+    ENDIF ELSE BEGIN
+      GSC1 = (strmid(fosclass,0,3) EQ 'FAD' AND fosinp EQ 'Grayscale')
+      pushd, dir_proc
+      ;; ***************  run GSC for (b), (c), or (d) ***********************
+      IF GSC1 EQ 1 THEN BEGIN ;; run GSC 1 for case (b)
+        close, 1 & openw,1, 'gscpars.txt'
+        printf,1,'R ' + strtrim(sz[1],2)
+        printf,1,'C ' + strtrim(sz[0],2)
+        printf,1,'M 1'
+        printf,1,'P 0'
+        printf,1,'G 0'
+        printf,1,'W ' + kdim_str
+        printf,1,'F 1'
+        printf,1,'B 6'
+        printf,1,'A 1'
+        printf,1,'X 5'
+        printf,1,'Y 10'
+        printf,1,'K 5'
+        close,1
+      ENDIF ELSE BEGIN ;; run GSC 52 for (c) and (d)
+        close, 1 & openw,1, 'gscpars.txt'
+        printf,1,'R ' + strtrim(sz[1],2)
+        printf,1,'C ' + strtrim(sz[0],2)
+        printf,1,'M 52'
+        printf,1,'P 0'
+        printf,1,'G 0'
+        printf,1,'W ' + kdim_str
+        printf,1,'F 1'
+        printf,1,'B 1'
+        printf,1,'A 1'
+        printf,1,'X 5'
+        printf,1,'Y 10'
+        printf,1,'K 5'
+        close,1
+        ;; amend image setup for GSC processing
+        ;; 1) set all BG to zero
+        tmp[BGmask] = 0b
+        IF fosinp EQ 'Binary' THEN BEGIN ;; case (c)
+          tmp[qFG] = 100b
+          tmp[qmiss] = 255b
+          IF ct3b GT 0 THEN tmp[q3b] = 0b ;; set special BG to zero
+          IF ct4b GT 0 THEN tmp[q4b] = 255b ;; non-fragmenting specialBG - assign to missing
+        ENDIF
+      ENDELSE
+      
+      if isc eq 0 then begin
+        openw, 1, 'gscinput' & writeu,1, tmp & close, 1 & tmp = 0
+        file_copy, dir_gwb + '/grayspatcon_lin64', 'grayspatcon', /overwrite
+      endif
+      spawn, './grayspatcon', log
+
+      ;; get result
+      ;; if we get a GraySpatCon error then the last entry will not be "Normal Finish"
+      res = log[n_elements(log)-1] & res = strpos(strlowcase(res), 'normal finish') gt 0
+      if res eq 0 then begin
+        file_delete, 'gscinput', 'gscoutput', 'gscoutput.txt', 'gscpars.txt', /allow_nonexistent,/quiet
+        openw, 9, fn_logfile, /append
+        printf, 9, 'GSC error'
+        for idd = 1, n_elements(log)-1 do printf, 9, log[idd]     
+        close, 9
+        popd
+        GOTO, skip_fos  ;; invalid input
+      endif
+      ;; read the image output
+      im = bytarr(sz(0),sz(1))
+      openr, 1, 'gscoutput' & readu,1, im & close,1
+      file_delete, 'gscoutput', 'gscpars.txt', /allow_nonexistent,/quiet      
+      popd
+    ENDELSE 
+
     if tstats eq 1 then begin
       fad_av = mean(im(qFG)) & fad_av_cat[isc] = fad_av
     endif
@@ -610,6 +758,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     if ct4b gt 0 then im[q4b] = 106b
     if ctmiss gt 0 then im[qmiss] = 102b 
     im[BGmask] = 101b 
+    
     
     ;; write out the single scale image
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.tif'
@@ -658,7 +807,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   
   ;; cleanup temporary proc directory and the masks for the current image
   file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
-  qmiss = 0 & q3b = 0 & q4b = 0 & BGmask = 0
+  qmiss = 0 & q3b = 0 & q4b = 0 & BGmask = 0 & qFG = 0
   
   if tstats eq 0 then goto, skipstats 
   ;; write out the statistics table
@@ -666,13 +815,15 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
 
   openw,12,fn_out
   printf, 12, 'Fragmentation analysis using Fixed Observation Scale (FOS)'
-  printf, 12, 'Method options: FAC (Foreground Area Clustering); FAD (Foreground Area Density)'
+  printf, 12, 'Method options: FAD - FG Area Density; FED - FG Edge Density; FAC - FG Area Clustering;'
   printf, 12, 'Summary analysis for image: '
   printf, 12, file_basename(input)
   printf, 12, '================================================================================'
   printf, 12, 'FOS parameter settings:'
+  IF fosinp EQ 'Grayscale' THEN tt = 'Input type: Grayscale (FG threshold: ' + grayt_str + ')' ELSE tt = 'Input type: ' + fosinp
+  printf, 12, tt  
   printf, 12, 'Foreground connectivity: ' + conn_str
-  printf, 12, 'FOS-type selected: ' + fragtype
+  printf, 12, 'FOS-type selected: ' + fosclass
   printf, 12, 'Method: ' + method
   printf, 12, 'Reporting style: ' + repstyle
   printf, 12, 'Number of reporting classes: ' + repclass
@@ -698,9 +849,10 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, '================================================================================'
   printf, 12, 'Image foreground statistics:'
   printf, 12, 'Foreground area [pixels]: ', strtrim(fgarea,2)
-  if fosg eq 'FOS-APP' then printf, 12, 'Number of foreground patches: ',  z80
-  if fosg eq 'FOS-APP' then printf, 12, 'Average foreground patch size: ', z81
-  IF ct4b GT 0 THEN printf, 12, 'Non-fragmenting background pixels [4b] in input image'
+  printf, 12, 'Number of foreground patches: ',  z80 
+  printf, 12, 'Average foreground patch size: ', z81 
+  IF fosinp EQ 'Binary' THEN tt = '[4b]' ELSE tt = '[104b]'
+  IF ct4b GT 0 THEN printf, 12, 'Non-fragmenting background pixels ' + tt + ' in input image'
   printf, 12, '================================================================================'
   printf, 12, 'Proportion [%] of foreground area in foreground cover class:'
   fmt = '(a55,'+strtrim(nr_cat,2)+'(f11.4))'
@@ -742,7 +894,9 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.csv'
   openw,12,fn_out
   w = indgen(nr_cat+1, /string) +',' & w = w[1:*] & cc = '' & for i = 0, nr_cat-1 do cc = cc + w[i]
-  printf,12, fragtype + ': FragmClass\ObsScale:, ' + cc
+  
+  IF fosinp EQ 'Grayscale' THEN tt = 'Grayscale_' + grayt_str ELSE tt = fosinp
+  printf,12, tt + ' ' + fragtype + ': FragmClass\ObsScale:, ' + cc
   cat2 = strtrim(cat2, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat2[i]
   printf,12, 'Neighborhood area [pixels]:,', cc  
   hec = strtrim(hec, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + hec[i]

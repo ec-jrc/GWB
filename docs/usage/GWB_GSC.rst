@@ -4,7 +4,7 @@ GraySpatCon (GWB_GSC)
 This module provides full access to the spatial convolution program 
 **GraySpatCon**. **GraySpatCon** is an extended version of **SpatCon**, with the 
 additional feature of permitting analysing grayscale density maps and conducting a global 
-map analysis. **GraySpatCon** offers 51 spatial convolution metrics, which are summarised 
+map analysis. **GraySpatCon** offers 52 spatial convolution metrics, which are summarised 
 in the 
 `GRAYSPATCON_Guide <https://github.com/ec-jrc/GWB/blob/main/tools/external_sources/GRAYSPATCON_Guide.pdf>`_.
 **GraySpatCon** conducts a moving window, or focal analysis and results in a spatially 
@@ -19,7 +19,7 @@ processing options are stored in the file :code:`input/gsc-parameters.txt`.
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_GSC parameter file:
+    ;; GWB_GSC parameter file:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Please amend only the options at the end of this file and between the lines in *****
     ;; GraySpatCon (GSC) metrics:
@@ -164,8 +164,8 @@ processing success of each input image.
 .. code-block:: console
 
     $ GWB_GSC -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_GSC using:
     dir_input= $HOME/input
@@ -175,6 +175,7 @@ processing success of each input image.
     % Loaded DLM: PNG.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     GSC finished sucessfully
 
     $ ls -R output/

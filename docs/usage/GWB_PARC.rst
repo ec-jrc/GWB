@@ -21,7 +21,7 @@ Processing parameter options are stored in the file :code:`input/parc-parameters
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_PARC parameter file:
+    ;; GWB_PARC parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; PARC: Landscape Parcellation index
@@ -51,8 +51,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_PARC -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_PARC using:
     dir_input= $HOME/input
@@ -60,6 +60,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     PARC finished sucessfully
 
     $ ls -R output/

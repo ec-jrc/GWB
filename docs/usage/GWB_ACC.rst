@@ -23,7 +23,7 @@ Processing parameter options are stored in the file :code:`input/acc-parameters.
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_ACCOUNTING parameter file:
+    ;; GWB_ACCOUNTING parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; ACC: Accounting of image objects and patch area size classes
@@ -67,8 +67,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_ACC -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_ACC using:
     dir_input= $HOME/input
@@ -76,6 +76,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     Accounting finished sucessfully
 
     $ ls -R output/

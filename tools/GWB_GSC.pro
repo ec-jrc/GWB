@@ -19,12 +19,12 @@ PRO GWB_GSC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_GSC (version 1.9.4)'
+GWB_mv = 'GWB_GSC (version 1.9.5)'
 ;;
 ;; Module changelog:
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.3: added GSC bugfix version 1.2.1
-;; 1.9.2: IDL 8.9.0, added metric 52 Clustering
+;; 1.9.2: IDL 8.9.0, added metric 52 FED (Clustering)
 ;; 1.9.1: initial release       
 ;;
 ;;==============================================================================

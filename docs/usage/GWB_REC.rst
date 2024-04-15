@@ -14,7 +14,7 @@ Processing parameter options are stored in the file :code:`input/rec-parameters.
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_REC parameter file:
+    ;; GWB_REC parameter file:
     ;; NOTE: change values only at the end of the file between the lines in *****
     ;;
     ;; REC: Recode image classes
@@ -52,8 +52,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_REC -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_REC using:
     dir_input= $HOME/input
@@ -61,6 +61,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     Recode finished sucessfully
 
     $ ls -R output/

@@ -32,7 +32,7 @@ Processing parameter options are stored in the file :code:`input/mspa-parameters
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_MSPA parameter file:
+    ;; GWB_MSPA parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; MSPA: Morphological Spatial Pattern Analysis (up to 23 classes)
@@ -77,8 +77,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_MSPA -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_MSPA using:
     dir_input= $HOME/input
@@ -86,6 +86,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     MSPA processing finished sucessfully
 
     $ ls -R output/

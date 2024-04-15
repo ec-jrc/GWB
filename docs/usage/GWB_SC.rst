@@ -22,7 +22,7 @@ processing options are stored in the file :code:`input/sc-parameters.txt`.
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_SC parameter file:
+    ;; GWB_SC parameter file:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; For all output types, missing indicates the input window contained only
     ;; missing pixels or missing pixel adjacencies.
@@ -96,8 +96,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_SC -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_SC using:
     dir_input= $HOME/input
@@ -105,6 +105,7 @@ success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     RULE 81 finished sucessfully
 
     $ ls -R output/

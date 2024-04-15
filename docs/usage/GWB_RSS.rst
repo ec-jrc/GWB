@@ -26,7 +26,7 @@ Processing parameter options are stored in the file :code:`input/rss-parameters.
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_RESTORATION-STATUS parameter file:
+    ;; GWB_RESTORATION-STATUS parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; RSS: Restoration Status = network coherenceof image objetcs
@@ -53,8 +53,8 @@ on computation time and processing success of each input image.
 .. code-block:: console
 
     $ GWB_RSS -i=$HOME/input -o=$HOME//output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_RSS using:
     dir_input= $HOME//input
@@ -62,6 +62,7 @@ on computation time and processing success of each input image.
     % Loaded DLM: TIFF.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     RSS finished sucessfully
 
     $ ls -R output/

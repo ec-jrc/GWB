@@ -31,10 +31,11 @@ The two directories have the following content and functionality:
 
 **Input data:** All GWB modules require categorical raster input maps in the (Geo)TIFF 
 format and of data type unsigned byte (8bit), with discrete integer values within 
-[0, 255] byte. The two sample images in the directory :code:`input` are:
+[0, 255] byte. The three sample images in the directory :code:`input` are:
 
 1. :code:`example.tif`: 0 byte - Missing, 1 byte - Background, 2 byte - Foreground
 2. :code:`clc3class.tif`: 1 byte - Agriculture, 2 byte - Natural, 3 byte - Developed
+3. :code:`gscinput.tif`: [0, 100] byte - grayscale data, 255 byte - Missing
 
 .. note::
 
@@ -114,8 +115,7 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
        Parameter file: input/dist-parameters.txt
 
     GWB_FRAG: user-selected custom scale fragmentation analysis
-       Requirements: 1b-BG, 2b-FG, optional: 0b-missing,
-       optional: 3b-special BG, 4b-non-fragmenting BG
+       Requirements: binary or grayscale map (see frag-parameters.txt), 
        Parameter file: input/frag-parameters.txt
         
     GWB_GSC: GraySpatCon analysis of attribute adjacency table
@@ -187,7 +187,7 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
     Approximate peak RAM usage factors for an image of size imsizeGB:
     GWB_ACC  : 30 * imsizeGB
     GWB_DIST : 18 * imsizeGB
-    GWB_FRAG : 13 * imsizeGB
+    GWB_FRAG : 20 * imsizeGB
     GWB_GSC  :  5 * imsizeGB
     GWB_LM   :  9 * imsizeGB
     GWB_MSPA : 20 * imsizeGB
@@ -224,9 +224,9 @@ It is also possible to use the "help" option, for example: :code:`GWB_ACC --help
     cd into: $HOME/GWB<version>/GWB
     then run the command: ./GWB_ACC
     Note: standalone mode enforces using the default standalone
-    - input directory: $HOME/GWB1.9.1/GWB/input 
+    - input directory: $HOME/GWB1.9.5/GWB/input 
       (with your input images and parameter files);
-    - output directory: $HOME/GWB1.9.1/GWB/output 
+    - output directory: $HOME/GWB1.9.5/GWB/output 
       (location for results, must exist and must be empty);
     ----------------------------------------------------------------------------------
      

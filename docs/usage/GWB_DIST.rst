@@ -23,7 +23,7 @@ Processing parameter options are stored in the file :code:`input/dist-parameters
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_DIST parameter file:
+    ;; GWB_DIST parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; DIST: Euclidean Distance + Hypsometric Curve
@@ -54,8 +54,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_DIST -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2023, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_DIST using:
     dir_input= $HOME/input
@@ -65,6 +65,7 @@ success of each input image.
     % Loaded DLM: LAPACK.
     % Loaded DLM: PNG.
     Done with: example.tif
+    Done with: gscinput.tif
     DIST finished sucessfully
 
     $ ls -R output/

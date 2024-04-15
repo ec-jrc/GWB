@@ -29,7 +29,7 @@ Processing parameter options are stored in the file :code:`input/lm-parameters.t
 .. code-block:: text
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; GTB_LM parameter file:
+    ;; GWB_LM parameter file:
     ;; NOTE: do NOT delete or add any lines in this parameter file!
     ;;
     ;; LM will provide up to 10 images and summary statistics.
@@ -56,8 +56,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_LM -i=$HOME/input -o=$HOME/output
-    IDL 8.8.3 (linux x86_64 m64).
-    (c) 2022, Harris Geospatial Solutions, Inc.
+    IDL 9.0.0 (linux x86_64 m64).
+    (c) 2023, NV5 Geospatial Solutions, Inc.
 
     GWB_LM using:
     dir_input= $HOME/input
@@ -66,6 +66,7 @@ success of each input image.
     % Loaded DLM: PNG.
     Done with: clc3class.tif
     Done with: example.tif
+    Done with: gscinput.tif
     LM finished sucessfully
 
     $ ls -R output/

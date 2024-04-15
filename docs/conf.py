@@ -9,7 +9,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 project = "GWB"
 copyright = "European Union, 2024, Peter Vogt"
 author = "Vogt Peter"
-release = "1.9.4"
+release = "1.9.5"
 
 # -- General configuration ---------------------------------------------------
 
