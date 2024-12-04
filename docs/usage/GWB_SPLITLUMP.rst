@@ -170,8 +170,8 @@ Example
   
      $ GWB_SPLITLUMP -i=$HOME/input/splitlump-parameters.txt
     
-     IDL 9.0.0 (linux x86_64 m64).
-     (c) 2023, NV5 Geospatial Solutions, Inc.
+     IDL 9.1.0 (linux x86_64 m64).
+     (c) 2024, NV5 Geospatial Solutions, Inc.
     
      parameter file: $HOME/input/splitlump-parameters.txt
      % Loaded DLM: TIFF.

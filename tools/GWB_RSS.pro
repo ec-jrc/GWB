@@ -20,9 +20,10 @@ PRO GWB_RSS
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 1.9.5)'
+GWB_mv = 'GWB_RSS (version 1.9.6)'
 ;;
 ;; Module changelog:
+;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info

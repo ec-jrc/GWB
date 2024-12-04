@@ -395,9 +395,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.9.5)'
+GWB_mv = 'GWB_MSPA (version 1.9.6)'
 ;;
 ;; Module changelog:
+;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info, SW tag
@@ -640,9 +641,10 @@ file_mkdir, dir_proc
 ;; apply MSPA settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
+gpref = 'unset LD_LIBRARY_PATH; '
 descbase = 'GTB_MSPA, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
 tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
-gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gpref + 'gdal_edit.py -mo ' + tagsw
 
 fn_logfile = dir_output + '/mspa.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l

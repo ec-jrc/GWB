@@ -59,8 +59,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_SPA -i=$HOME/input -o=$HOME/output
-    IDL 9.0.0 (linux x86_64 m64).
-    (c) 2023, NV5 Geospatial Solutions, Inc.
+    IDL 9.1.0 (linux x86_64 m64).
+    (c) 2024, NV5 Geospatial Solutions, Inc.
 
     GWB_SPA using:
     dir_input= $HOME/input

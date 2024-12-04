@@ -20,9 +20,10 @@ PRO GWB_SPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SPA (version 1.9.5)'
+GWB_mv = 'GWB_SPA (version 1.9.6)'
 ;;
 ;; Module changelog:
+;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info, statistic output option, SW tag
@@ -181,9 +182,10 @@ endelse
 ;; apply SPAx settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
+gpref = 'unset LD_LIBRARY_PATH; '
 desc = 'GTB_SPA, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
 tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
-gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gpref + 'gdal_edit.py -mo ' + tagsw
 gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
 
 fn_logfile = dir_output + '/spa' + spax_str + '.log'

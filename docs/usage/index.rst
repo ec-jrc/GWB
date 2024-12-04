@@ -224,9 +224,9 @@ It is also possible to use the "help" option, for example: :code:`GWB_ACC --help
     cd into: $HOME/GWB<version>/GWB
     then run the command: ./GWB_ACC
     Note: standalone mode enforces using the default standalone
-    - input directory: $HOME/GWB1.9.5/GWB/input 
+    - input directory: $HOME/GWB<version>/GWB/input 
       (with your input images and parameter files);
-    - output directory: $HOME/GWB1.9.5/GWB/output 
+    - output directory: $HOME/GWB<version>/GWB/output 
       (location for results, must exist and must be empty);
     ----------------------------------------------------------------------------------
      
@@ -253,7 +253,7 @@ Additional, general remarks:
     Details on each image processing result can be found in the log-file in the 
     directory :code:`output`.
 -   GWB is written in the 
-    `IDL language <https://www.l3harrisgeospatial.com/Software-Technology/IDL>`_. It 
+    `IDL language <https://www.nv5geospatialsoftware.com/Products/IDL>`_. It 
     includes all required IDL libraries and the source code of each module, stored in 
     the folder: :code:`/opt/GWB/tools/source/`.
 -   To list your current version of GWB, or to check for a potential new GWB version, 

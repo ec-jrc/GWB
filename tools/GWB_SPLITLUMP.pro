@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 1.9.5)'
+GWB_mv = 'GWB_SPLITLUMP (version 1.9.6)'
 ;;
 ;; Module changelog:
+;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.3: fixed standalone execution
 ;; 1.9.2: IDL 8.9.0, enforec working directory splitlump
@@ -56,10 +57,11 @@ GWB_mv = 'GWB_SPLITLUMP (version 1.9.5)'
 ;;==============================================================================
 ;;==============================================================================
 ;; initial system checks
-gdi = 'gdalinfo -noct '
-gtrans = 'gdal_translate -co COMPRESS=LZW -srcwin '
-gedit = 'gdal_edit.py '
-gbuildvrt = 'gdalbuildvrt '
+gpref = 'unset LD_LIBRARY_PATH; '
+gdi = gpref + 'gdalinfo -noct '
+gtrans = gpref + 'gdal_translate -co COMPRESS=LZW -srcwin '
+gedit = gpref + 'gdal_edit.py '
+gbuildvrt = gpref + 'gdalbuildvrt '
 ;;==============================================================================
 ;; 0) get path to directories or use default
 ;;==============================================================================

@@ -20,9 +20,10 @@ PRO GWB_REC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.9.5)'
+GWB_mv = 'GWB_REC (version 1.9.6)'
 ;;
 ;; Module changelog
+;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
 ;; 1.9.1: added image size info
@@ -222,13 +223,14 @@ endif
 ;;==============================================================================
 ;;==============================================================================
 ;; check gdal version, NUM_THREADS is supported only in 2.1 and later
-spawn, 'gdalinfo --version', res & res = res[0]
+gpref = 'unset LD_LIBRARY_PATH; '
+spawn, gpref + 'gdalinfo --version', res & res = res[0]
 res = strmid(res, 5, strpos(res,',')-5) & res = strmid(res, 0, strpos(res,'.',/reverse_search))
 res = float(res)
 IF res GE 2.1 THEN CCPU = ' -co "NUM_THREADS=ALL_CPUS" ' ELSE CCPU = ''
 desc = 'GTB_REC, https://forest.jrc.ec.europa.eu/activities/lpa/gtb/'
 tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
-gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gpref + 'gdal_edit.py -mo ' + tagsw
 gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
 
 
@@ -332,7 +334,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   close, 1
   openw, 1, 'recode.txt' & printf, 1, psel & close, 1
   ;; use gdal to write the raw data in bsq and without the geoheader
-  spawn, 'gdal_translate -of ENVI ' + input + ' recinput > /dev/null 2>&1'  
+  spawn, gpref + 'gdal_translate -of ENVI ' + input + ' recinput > /dev/null 2>&1'  
   file_copy, dir_gwb + '/recode_lin64', 'recode', /overwrite
   file_copy, dir_gwb + '/gdalcopyproj.py', 'gdalcopyproj.py', /overwrite
   ;; as user, set correct python path for gdalcopyproj.py and ensure it is executable
@@ -350,7 +352,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   fn_out = outdir + '/' + fbn + '_rec.tif' 
   file_move, 'recinput.hdr','recoutput.hdr', /overwrite
   file_move, 'recinput.aux.xml','recoutput.aux.xml', /overwrite
-  spawn, 'gdal_translate -of GTiff -co "COMPRESS=LZW"' + CCPU + BTIFF + ' recoutput ' + fn_out + ' > /dev/null 2>&1'
+  spawn, gpref + 'gdal_translate -of GTiff -co "COMPRESS=LZW"' + CCPU + BTIFF + ' recoutput ' + fn_out + ' > /dev/null 2>&1'
   spawn, './gdalcopyproj.py ' + input + ' ' + fn_out  + ' > /dev/null 2>&1'
   spawn, gedit + fn_out + ' > /dev/null 2>&1'
   popd

@@ -1,11 +1,11 @@
 PRO GWB_FRAG
 ;;==============================================================================
-;; GWB APP for user-selected scale of FAC or FAD (fragmentation)
+;; GWB APP for user-selected scale of FAD/FEC/FAC (fragmentation)
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to conduct flexible FAC/FAD 
+;; IDL cmd-line app to conduct flexible FAD/FED/FAC
 ;; (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/)
 ;; more info in the GTB manual.
 ;;
@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.5)'
+GWB_mv = 'GWB_FRAG (version 1.9.6)'
 ;;
 ;; Module changelog:
+;; 1.9.6: add gpref, histogram, ECA, IDL 9.1.0
 ;; 1.9.5: added FED and grayscale input
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
@@ -193,7 +194,7 @@ endelse
 tvlct, r, g, b
 if strlen(fragtype) eq 5 then fosg = 'FOS' else fosg = 'FOS-APP'
 method = strmid(fragtype,0,3)
-repstyle = method + ' at pixel level'
+repstyle = method + ' at pixel level' & repstyle2 = method
 IF fosg eq 'FOS-APP' then repstyle = method + ' at patch level (APP: average per patch)'
 IF fosg eq 'FOS-APP' then repclass = strmid(fragtype,8,1) ELSE repclass = strmid(fragtype,4,1)
 fosclass = fragtype
@@ -354,9 +355,10 @@ dir_proc = dir_output + '/.proc'
 ;; apply frag settings in a loop over all tif images 
 ;;==============================================================================
 ;;==============================================================================
+gpref = 'unset LD_LIBRARY_PATH; '
 desc = 'GTB_FOS, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
 tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
-gedit = 'unset LD_LIBRARY_PATH; gdal_edit.py -mo ' + tagsw
+gedit = gpref + 'gdal_edit.py -mo ' + tagsw
 gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
 
 fn_logfile = dir_output + '/' + 'frag.log'
@@ -477,7 +479,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     openw, 9, fn_logfile, /append
     printf, 9, 'Image dimension < 250 pixels in x or y image dimension'
     close, 9
-    GOTO, skip_fos  ;; invalid input
+    GOTO, skip_fos  ;; invalid input; PV: comment out to test small images
   ENDIF
 
 
@@ -541,11 +543,12 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   image0 = temporary(im) & obj_last = -1
   ;; image properties
   IF fosinp EQ 'Binary' THEN BEGIN
-    qmiss = where(image0 eq 0b, ctmiss, /l64)
+    qmiss = where(image0 eq 0b, ctmiss, /l64, complement=ruarea)
     q3b = where(image0 eq 3b, ct3b, /l64)
     q4b = where(image0 eq 4b, ct4b, /l64)
     BGmask = where(image0 EQ 1b, /l64)
-    if tstats eq 1 then qFG = where(image0 eq 2b, /l64, fgarea)
+    qFG = where(image0 eq 2b, /l64, fgarea)
+    fareaperc=100.0/n_elements(ruarea)*fgarea
   ENDIF ELSE BEGIN ;; grayscale
     ;; we must have foreground pixels and we must have BG-pixels
     BGmask = where(image0 LT grayt, ctbg, /l64)
@@ -562,7 +565,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       close, 9
       GOTO, skip_fos  ;; invalid input
     ENDIF
-    qmiss = where(image0 eq 255b,ctmiss, /l64) 
+    qmiss = where(image0 eq 255b,ctmiss, /l64, complement=ruarea) 
+    fareaperc=100.0/n_elements(ruarea)*fgarea
     q3b = where(image0 eq 103b, ct3b, /l64) 
     q4b = where(image0 eq 104b, ct4b, /l64)
     IF ct3b GT 0 THEN image0[q3b] = 0b ;; set special BG to zero
@@ -585,11 +589,16 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     obj_last = max(ext1) & z80 = strtrim(obj_last,2)
     aps = total(obj_area[1:*]) / obj_last & z81 = strtrim(aps,2)
     ;; get pixel indices by patch
-    ext1 = histogram(temporary(ext1), reverse_indices = rev, /l64) & ext1=0   
+    ext1 = histogram(temporary(ext1), reverse_indices = rev, /l64)
+    ;; PCnum:= overall connectivity. Sum of [ (areas per component)^2 ]
+    pcnum = total(ext1(1: * )^2, / double) & ECA = sqrt(pcnum)
+    ECA_max = total(ext1(1: * ), / double) & COH = ECA/ECA_max*100.0
+    COH_ru = ECA/n_elements(ruarea)*100.0 & ext1=0 
     
     ;; define arrays for cummulative values
     intact_cat = fltarr(nr_cat) & interior_cat = intact_cat & dominant_cat = intact_cat & transitional_cat = intact_cat
-    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat
+    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat & fadru_av_cat = intact_cat
+    hist2_cat = fltarr(nr_cat,101)
   ENDIF
   
   ;; define output already here to write out each scale image
@@ -737,10 +746,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       file_delete, 'gscoutput', 'gscpars.txt', /allow_nonexistent,/quiet      
       popd
     ENDELSE 
-
-    if tstats eq 1 then begin
-      fad_av = mean(im(qFG)) & fad_av_cat[isc] = fad_av
-    endif
     
     ;; do we want APP?
     if fosg eq 'FOS-APP' then begin
@@ -752,13 +757,12 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       ENDFOR
       im = extim[1:sz[0], 1:sz[1]] & extim=0
     endif
-
+   
     ;; add specialBG (105b), specialBG-Nf (106b), Missing (102b), background (101b)   
     if ct3b gt 0 then im[q3b] = 105b        
     if ct4b gt 0 then im[q4b] = 106b
     if ctmiss gt 0 then im[qmiss] = 102b 
     im[BGmask] = 101b 
-    
     
     ;; write out the single scale image
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.tif'
@@ -768,57 +772,88 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, compression = 1
     spawn, gedit + fn_out + ' > /dev/null 2>&1'
 
-    ;; do we want the statistics?
-    if tstats eq 1 then begin
-      ;; initialize
-      intact = -1.0 & interior = intact & dominant = intact & transitional = intact  & patchy = intact  
-      rare = intact & continuous = intact & separated = intact
-      
-      if fosg eq 'FOS' then begin
-        ;; get the 5 fragmentation proportions (the 6th, rare, is always 100.0%)
-        if strmid(fragtype,4,1) eq '6' then begin
-          zz = (im EQ 100b) & intact = total(zz)/fgarea*100.0 & intact_cat[isc] = intact
-          zz = (im GE 90b) AND (im LT 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
-        endif else begin
-          zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
-        endelse
-        zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
-        zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
-        zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
-        zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & zz = 0 & rare_cat[isc] = rare
-      endif else begin ;; output 5-class as well as 2-class
-        zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
-        zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
-        zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
-        zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
-        zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & rare_cat[isc] = rare
-        zz = (im GE 40b) AND (im LE 100b) & continuous = total(zz)/fgarea*100.0 & continuous_cat[isc] = continuous
-        zz = (im LT 40b) & separated = total(zz)/fgarea*100.0 & zz = 0 & separated_cat[isc] = separated
-      endelse     
-      ;; save stats summary in idl sav format for potential change analysis at some later point      
-      hec = ((pixres * kdim)^2) / 10000.0 & acr = hec * 2.47105 & geotiff_log = ''
-      IF is_geotiff GT 0 then spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
-      fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
-      save, filename = fn_out, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
-        separated, continuous, fad_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim, hec, acr        
-    endif ;; end of statistics output
+
+    if tstats eq 0 then goto, nostats    
+    ;; build the statistics
+    fad_av = mean(im[qFG]) & fad_av_cat[isc] = fad_av
+    ;; for the ruarea average we need to temporarily set the BG to zero
+    im[BGmask] = 0b
+    fadru_av = mean(im[ruarea]) & fadru_av_cat[isc] = fadru_av
+    im[BGmask] = 101b 
     
+    ;; a) build histogram
+    hist = histogram(im[qFG],/l64) & hist = hist[0:100]
+    if strlen(fosclass) eq 5 then begin
+      method = strmid(fosclass,0,3) & hcolor = 'orange'
+    endif else begin
+      method = strmid(fosclass,0,7) & hcolor = 'yellow'
+    endelse
+    bins = findgen(101)-0.5 & xtit = method & tit = 'Foreground pixel histogram (WS: ' + kdim_str + ')' & amax = max(hist)
+    ;; plot as percentage by FG-area
+    hist2 = float(hist)/n_elements(qfg)*100.0 & bmax = max(hist2) & hist2_cat[isc,*] = hist2
+    bp = barplot(bins, hist2, fill_color=hcolor, xtitle=xtit, /buffer, $
+      ytitle = 'Occurrence frequency [%]', title = tit, xrange = [0,105], histogram=1)
+    ;bp = text(5,bmax*0.95,'Average value at',/data,/current)
+    ;bp = text(5,bmax*0.90,'Foreground level: ' + strtrim(fad_av,2) + '%',/data,/current)
+    ;bp = text(5,bmax*0.85,'Reporting unit level: ' + strtrim(fadru_av,2) + '%',/data,/current)
+    fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.png'
+    bp.save, fn_out, resolution=300
+    bp.close
+    
+    ;; b) do the grouping
+    intact = -1.0 & interior = intact & dominant = intact & transitional = intact  & patchy = intact
+    rare = intact & continuous = intact & separated = intact
+    if fosg eq 'FOS' then begin
+      ;; get the 5 fragmentation proportions (the 6th, rare, is always 100.0%)
+      if strmid(fragtype,4,1) eq '6' then begin
+        zz = (im EQ 100b) & intact = total(zz)/fgarea*100.0 & intact_cat[isc] = intact
+        zz = (im GE 90b) AND (im LT 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+      endif else begin
+        zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+      endelse
+      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
+      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
+      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
+      zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & zz = 0 & rare_cat[isc] = rare
+    endif else begin ;; output 5-class as well as 2-class
+      zz = (im GE 90b) AND (im LE 100b) & interior = total(zz)/fgarea*100.0 & interior_cat[isc] = interior
+      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz)/fgarea*100.0 & dominant_cat[isc] = dominant
+      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz)/fgarea*100.0 & transitional_cat[isc] = transitional
+      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz)/fgarea*100.0 & patchy_cat[isc] = patchy
+      zz = (im LT 10b) & rare = total(zz)/fgarea*100.0 & rare_cat[isc] = rare
+      zz = (im GE 40b) AND (im LE 100b) & continuous = total(zz)/fgarea*100.0 & continuous_cat[isc] = continuous
+      zz = (im LT 40b) & separated = total(zz)/fgarea*100.0 & zz = 0 & separated_cat[isc] = separated
+    endelse
+    ;; c) save stats summary in idl sav format for potential change analysis at some later point
+    hec = ((pixres * kdim)^2) / 10000.0 & acr = hec * 2.47105 & geotiff_log = ''
+    IF is_geotiff GT 0 then spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
+    fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
+    save, filename = fn_out, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
+      separated, continuous, fad_av, fadru_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim, hec, acr
+    nostats: 
   endfor    ;; end of isc scale loop  
   
   ;; cleanup temporary proc directory and the masks for the current image
   file_delete, dir_proc, /recursive, /quiet, /allow_nonexistent
   qmiss = 0 & q3b = 0 & q4b = 0 & BGmask = 0 & qFG = 0
+  if tstats eq 0 then begin
+     ruarea = 0 & goto, skipstats 
+  endif
   
-  if tstats eq 0 then goto, skipstats 
-  ;; write out the statistics table
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; d) write out the statistics table as plain text file
+  ;;=======================================
   fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.txt'
-
   openw,12,fn_out
   printf, 12, 'Fragmentation analysis using Fixed Observation Scale (FOS)'
+  printf, 12, '(Fragmentation is complementary to Connectivity: Fragmentation = 100% - Connectivity)
   printf, 12, 'Method options: FAD - FG Area Density; FED - FG Edge Density; FAC - FG Area Clustering;'
   printf, 12, 'Summary analysis for image: '
   printf, 12, file_basename(input)
   printf, 12, '================================================================================'
+  IF hprec EQ '1' THEN printf, 12, 'Precision: floating point' else printf, 12, 'Precision: rounded byte'
+  IF fosinp EQ 'Binary' THEN tt = '[4b]' ELSE tt = '[104b]'
+  IF ct4b GT 0 THEN printf, 12, 'Non-fragmenting background pixels ' + tt + ' in input image'
   printf, 12, 'FOS parameter settings:'
   IF fosinp EQ 'Grayscale' THEN tt = 'Input type: Grayscale (FG threshold: ' + grayt_str + ')' ELSE tt = 'Input type: ' + fosinp
   printf, 12, tt  
@@ -828,7 +863,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, 'Reporting style: ' + repstyle
   printf, 12, 'Number of reporting classes: ' + repclass
   printf, 12, 'Pixel resolution [m]: ' + pixres_str
-  printf, 12, 'Window size [pixels]: ' + kdim_str
+  ws_cat = strarr(nr_cat)
+  for id = 0, nr_cat -1 do ws_cat[id] = '   ' + strtrim(cat[id],2)
+  cc = '' & for i = 0, nr_cat-1 do cc = cc + ws_cat[i]
+  ccws = cc
+  printf, 12, 'Window size [pixels]: ' + ccws
   printf, 12, 'Observation scale [(window size * pixel resolution)^2]: '
   ;; Observation scales
   w = indgen(nr_cat)+1 & if nr_cat gt 1 then w = w[1:*]
@@ -839,7 +878,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   cat2 = strarr(nr_cat)
   for id = 0, nr_cat -1 do cat2[id] = '   ' + strtrim(cat[id],2) + 'x' + strtrim(cat[id],2) + '   '
   cat2[0] = cat2[0] + '  '
-  ;  printf, 12, format = '(%"Neighborhood area:", 10(A))', cat2
   printf, 12, format = '(a18, 10(A))', 'Neighborhood area:',cat2
 
   ;; area conversions
@@ -847,20 +885,10 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, format = '(a15, 10(f11.2))', '[hectare]:', hec
   printf, 12, format = '(a15, 10(f11.2))', '[acres]:', acr
   printf, 12, '================================================================================'
-  printf, 12, 'Image foreground statistics:'
-  printf, 12, 'Foreground area [pixels]: ', strtrim(fgarea,2)
-  printf, 12, 'Number of foreground patches: ',  z80 
-  printf, 12, 'Average foreground patch size: ', z81 
-  IF fosinp EQ 'Binary' THEN tt = '[4b]' ELSE tt = '[104b]'
-  IF ct4b GT 0 THEN printf, 12, 'Non-fragmenting background pixels ' + tt + ' in input image'
-  printf, 12, '================================================================================'
   printf, 12, 'Proportion [%] of foreground area in foreground cover class:'
   fmt = '(a55,'+strtrim(nr_cat,2)+'(f11.4))'
-  fmt2 = '(a67,'+strtrim(nr_cat,2)+'(f11.4))'
-  
   if fosg eq 'FOS' then begin    
     ;if fragtype eq 'FOS6' then printf, 12, 'FOS 6-class:' else printf, 12, 'FOS 5-class:'    
-    printf, 12, repstyle  + ': ' + repclass + ' classes'
     printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare_cat
     printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy_cat
     printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional_cat
@@ -872,7 +900,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       printf, 12, format=fmt, 'Intact (' + method + '-pixel value: 100): ', intact_cat
     endelse
   endif else begin
-    printf, 12, 'FOS-' + strmid(fragtype,0,7)  + ': 5 classes:'
     printf, 12, format=fmt, 'Rare (' + method + '-pixel value within: [0 - 9]): ', rare_cat
     printf, 12, format=fmt, 'Patchy (' + method + '-pixel value within: [10 - 39]): ', patchy_cat
     printf, 12, format=fmt, 'Transitional (' + method + '-pixel value within: [40 - 59]): ', transitional_cat
@@ -883,18 +910,43 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     printf, 12, format=fmt, 'Continuous (' + method + '-pixel value within: [40 - 100]): ', continuous_cat
   endelse
   printf, 12, '================================================================================'
-  if hprec eq '1' then printf, 12, 'Precision: floating point' else printf, 12, 'Precision: rounded byte'
-  printf, 12, format=fmt2, 'Average pixel value across all foreground pixels using ' + method + '-method: ', strtrim(fad_av_cat,2)
-  printf, 12, format=fmt2, 'Equivalent to average foreground connectivity: ', strtrim(fad_av_cat,2)
-  printf, 12, format=fmt2, 'Equivalent to average foreground fragmentation: ', strtrim(100.0-fad_av_cat,2)
+  printf, 12, '================================================================================'
+  printf, 12, 'A) Image summary:'
+  printf, 12, '================================================================================'
+  printf, 12, 'Reporting unit area [pixels]: ', strtrim(n_elements(ruarea),2)
+  printf, 12, 'Foreground area [pixels]: ', strtrim(fgarea,2)
+  printf, 12, 'Foreground area [%]: ', strtrim(fareaperc,2)
+  printf, 12, 'Number of foreground patches: ',  z80
+  printf, 12, 'Average foreground patch size [pixels]: ', z81
+  printf, 12, '================================================================================'
+  printf, 12, 'B) Reporting levels'
+  printf, 12, '================================================================================'
+  fmt2 = '(a34,'+strtrim(nr_cat,2)+'(f11.4))'
+  printf, 12, 'Foreground (FG) connectivity is available at 4 reporting levels, at:'
+  printf, 12, 'B1) Pixel-level: method FAD/FED/FAC: check the FG pixel value on the map, or aggregated at'
+  printf, 12, 'B2) Patch-level: method _APP (Average-Per-Patch): check the FG pixel value on the map'
+  printf, 12, 'B3) Foreground-level: reference area = all foreground pixels'
+  printf, 12, format=fmt2, '- Average connectivity at WS [%]: ', strtrim(fad_av_cat,2)
+  printf, 12, '- ECA (Equivalent Connected Area) [pixels]: ', strtrim(ECA,2)  
+  printf, 12, '- COH (Coherence = ECA/ECA_max*100) [%]: ', strtrim(COH,2)
+  printf, 12, 'B4) Reporting unit-level: reference area = entire reporting unit'
+  printf, 12, format=fmt2, '- Average connectivity at WS [%]: ', strtrim(fadru_av_cat,2)
+  printf, 12, '- COH_ru (ECA/Reporting unit area*100) [%]: ', strtrim(COH_ru,2)
+  printf, 12, '================================================================================'
+  printf, 12, '================================================================================'
+  printf, 12, 'Histogram of FG-pixel values rounded to the nearest integer, FGcover[%] at window size:'
+  fmt3 = '(a6,' + strtrim(nr_cat,2)+'(f11.4))'
+  cc = '' & for i = 0, nr_cat-1 do cc = cc + '   WS' + strtrim(ws_cat[i],2) + '    '
+  printf, 12, 'Value ' + cc
+  For id = 0, 100 do printf, 12, format=fmt3, strtrim(id,2), hist2_cat[*,id]
   close, 12
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; write csv output
+  ;; e) write out the statistics table as csv 
+  ;;=======================================
   fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.csv'
   openw,12,fn_out
   w = indgen(nr_cat+1, /string) +',' & w = w[1:*] & cc = '' & for i = 0, nr_cat-1 do cc = cc + w[i]
-  
   IF fosinp EQ 'Grayscale' THEN tt = 'Grayscale_' + grayt_str ELSE tt = fosinp
   printf,12, tt + ' ' + fragtype + ': FragmClass\ObsScale:, ' + cc
   cat2 = strtrim(cat2, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat2[i]
@@ -924,10 +976,31 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     printf, 12, 'Separated:, ' + cc & z = strtrim(continuous_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
     printf, 12, 'Continuous:, ' + cc 
   endelse
+  printf, 12, '' 
+  printf, 12, 'A) Image summary:'
+  printf, 12, 'Reporting unit area [pixels]: ', strtrim(n_elements(ruarea),2)
+  printf, 12, 'Foreground area [pixels]: ', strtrim(fgarea,2)
+  printf, 12, 'Foreground area [%]: ', strtrim(fareaperc,2)
+  printf, 12, 'Number of foreground patches: ',  z80
+  printf, 12, 'Average foreground patch size [pixels]: ', z81
   z = strtrim(fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-  printf, 12, 'Average connectivity: ' + prec + ', ' + cc
-  z = strtrim(100.0-fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
-  printf, 12, 'Average fragmentation: 100-' + prec + ', ' + cc
+  printf, 12, 'B) Reporting levels'
+  printf, 12, 'B3) Foreground-level:'
+  printf, 12, '- Average connectivity at window size [%]:,' + cc
+  printf, 12, '- ECA [pixels]: ', strtrim(ECA,2)
+  printf, 12, '- COH [%]: ', strtrim(COH,2)
+  printf, 12, 'B4) Reporting unit-level:'
+  z = strtrim(fadru_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
+  printf, 12, '- Average connectivity at window size [%]:,' + cc
+  printf, 12, '- COH_ru [%]: ', strtrim(COH_ru,2)
+  printf, 12, ' '
+  printf, 12, 'FGcover[%] histogram at window size'
+  cc = '' & for i = 0, nr_cat-1 do cc = cc + 'WS' + strtrim(ws_cat[i],2) + ','
+  printf, 12, 'Pixel Value, ' + cc
+  For id = 0, 100 do begin
+    cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,id],2)+ ','
+    printf, 12, strtrim(id,2), ', ',cc 
+  endfor
   close,12
   
   skipstats:
