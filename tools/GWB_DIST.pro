@@ -20,9 +20,10 @@ PRO GWB_DIST
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_DIST (version 1.9.6)'
+GWB_mv = 'GWB_DIST (version 1.9.7)'
 ;;
 ;; Module changelog:
+;; 1.9.7: increase computing precision 
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
@@ -303,7 +304,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   conn8 = 1 
   fgo = label_region(ext eq 2b,all_neighbors=conn8, /ulong) & fgo = max(fgo) ;; 8-conn FG
   bgo = label_region(ext eq 1b,all_neighbors=1-conn8, /ulong) & bgo = max(bgo)  ;; 4-conn BG 
-  fg_pix = total(image0 eq 2b) & bg_pix = total(image0 eq 1b) & data = fg_pix + bg_pix
+  fg_pix = total(image0 eq 2b,/double) & bg_pix = total(image0 eq 1b,/double) & data = fg_pix + bg_pix
   pfg=fg_pix/data & pbg=bg_pix/data
 
   fo = morph_distance(ext EQ 1b, /background, neighbor = 3) & fo = fo[1:sim_x, 1:sim_y]
@@ -402,7 +403,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   xtit = 'Background          distance [pixels]          Foreground'
 
   ;; calculate hypsometric curve
-  fghmc=total(fghist[1:*],/cum) & bghmc=total(bghist[1:*],/cum)
+  fghmc=total(fghist[1:*],/cum,/double) & bghmc=total(bghist[1:*],/cum,/double)
   fghmcx=fghmc/max(fghmc) & bghmcx=bghmc/max(bghmc)
   hmc = fltarr(n_elements(bins))
   hmc[0:bgmax-1] = -reverse(bghmcx) & hmc[bgmax+1:*]=fghmcx

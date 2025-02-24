@@ -20,7 +20,7 @@ PRO GWB_LM
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_LM (version 1.9.6)'
+GWB_mv = 'GWB_LM (version 1.9.7)'
 ;;
 ;; Module changelog:
 ;; 1.9.6: add gpref, IDL 9.1.0
@@ -379,7 +379,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
      ;;================================================================================
      ;; get unique frequencies excluding the missing pixels (0)
      hist = histogram(im103, /l64) ;; the frequencies for each class
-     tot = total(hist[1:236]) & hn = hist/tot*100.0 & eps = 0.000005 & hmax = max(hn[1:*])
+     tot = total(hist[1:236],/double) & hn = hist/tot*100.0 & eps = 0.000005 & hmax = max(hn[1:*])
      ;; we are using the lm-colours! 20-black, 1-blue , 2-red, 17-darkgreen
      ;; white (0) no number if not present
      ;; black (20) if not hmax

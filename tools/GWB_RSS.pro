@@ -20,9 +20,10 @@ PRO GWB_RSS
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 1.9.6)'
+GWB_mv = 'GWB_RSS (version 1.9.7)'
 ;;
 ;; Module changelog:
+;; 1.9.7: increase computing precision
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
@@ -276,7 +277,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
 
   ;; ECA: equivalent connected component area = sqrt(pcnum) [unit area, hectares]
   ECA_orig = sqrt(pcnum_orig)
-  ECA_max = total(h_comp_area[1: * ])
+  ECA_max = total(h_comp_area[1: * ],/double)
   DOC_orig = ECA_orig/ECA_max*100.0
   REST_POT = 100.0-doc_orig
   RAC_orig = ECA_max / data_area *100.0

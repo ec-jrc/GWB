@@ -20,9 +20,10 @@ PRO GWB_PARC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_PARC (version 1.9.6)'
+GWB_mv = 'GWB_PARC (version 1.9.7)'
 ;;
 ;; Module changelog:
+;; 1.9.7: increase computing precision
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
@@ -279,11 +280,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       vclass = vclass + 1
       blob = label_region(ext1 eq qclass, all_neighbors=conn8, / ulong) & mx = max(blob)
       barea = histogram(temporary(blob),/l64) & parcels = parcels + mx
-      ba = barea[1:mx] & atot = total(ba) & aps = atot/mx
+      ba = barea[1:mx] & atot = total(ba,/double) & aps = atot/mx
       ;; meshsize/area averaged mean patch size:
-      s = total(ba^2) & aaps_rel = s/atot & aaps  = s/data_area
+      s = total(ba^2,/double) & aaps_rel = s/atot & aaps  = s/data_area
       ;; division index:
-      s = total((ba/atot)^2) & div_rel = 1.0 - s
+      s = total((ba/atot)^2,/double) & div_rel = 1.0 - s
       ;; alog-scale division index, set lower end to 20.0, then scale into [100, 1]%
       div = -alog(s) & div = div_up < div & parc = div_scale * abs(div)
 
@@ -330,9 +331,9 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   aps = data_area/parcels
   ;; amend p_ba: take off the last entry which is -1 from the original definition
   p_ba = p_ba[0:n_elements(p_ba)-2]
-  aaps = (total(p_ba^2))/data_area
+  aaps = (total(p_ba^2),/double)/data_area
   ;; division index:
-  s = total((p_ba/data_area)^2) & div_im = 1.0 -s
+  s = total((p_ba/data_area)^2,/double) & div_im = 1.0 -s
   div = -alog(s) & div = div_up < div & parc = div_scale * abs(div )
   
   skip_parcb:  

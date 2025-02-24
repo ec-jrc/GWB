@@ -20,7 +20,7 @@ PRO GWB_SPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SPA (version 1.9.6)'
+GWB_mv = 'GWB_SPA (version 1.9.7)'
 ;;
 ;; Module changelog:
 ;; 1.9.6: add gpref, IDL 9.1.0
