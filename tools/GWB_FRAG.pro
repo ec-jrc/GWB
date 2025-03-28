@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.7)'
+GWB_mv = 'GWB_FRAG (version 1.9.8)'
 ;;
 ;; Module changelog:
+;; 1.9.8: calculate AVCON before potential averaging, fixed csv output
 ;; 1.9.7: increase computing precision, fixed fadru_av to include special BG, AVCON
 ;; 1.9.6: add gpref, histogram, ECA, IDL 9.1.0
 ;; 1.9.5: added FED and grayscale input
@@ -276,6 +277,7 @@ ENDIF ELSE BEGIN
   print, "Exiting..."
   goto,fin
 ENDELSE
+grayt_str  = ''
 IF fosinp EQ 'Grayscale' THEN BEGIN
   grayt_str  = strtrim(strmid(c_inp,9),2)
   ;; test if in [1,100]
@@ -576,7 +578,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ENDELSE
     
   ;; FOS loop over observation scales
-  kdim_cat = cat 
+  kdim_cat = cat & fad_av_cat = fltarr(nr_cat) & fadru_av_cat = fltarr(nr_cat)
   
   IF (fosg eq 'FOS-APP') OR (tstats eq 1) THEN BEGIN
     ext1 = bytarr(sz[0] + 2, sz[1] + 2)
@@ -599,7 +601,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     
     ;; define arrays for cummulative values
     intact_cat = fltarr(nr_cat) & interior_cat = intact_cat & dominant_cat = intact_cat & transitional_cat = intact_cat
-    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat & fad_av_cat = intact_cat & fadru_av_cat = intact_cat
+    patchy_cat = intact_cat & rare_cat = intact_cat & separated_cat = intact_cat & continuous_cat = intact_cat
     hist2_cat = fltarr(nr_cat,101)
   ENDIF
   
@@ -749,6 +751,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       popd
     ENDELSE 
     
+    ;; build the statistics BEFORE doing APP so they are consistent with non-APP
+    fad_av = mean(im[qFG]) & fad_av_cat[isc] = fad_av
+    fadru_av = fad_av*fgarea/n_ruarea & fadru_av_cat[isc] = fadru_av
+
+    
     ;; do we want APP?
     if fosg eq 'FOS-APP' then begin
       extim = bytarr(sz[0] + 2, sz[1] + 2)
@@ -775,11 +782,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     spawn, gedit + fn_out + ' > /dev/null 2>&1'
 
 
-    if tstats eq 0 then goto, nostats    
-    ;; build the statistics
-    fad_av = mean(im[qFG]) & fad_av_cat[isc] = fad_av 
-    fadru_av = fad_av*fgarea/n_ruarea & fadru_av_cat[isc] = fadru_av
-    
+    if tstats eq 0 then goto, nostats        
     ;; a) build histogram
     hist = histogram(im[qFG],/l64) & hist = hist[0:100]
     if strlen(fosclass) eq 5 then begin
@@ -827,7 +830,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     hec = ((pixres * kdim)^2) / 10000.0 & acr = hec * 2.47105 & geotiff_log = ''
     IF is_geotiff GT 0 then spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
-    save, filename = fn_out, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
+    save, filename = fn_out, grayt_str, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
       separated, continuous, fad_av, fadru_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim, hec, acr
     nostats: 
   endfor    ;; end of isc scale loop  
@@ -976,22 +979,24 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   endelse
   printf, 12, ' ' 
   printf, 12, 'A) Image summary:'
-  printf, 12, 'Reporting unit area [pixels]: ', strtrim(n_ruarea,2)
-  printf, 12, 'Foreground area [pixels]: ', strtrim(fgarea,2)
-  printf, 12, 'Foreground area [%]: ', strtrim(fareaperc,2)
-  printf, 12, 'Number of foreground patches: ',  z80
-  printf, 12, 'Average foreground patch size [pixels]: ', z81
+  printf, 12, 'Reporting unit area [pixels]:, ' + strtrim(n_ruarea,2)
+  printf, 12, 'Foreground area [pixels]:, ' + strtrim(fgarea,2)
+  printf, 12, 'Foreground area [%]:, ' + strtrim(fareaperc,2)
+  printf, 12, 'Number of foreground patches:, ' +  z80
+  printf, 12, 'Average foreground patch size [pixels]:, ' + z81
   z = strtrim(fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   printf, 12, ' '
   printf, 12, 'B) Reporting levels'
   printf, 12, 'B3) Foreground-level:'
-  printf, 12, '- Average ' + method + ' at window size [%]:,' + cc
-  printf, 12, '- ECA [pixels]: ', strtrim(ECA,2)
-  printf, 12, '- COH [%]: ', strtrim(COH,2)
+  sss = strmid(method,0,3)
+  IF strlen(method) EQ 3 THEN sstr = '- Average ' + sss + ' at window size [%]:,' ELSE sstr = '- Average ' + sss + ' (before APP) at window size [%]:,'   
+  printf, 12, sstr + cc
+  printf, 12, '- ECA [pixels]:, ' + strtrim(ECA,2)
+  printf, 12, '- COH [%]:, ' + strtrim(COH,2)
   printf, 12, 'B4) Reporting unit-level:'
   z = strtrim(fadru_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   printf, 12, '- AVCON (average connectivity) at window size [%]:,' + cc
-  printf, 12, '- COH_ru [%]: ', strtrim(COH_ru,2)
+  printf, 12, '- COH_ru [%]:, ' + strtrim(COH_ru,2)
   printf, 12, ' '
   cc = '' & for i = 0, nr_cat-1 do cc = cc + 'WS' + strtrim(ws_cat[i],2) + ','
   printf, 12, 'FGcover histogram [%] at window size,' + cc

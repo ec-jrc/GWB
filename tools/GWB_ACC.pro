@@ -20,7 +20,7 @@ PRO GWB_ACC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_ACC (version 1.9.7)'
+GWB_mv = 'GWB_ACC (version 1.9.8)'
 ;;
 ;; Module changelog:
 ;; 1.9.6: add gpref, IDL 9.1.0

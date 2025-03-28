@@ -20,7 +20,7 @@ PRO GWB_DIST
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_DIST (version 1.9.7)'
+GWB_mv = 'GWB_DIST (version 1.9.8)'
 ;;
 ;; Module changelog:
 ;; 1.9.7: increase computing precision 

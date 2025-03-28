@@ -20,7 +20,7 @@ PRO GWB_PARC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_PARC (version 1.9.7)'
+GWB_mv = 'GWB_PARC (version 1.9.8)'
 ;;
 ;; Module changelog:
 ;; 1.9.7: increase computing precision
@@ -331,7 +331,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   aps = data_area/parcels
   ;; amend p_ba: take off the last entry which is -1 from the original definition
   p_ba = p_ba[0:n_elements(p_ba)-2]
-  aaps = (total(p_ba^2),/double)/data_area
+  aaps = total((p_ba^2),/double)/data_area
   ;; division index:
   s = total((p_ba/data_area)^2,/double) & div_im = 1.0 -s
   div = -alog(s) & div = div_up < div & parc = div_scale * abs(div )
