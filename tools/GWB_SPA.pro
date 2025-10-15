@@ -1,11 +1,11 @@
 PRO GWB_SPA
 ;;==============================================================================
-;;                   GWB APP for Spatial Pattern Analysis (SPA)
+;;                   GWB script for Spatial Pattern Analysis (SPA)
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to conduct SPAx as implemented in GuidosToolbox (GTB)
+;; IDL cmd-line script to conduct SPAx as implemented in GuidosToolbox (GTB)
 ;; (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/)
 ;; more info in the GTB manual.
 ;;
@@ -20,9 +20,10 @@ PRO GWB_SPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SPA (version 1.9.8)'
+GWB_mv = 'GWB_SPA (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0

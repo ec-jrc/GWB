@@ -3,7 +3,7 @@ GWB
 version: V1.4 or later
 ========================================================================================
 
-Copyright (C) 2018-2023 European Union
+Copyright (C) 2018-2026 European Union
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -84,14 +84,14 @@ https://github.com/ec-jrc/jeolib-miallib
 ---------------- 
 GPL 3
 
-Copyright (c) 2020-2023 European Union
+Copyright (c) 2020-2026 European Union
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-This program iis distributed in the hope that it will be useful,
+This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -109,7 +109,7 @@ https://github.com/ec-jrc/GTB/blob/main/external_sources/fsp/frag.c
 
 Author(s): Pierre Soille and Peter Vogt
 
-Copyright (C) 2008-2023 European Union (Joint Research Centre)
+Copyright (C) 2008-2026 European Union (Joint Research Centre)
 
 This file is an amended version of mspa.c to work with GTB/GWB.
 This file requires miallib.
@@ -138,7 +138,7 @@ https://github.com/ec-jrc/GTB/blob/main/external_sources/fsp/frag.h
 Author(s): Pierre Soille and Jacopo Grazzini
 
 Generic functions enabling parsing parameters to programs
-Copyright (C) 2000-2023 European Union (Joint Research Centre)
+Copyright (C) 2000-2026 European Union (Joint Research Centre)
 
 This file is part of GTB/GWB.
 This file requires miallib.
@@ -167,7 +167,7 @@ https://github.com/ec-jrc/GTB/tree/main/external_sources/fsp
  Author(s): Pierre Soille and Jacopo Grazzini
 
 Generic functions enabling parsing parameters to programs
-Copyright (C) 2000-2023 European Union (Joint Research Centre)
+Copyright (C) 2000-2026 European Union (Joint Research Centre)
 
 This file is part of GTB/GWB.
 This file requires miallib.
@@ -195,7 +195,7 @@ https://github.com/ec-jrc/GTB/blob/main/external_sources/fsp/mia_parse.c
 Author(s): Pierre Soille and Jacopo Grazzini
 
 Generic functions enabling parsing parameters to programs
-Copyright (C) 2000-2023 European Union (Joint Research Centre)
+Copyright (C) 2000-2026 European Union (Joint Research Centre)
 
 This file is part of GTB/GWB.
 This file requires miallib.
@@ -223,7 +223,7 @@ https://github.com/ec-jrc/GTB/blob/main/external_sources/fsp/mia_parse.h
 Author(s): Pierre Soille and Jacopo Grazzini
 
 Generic functions enabling parsing parameters to programs
-Copyright (C) 2000-2023 European Union (Joint Research Centre)
+Copyright (C) 2000-2026 European Union (Joint Research Centre)
 
 This file is part of GTB/GWB.
 This file requires miallib.

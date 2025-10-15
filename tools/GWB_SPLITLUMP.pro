@@ -1,12 +1,12 @@
 PRO GWB_SPLITLUMP
 ;;==============================================================================
-;;   GWB APP for buffered splitting and lumping of a large image (SPLITLUMP)
+;;   GWB script for buffered splitting and lumping of a large image (SPLITLUMP)
 ;;   GWB: https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb
 ;;==============================================================================
 ;;
 ;; Purpose:
 ;;==============================================================================
-;; cmd-line app to cut a large image into buffered stripes for GWB processing:
+;; cmd-line script to cut a large image into buffered stripes for GWB processing:
 ;; a) splitter.sh: cut the large input map into buffered stripes
 ;; b) run the GWB_X module to do the processing of your choice
 ;; c) lumper.sh: cut the GWB-processed buffered stripes and reassemble them
@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 1.9.8)'
+GWB_mv = 'GWB_SPLITLUMP (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.3: fixed standalone execution
@@ -96,7 +97,7 @@ ENDIF
 pushd, dir_input & cd, current = dir_inputdef & popd
 dir_input = dir_inputdef
 
-;; retrive full path to mod_params
+;; retrieve full path to mod_params
 mod_params = dir_input + '/splitlump-parameters.txt'
 IF (file_info(mod_params)).exists EQ 0b THEN BEGIN
   print, "The file: " + mod_params + "  was not found."

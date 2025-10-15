@@ -1,11 +1,11 @@
 PRO GWB_GSC
 ;;==============================================================================
-;; GWB APP interface to GraySpatCon 
+;; GWB script interface to GraySpatCon 
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to run native GraySpatCon
+;; IDL cmd-line script to run native GraySpatCon
 ;; more info at: https://docs.sepal.io/en/latest/cli/gwb.html
 ;;
 ;; Requirements: no external requirements
@@ -19,9 +19,10 @@ PRO GWB_GSC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_GSC (version 1.9.8)'
+GWB_mv = 'GWB_GSC (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.3: added GSC bugfix version 1.2.1

@@ -61,10 +61,11 @@ Example of the GWB setup in the user account :code:`~`, or :code:`$HOME`.
     $ ls input/
     backup/              splitlump/           readme.txt
     clc3class.tif        example.tif 
-    acc-parameters.txt   dist-parameters.txt  frag-parameters.txt 
-    gsc-parameters.txt   lm-parameters.txt    mspa-parameters.txt 
-    parc-parameters.txt  rec-parameters.txt   rss-parameters.txt 
-    sc-parameters.txt    spa-parameters.txt   splitlump-parameters.txt
+    acc-parameters.txt   dist-parameters.txt  foschange-parameters.txt
+    frag-parameters.txt  gsc-parameters.txt   lm-parameters.txt 
+    mspa-parameters.txt  parc-parameters.txt  rec-parameters.txt
+    rss-parameters.txt   sc-parameters.txt    spa-parameters.txt 
+    splitlump-parameters.txt
     
 
     $ less input/readme.txt
@@ -114,9 +115,13 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
        Requirements: 1b-BG, 2b-FG, optional: 0b-missing
        Parameter file: input/dist-parameters.txt
 
-    GWB_FRAG: user-selected custom scale fragmentation analysis
+    GWB_FRAG: user-selected custom scale FOS fragmentation analysis
        Requirements: binary or grayscale map (see frag-parameters.txt), 
        Parameter file: input/frag-parameters.txt
+        
+    GWB_FOSCHANGE: change of FOS fragmentation/connectivity
+       Requirements: two GTB/GWB-generated FOS-directories 
+       Parameter file: input/foschange-parameters.txt
         
     GWB_GSC: GraySpatCon analysis of attribute adjacency table
        Requirements: categorical map within [0b, 255b]
@@ -185,17 +190,18 @@ To get an overview of all GWB modules enter the command: :code:`GWB`
     c) The log-file will list: imsizeGB, ~ RAM requirements, peak RAM usage
 
     Approximate peak RAM usage factors for an image of size imsizeGB:
-    GWB_ACC  : 30 * imsizeGB
-    GWB_DIST : 18 * imsizeGB
-    GWB_FRAG : 20 * imsizeGB
-    GWB_GSC  :  5 * imsizeGB
-    GWB_LM   :  9 * imsizeGB
-    GWB_MSPA : 20 * imsizeGB
-    GWB_PARC : 22 * imsizeGB
-    GWB_REC  :  2 * imsizeGB
-    GWB_RSS  : 20 * imsizeGB
-    GWB_SPA  : 20 * imsizeGB
-    GWB_SC   :  5 * imsizeGB
+    GWB_ACC      : 30 * imsizeGB
+    GWB_DIST     : 18 * imsizeGB
+    GWB_FRAG     : 20 * imsizeGB
+    GWB_FOSCHANGE: 9 * imsizeGB
+    GWB_GSC      :  5 * imsizeGB
+    GWB_LM       :  9 * imsizeGB
+    GWB_MSPA     : 20 * imsizeGB
+    GWB_PARC     : 22 * imsizeGB
+    GWB_REC      :  2 * imsizeGB
+    GWB_RSS      : 20 * imsizeGB
+    GWB_SPA      : 20 * imsizeGB
+    GWB_SC       :  5 * imsizeGB
     GWB_SPLITLUMP: shell-script, no RAM required
  
     Example: input image 50,000 x 50,000 pixels -> imsizeGB = 2.33 GB.
@@ -283,6 +289,7 @@ Available Commands
     GWB_ACC
     GWB_DIST
     GWB_FRAG
+    GWB_FOSCHANGE
     GWB_GSC
     GWB_LM
     GWB_MSPA

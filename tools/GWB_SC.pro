@@ -1,11 +1,11 @@
 PRO GWB_SC
 ;;==============================================================================
-;; GWB APP interface to SpatCon 
+;; GWB script interface to SpatCon 
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to run native SpatCon
+;; IDL cmd-line script to run native SpatCon
 ;; more info at: https://docs.sepal.io/en/latest/cli/gwb.html
 ;;
 ;; Requirements: no external requirements
@@ -19,9 +19,10 @@ PRO GWB_SC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SC (version 1.9.8)'
+GWB_mv = 'GWB_SC (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0

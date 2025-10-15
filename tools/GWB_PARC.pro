@@ -1,11 +1,11 @@
 PRO GWB_PARC
 ;;==============================================================================
-;;         GWB APP for Parcellation (PARC)
+;;         GWB script for Parcellation (PARC)
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to conduct PARC as implemented in GuidosToolbox (GTB)
+;; IDL cmd-line script to conduct PARC as implemented in GuidosToolbox (GTB)
 ;; (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/)
 ;; more info in the GTB manual.
 ;;
@@ -20,9 +20,10 @@ PRO GWB_PARC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_PARC (version 1.9.8)'
+GWB_mv = 'GWB_PARC (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.7: increase computing precision
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0

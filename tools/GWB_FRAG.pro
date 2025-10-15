@@ -1,11 +1,11 @@
 PRO GWB_FRAG
 ;;==============================================================================
-;; GWB APP for user-selected scale of FAD/FEC/FAC (fragmentation)
+;; GWB script for user-selected scale of FAD/FEC/FAC (fragmentation/connectivity)
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to conduct flexible FAD/FED/FAC
+;; IDL cmd-line script to conduct flexible FAD/FED/FAC
 ;; (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/)
 ;; more info in the GTB manual.
 ;;
@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.8)'
+GWB_mv = 'GWB_FRAG (version 1.9.9)'
 ;;
 ;; Module changelog:
+;; 1.9.9: IDL 9.2.0, add color histogram
 ;; 1.9.8: calculate AVCON before potential averaging, fixed csv output
 ;; 1.9.7: increase computing precision, fixed fadru_av to include special BG, AVCON
 ;; 1.9.6: add gpref, histogram, ECA, IDL 9.1.0
@@ -786,18 +787,35 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     ;; a) build histogram
     hist = histogram(im[qFG],/l64) & hist = hist[0:100]
     if strlen(fosclass) eq 5 then begin
-      method = strmid(fosclass,0,3) & hcolor = 'orange'
+      method = strmid(fosclass,0,3) & rep = strmid(fosclass,4,1)
     endif else begin
-      method = strmid(fosclass,0,7) & hcolor = 'yellow'
+      method = strmid(fosclass,0,7) & rep = strmid(fosclass,8,1)
     endelse
-    bins = findgen(101)-0.5 & xtit = method & tit = 'Foreground pixel histogram (WS: ' + kdim_str + ')' & amax = max(hist)
+    bins = findgen(101)-0.5 & xtit = method & tit = 'Foreground pixel histogram (WS: ' + kdim_str + ')'    
     ;; plot as percentage by FG-area
-    hist2 = float(hist)/n_elements(qfg)*100.0 & bmax = max(hist2) & hist2_cat[isc,*] = hist2
-    bp = barplot(bins, hist2, fill_color=hcolor, xtitle=xtit, /buffer, $
-      ytitle = 'Occurrence frequency [%]', title = tit, xrange = [0,105], histogram=1)
-    ;bp = text(5,bmax*0.95,'Average value at',/data,/current)
-    ;bp = text(5,bmax*0.90,'Foreground level: ' + strtrim(fad_av,2) + '%',/data,/current)
-    ;bp = text(5,bmax*0.85,'Reporting unit level: ' + strtrim(fadru_av,2) + '%',/data,/current)
+    hist2 = float(hist)/n_elements(qfg)*100.0 & bmax = max(hist2) * 1.05 & hist2_cat[isc,*] = hist2
+    
+    IF rep EQ '5' THEN BEGIN
+      bp = barplot(bins[0:9], hist2[0:9], fill_color=[215,50,40], xtitle=xtit, /buffer, thick=0, $
+        ytitle = 'Frequency [%]', title = tit, xrange = [0,105], yrange = [0, bmax],histogram=1, font_size=12) ;; very low
+      bp = barplot(bins[10:39], hist2[10:39], fill_color = [250,140,90],thick=0,histogram=1, /overplot) ;; low
+      bp = barplot(bins[40:59], hist2[40:59], fill_color = [255,200,0],thick=0,histogram=1, /overplot) ;; intermediate
+      bp = barplot(bins[60:89], hist2[60:89], fill_color = [140,200,100],thick=0,histogram=1, /overplot) ;; high
+      bp = barplot(bins[90:100], hist2[90:100], fill_color = [0,175,0],thick=0,histogram=1, /overplot) ;; very high
+    ENDIF ELSE IF rep EQ '6' THEN BEGIN
+      bp = barplot(bins[0:9], hist2[0:9], fill_color=[215,50,40], xtitle=xtit, /buffer, thick=0, $
+        ytitle = 'Frequency [%]', title = tit, xrange = [0,105], yrange = [0,bmax],histogram=1, font_size=12)
+      bp = barplot(bins[10:39], hist2[10:39], fill_color = [250,140,90],thick=0,histogram=1, /overplot) ;; low
+      bp = barplot(bins[40:59], hist2[40:59], fill_color = [255,200,0],thick=0,histogram=1, /overplot) ;; intermediate
+      bp = barplot(bins[60:89], hist2[60:89], fill_color = [140,200,100],thick=0,histogram=1, /overplot) ;; high
+      bp = barplot(bins[90:99], hist2[90:99], fill_color = [0,175,0],thick=0,histogram=1, /overplot) ;; very high
+      bp = barplot(bins[100:100], hist2[100:100], fill_color = [0,120,0],thick=0,histogram=1, /overplot) ;; intact
+    ENDIF ELSE IF rep EQ '2' THEN BEGIN
+      bp = barplot(bins[0:39], hist2[0:39], fill_color=[0,120,0], xtitle=xtit, /buffer, thick=0, $
+        ytitle = 'Frequency [%]', title = tit, xrange = [0,105], yrange = [0,bmax],histogram=1, font_size=12)
+      bp = barplot(bins[40:100], hist2[40:100], fill_color = [140,200, 101],thick=0,histogram=1, /overplot) ;; low
+    ENDIF
+
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.png'
     bp.save, fn_out, resolution=300
     bp.close

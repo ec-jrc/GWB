@@ -16,7 +16,7 @@
 ;; - Grayscale: [0, grayt-1]-background, [grayt, 100]-foreground (grayt = grayscale threshold in [1,100]), optional:
 ;;       255-missing, 103-special background, 104-non-fragmenting background
 ;;
-;; Please specify entries at lines 32-36 ONLY using the following syntax:
+;; Please specify entries at lines 37-43 ONLY using the following syntax:
 ;; line 37: Method/reporting: FAD_5 (default) or FAD_6, FAD-APP_2, FAD-APP_5 (same for FED or FAC)
 ;; line 38: Foreground connectivity: 8 (default) or 4
 ;; line 39: pixel resolution [meters]

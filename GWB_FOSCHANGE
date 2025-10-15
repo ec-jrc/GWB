@@ -1,0 +1,287 @@
+#!/bin/bash
+# This script starts an IDL Runtime or Virtual Machine application
+# Are we running headless?
+if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
+
+# check for system or standalone mode and set default parameters
+if [ "$0" == "/usr/bin/GWB_FOSCHANGE" ] &&  [ -f "/opt/GWB/tools/GWB_version.txt" ]; then
+  v_installed=$(cat /opt/GWB/tools/GWB_version.txt)
+  standalone=0
+  topdir=/opt/GWB
+elif  [ "$0" == "./GWB_FOSCHANGE" ] &&  [ -f "tools/GWB_version.txt" ]; then
+  v_installed=$(cat tools/GWB_version.txt)
+  standalone=1
+  topdir=$PWD
+  DIR_INPUT=$topdir"/input"
+  DIR_OUTPUT=$topdir"/output"
+else
+  echo "Please run this script from /usr/bin/ or from your local GWB installation"
+  exit 1
+fi
+
+# check status of GWB
+checker="$topdir"/GWB_check4updates
+if [ ! -f "$checker" ]; then
+  echo "GWB installation corrupted, please reinstall."
+  exit 1
+fi
+GWBstatus=$("$checker" >/dev/null; echo $?)
+if [ "$GWBstatus" == "49" ]; then
+    echo ""
+    echo "*********************** Attention ************************"
+    echo "GWB outdated. Please upgrade to the current version at:"
+    echo "https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/"
+    echo "*********************** Attention ************************"
+    echo ""
+fi
+
+options="$*"
+# if no option is provided in system-mode:
+if [ "$standalone" -eq 0 ] && [  "$options" == "" ]; then
+    echo "usage: GWB_FOSCHANGE --help"
+    exit 1
+fi
+
+#read parameters from command line
+#=================================================
+
+for i in "$@"
+do
+   case $i in
+       -i=*)
+       DIR_INPUT="${i#*=}"
+       shift
+       ;;
+       -o=*)
+       DIR_OUTPUT="${i#*=}"
+       shift
+       ;;
+       --nox)
+       headless='1'
+       echo "Note: after execution, the cmd-line message: "
+       echo "'% Program caused arithmetic error: Floating illegal operand'"
+       echo "can be safely ignored."
+       shift
+       ;;
+       -v | --version)
+       echo "GWB version: $v_installed"
+       exit
+       ;;
+       -h|--help)
+       echo "----------------------------------------------------------------------------------"
+       echo " 1) System mode - you MUST specify custom directories:"
+       echo "----------------------------------------------------------------------------------"
+       echo "GWB_FOSCHANGE -i=<your dir_input> -o=<your dir_output>"
+       echo "-i=<full path to directory 'input'> "
+       echo "     (containing the foschange-parameter file)"
+       echo "-o=<full path to directory 'output'> "
+       echo "     (location for results, must exist and must be empty)"
+       echo " "
+       echo "----------------------------------------------------------------------------------"
+       echo " 2) Standalone mode - fixed directory setup:"
+       echo "----------------------------------------------------------------------------------"
+       echo "cd into: $HOME/GWB$v_installed/GWB"
+       echo "then run the command: ./GWB_FOSCHANGE"
+       echo "Note: standalone mode enforces using the default standalone"
+       echo "- input directory: $HOME/GWB$v_installed/GWB/input "
+       echo "  (with the foschange-parameter file);"
+       echo "- output directory: $HOME/GWB$v_installed/GWB/output "
+       echo "  (location for results, must exist and must be empty);"
+       echo "----------------------------------------------------------------------------------"
+       echo " "
+       echo "other cmd-line options:"
+       echo "--help: show cmd-line options"
+       echo "--nox: enforce headless execution via xvfb-run"
+       echo "--version: show GWB version number"
+       exit
+       ;;
+       *)
+       # unknown option
+       echo "Error: unknown option $i"
+       echo "usage: GWB_FOSCHANGE --help"
+       exit
+       ;;
+   esac
+done
+
+# startup tests
+if [ "$(getconf LONG_BIT)" != "64" ]; then
+  echo 'OS is not 64bit'
+  exit 1
+fi
+
+if [ "$(id -u)" -eq "0" ];then 
+  echo 'Please run this script as a normal user (not root)'
+  exit 1
+fi
+
+GWBCONF="${HOME}/.gwb/"
+if ! mkdir -p "$GWBCONF";then
+  echo "You have no permissions to create the directory '${GWBCONF}'"
+  exit 1
+fi
+if [ ! -w "$GWBCONF" ];then 
+  echo "You have no write permissions in the directory '${GWBCONF}'"
+  exit 1
+fi  
+
+# provide license info
+EULAOK="$GWBCONF"EULA.txt
+licfile=$topdir"/EULA_GWB.pdf"
+if [ ! -e "$EULAOK" ]; then
+  echo " "
+  echo "   GWB (GuidosToolbox Workbench) EULA information"
+  echo "================================================================"
+  if [ "${headless}" == "1" ]; then
+    echo "To use GWB you must accept the terms outlined in"
+    echo "$licfile"
+    echo "(https://ies-ows.jrc.ec.europa.eu/gtb/GWB/EULA_GWB.pdf)"
+    echo " "
+  else
+    xdg-open "$licfile" &
+  fi
+  echo "Do you accept the terms of the GWB EULA?"
+  echo "Please enter 'yes' or 'no' in small letters without the quotes('')"
+  echo "  "
+  read -r answer
+  if [ "${answer}" != "yes" ]; then
+    echo 'You can not use GWB because you did not agree with the GWB EULA.'
+    exit
+  fi
+  echo "GWB EULA agreed" > "$EULAOK"
+fi
+
+#############################
+### we are in standalone mode #####
+#############################
+# if standalone mode is active (1), reset the input/output directories to the default
+if [ "$standalone" -eq 1 ]; then
+  DIR_INPUT=$topdir"/input"
+  DIR_OUTPUT=$topdir"/output"
+  echo "*********************** Attention ************************"
+  echo "Running in standalone mode implies using"
+  echo "the default standalone input/output directories:"
+  echo "$DIR_INPUT"
+  echo "$DIR_OUTPUT"
+  echo "*********************** Attention ************************"
+  if [ ! -d "$DIR_INPUT" ];then
+   echo "The input directory '${DIR_INPUT}' does not exist"
+   exit 1
+ fi
+ if [ ! -d "$DIR_OUTPUT" ];then
+   echo "The output directory '${DIR_OUTPUT}' does not exist"
+   exit 1
+ fi
+ if [ ! -w "$DIR_OUTPUT" ];then
+   echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
+   exit 1
+ fi
+ # is DIR_OUTPUT empty?
+ if [ "$(ls -A "$DIR_OUTPUT")" ]; then
+   echo "Please empty the output directory '${DIR_OUTPUT}'"
+   exit 1
+ fi
+fi
+
+
+#############################
+### we are in system mode ########
+#############################
+if [ "$standalone" -eq 0 ];then
+    # did we get the full-path?
+    if [ "${DIR_INPUT:0:1}" != "/" ]; then
+      echo "Please provide the full pathname to the input directory"
+      exit 1
+    fi
+    if [ "${DIR_OUTPUT:0:1}" != "/" ]; then
+      echo "Please provide the full pathname to the output directory"
+      exit 1
+    fi
+    # are there any empty spaces in the directory path name?
+    if [[ "$DIR_INPUT" =~ \ |\' ]]; then
+      echo "empty spaces or ' in input directory pathname '${DIR_INPUT}' "
+      exit 1
+    fi
+    if [[ "$DIR_OUTPUT" =~ \ |\' ]]; then
+      echo "empty spaces or ' in output directory pathname '${DIR_OUTPUT}' "
+      exit 1
+    fi
+    # do we have write access in $DIR_INPUT and $DIR_OUTPUT?
+    if [ ! -d "$DIR_INPUT" ];then
+      echo "The input directory '${DIR_INPUT}' does not exist"
+      echo "Use the -i= option to specify your input directory"
+      exit 1
+    fi
+    if [ ! -w "$DIR_INPUT" ];then
+      echo "You have no write permissions in the input directory '${DIR_INPUT}'"
+      echo "Use the -i= option to specify your input directory"
+      exit 1
+    fi
+    if [ ! -d "$DIR_OUTPUT" ];then
+      echo "The output directory '${DIR_OUTPUT}' does not exist"
+      echo "Use the -o= option to specify your output directory"
+      exit 1
+    fi
+    if [ ! -w "$DIR_OUTPUT" ];then
+      echo "You have no write permissions in the output directory '${DIR_OUTPUT}'"
+      echo "Use the -o= option to specify your output directory"
+      exit 1
+    fi
+    if [ "$DIR_OUTPUT" == "$DIR_INPUT" ];then
+      echo "input and output directory must be different"
+      exit 1
+    fi
+    # is DIR_OUTPUT empty?
+    if [ "$(ls -A "$DIR_OUTPUT")" ]; then
+      echo "Please empty the output directory '${DIR_OUTPUT}'"
+      exit 1
+    fi
+fi
+
+rm -f "$GWBCONF"gwb_dirs.txt
+# write selected settings to startup file if in system mode
+if [ "$standalone" -eq 0 ];then
+  echo "$DIR_INPUT" > "$GWBCONF"gwb_dirs.txt
+  echo "$DIR_OUTPUT" >> "$GWBCONF"gwb_dirs.txt
+  # copy parameter files if not already there
+  fparam="$DIR_INPUT"/foschange-parameters.txt
+  if [ ! -e "$fparam" ];then
+   cp -f $topdir/input/backup/foschange-parameters.txt "$fparam"
+   cp -fr $topdir/input/backup "$DIR_INPUT"/
+   cp -f $topdir/input/readme.txt "$DIR_INPUT"/
+   echo "***** Attention *****"
+   echo "Copied missing parameter file, please verify settings in:"
+   echo "$fparam"
+   echo "*********************"
+  fi
+fi
+
+# Specify the path to the IDL SAVE file that launches
+# the application, relative to $topdir.
+idlapp=$topdir/tools/GWB_FOSCHANGE.sav
+
+# Specify the path to the top directory of the IDL
+# distribution, relative to $topdir.
+idl_install_dir=$topdir/tools/idl
+IDL_DIR=$idl_install_dir ; export IDL_DIR
+
+# Run the application
+logram="$GWBCONF"gwb_foschange_pram.txt
+# output Peak RAM usage (kb) if /usr/bin/time is available
+cmd1=' '
+if [[ -f "/usr/bin/time" ]];then cmd1=(command time --output="$logram" --format="%M"); fi
+if [ "${headless}" == "1" ]; then
+  ${cmd1[@]} xvfb-run -a "$IDL_DIR"/bin/idl -rt="$idlapp"
+else
+  ${cmd1[@]} "$IDL_DIR"/bin/idl -rt="$idlapp"
+fi
+
+
+# convert the peak RAM usage from kb into GB and add it to the end of the log-file
+if [[ -f "/usr/bin/time" ]];then
+  logidl="$GWBCONF"gwb_foschange_log.txt
+  logfile=$(cat "$logidl")
+  pruse=$(awk "BEGIN {print $(cat "$logram")/1024^2}")
+  echo 'Peak RAM use [GB]: '"$pruse" >> "$logfile"
+fi
+exit

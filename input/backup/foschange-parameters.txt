@@ -1,0 +1,28 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GWB_FOSCHANGE parameter file:
+;; NOTE: do NOT delete or add any lines in this parameter file!
+;; Change analysis of GTB/GWB-generated FOS-analysis
+;; for example results of GWB_FRAG using FAD/FED/FAC_5/6 only, no FAD-APP/FED-APP!
+;;
+;; The result of GWB_FOSCHANGE (FOSchange.tif/csv/png and FOSchange_hist.csv) are written into
+;; the default output directory in standalone mode or the user-specified directory
+;;
+;; Requires two unmodified GTB/GWB-generated FOS-analysis directories of a FAD/FED/FAC_5/6 FOS analysis
+;; Each input directory must have the following GTB/GWB-generated 5 files only :
+;; 1) the <FAD/FED/FAC>.png (histogram graph)
+;; 2) the <FAD/FED/FAC>.sav (IDL-formatted summary statistics)
+;; 3) the <FAD/FED/FAC>.tif (GeoTIFF map of fragmentation/connectivity)
+;; 4) the <FAD/FED/FAC>.csv (fragmentation/connectivity summary spreadsheet)
+;; 5) the <FAD/FED/FAC>.txt (fragmentation/connectivity summary plain text file)
+;;
+;; Please specify entries at lines 26-27 ONLY using the following syntax:
+;; line 26: full path to the GTB/GWB-generated Fragmentation/Connectivity directory at time 1
+;; line 27: full path to the GTB/GWB-generated Fragmentation/Connectivity directory at time 2
+;;
+;; an example parameter file using the default settings, specify the full path to the two input directories:
+;; $HOME/input/FOS1
+;; $HOME/input/FOS2
+****************************************************************************
+$HOME/input/FOS1
+$HOME/input/FOS2
+****************************************************************************

@@ -1,11 +1,11 @@
 PRO GWB_REC
 ;;==============================================================================
-;;         GWB APP to recode image classes
+;;         GWB script to recode image classes
 ;;==============================================================================
 ;; 
 ;; Purpose: 
 ;;==============================================================================
-;; IDL cmd-line app to recode classes as implemented in GuidosToolbox (GTB)
+;; IDL cmd-line script to recode classes as implemented in GuidosToolbox (GTB)
 ;; (https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/)
 ;; more info in the GTB manual.
 ;;
@@ -20,9 +20,10 @@ PRO GWB_REC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.9.8)'
+GWB_mv = 'GWB_REC (version 1.9.9)'
 ;;
 ;; Module changelog
+;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
 ;; 1.9.4: IDL 9.0.0
 ;; 1.9.2: IDL 8.9.0
