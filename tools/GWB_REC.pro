@@ -20,7 +20,7 @@ PRO GWB_REC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_REC (version 1.9.9)'
+GWB_mv = 'GWB_REC (version 2.0.0)'
 ;;
 ;; Module changelog
 ;; 1.9.9: IDL 9.2.0

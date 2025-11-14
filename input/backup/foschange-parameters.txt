@@ -4,25 +4,25 @@
 ;; Change analysis of GTB/GWB-generated FOS-analysis
 ;; for example results of GWB_FRAG using FAD/FED/FAC_5/6 only, no FAD-APP/FED-APP!
 ;;
-;; The result of GWB_FOSCHANGE (FOSchange.tif/csv/png and FOSchange_hist.csv) are written into
+;; The result of GWB_FOSCHANGE (FOSchange.tif/csv/png, FOSchange_hist/colors.csv) are written into
 ;; the default output directory in standalone mode or the user-specified directory
 ;;
 ;; Requires two unmodified GTB/GWB-generated FOS-analysis directories of a FAD/FED/FAC_5/6 FOS analysis
-;; Each input directory must have the following GTB/GWB-generated 5 files only :
+;; The input directory must have the following GTB/GWB-generated files:
 ;; 1) the <FAD/FED/FAC>.png (histogram graph)
-;; 2) the <FAD/FED/FAC>.sav (IDL-formatted summary statistics)
-;; 3) the <FAD/FED/FAC>.tif (GeoTIFF map of fragmentation/connectivity)
+;; 2) the <FAD/FED/FAC>.sav (IDL-formatted summary statistics, mandatory)
+;; 3) the <FAD/FED/FAC>.tif (GeoTIFF map of fragmentation/connectivity, mandatory)
 ;; 4) the <FAD/FED/FAC>.csv (fragmentation/connectivity summary spreadsheet)
 ;; 5) the <FAD/FED/FAC>.txt (fragmentation/connectivity summary plain text file)
 ;;
 ;; Please specify entries at lines 26-27 ONLY using the following syntax:
-;; line 26: full path to the GTB/GWB-generated Fragmentation/Connectivity directory at time 1
-;; line 27: full path to the GTB/GWB-generated Fragmentation/Connectivity directory at time 2
+;; line 26: full path to the GTB/GWB-generated Fragmentation/Connectivity GeoTIFF map at time 1
+;; line 27: full path to the GTB/GWB-generated Fragmentation/Connectivity GeoTIFF map at time 2
 ;;
-;; an example parameter file using the default settings, specify the full path to the two input directories:
-;; $HOME/input/FOS1
-;; $HOME/input/FOS2
+;; example parameter file: specify the full path to the two FOS GeoTIFFs:
+;; $HOME/input/FOS1/fm1990_fos-fad_5class_31.tif
+;; $HOME/input/FOS2/fm2018_fos-fad_5class_31.tif
 ****************************************************************************
-$HOME/input/FOS1
-$HOME/input/FOS2
+$HOME/input/FOS1/fm1990_fos-fad_5class_31.tif
+$HOME/input/FOS2/fm2018_fos-fad_5class_31.tif
 ****************************************************************************

@@ -1,5 +1,11 @@
 #!/bin/bash
 # This script starts an IDL Runtime or Virtual Machine application
+
+if [ "$(id -u)" -eq "0" ];then
+  echo 'Please run this script as a normal user (not root)'
+  exit 1
+fi
+
 # Are we running headless?
 if [ "${DISPLAY}" == "" ]; then headless='1'; else headless='0'; fi
 
@@ -107,11 +113,6 @@ done
 # startup tests
 if [ "$(getconf LONG_BIT)" != "64" ]; then
   echo 'OS is not 64bit'
-  exit 1
-fi
-
-if [ "$(id -u)" -eq "0" ];then 
-  echo 'Please run this script as a normal user (not root)'
   exit 1
 fi
 

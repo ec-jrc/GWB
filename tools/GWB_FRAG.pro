@@ -20,7 +20,7 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 1.9.9)'
+GWB_mv = 'GWB_FRAG (version 2.0.0)'
 ;;
 ;; Module changelog:
 ;; 1.9.9: IDL 9.2.0, add color histogram
@@ -167,7 +167,7 @@ ENDIF
 ;; get and check parameters
 ;; 1) frag type
 fragtype = strtrim(finp(q[0]), 2)
-fragarray = ['FAD_5', 'FAD_6', 'FAD-APP_2', 'FAD-APP_5', 'FED_5', 'FED_6', 'FED-APP_2', 'FED-APP_5', 'FAC_5', 'FAC_6', 'FAC-APP_2', 'FAC-APP_5']
+fragarray = ['FAD_5','FAD_6','FAD-APP_2','FAD-APP_5','FED_5','FED_6','FED-APP_2','FED-APP_5','FAC_5','FAC_6','FAC-APP_2','FAC-APP_5']
 qq = where(fragtype eq fragarray)
 IF qq LT 0 THEN  BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
@@ -656,7 +656,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
 
       if isc eq 0 then begin
         openw, 1, 'scinput' & writeu,1, tmp & close, 1 & tmp = 0
-        file_copy, dir_gwb + '/spatcon_lin64', 'spatcon', /overwrite
+        file_copy, dir_gwb + '/spatcon_lin64','spatcon', /overwrite
       endif
       spawn, './spatcon', log
 
@@ -666,7 +666,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       openr, 1, 'scoutput' & readu,1, im & close,1
 
       ;; clean up
-      file_delete, 'scoutput', 'scpars.txt', 'scsize.txt',/allow_nonexistent,/quiet
+      file_delete, 'scoutput','scpars.txt','scsize.txt',/allow_nonexistent,/quiet
       popd
 
       ;; rescale to normalized byte range
@@ -729,7 +729,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       
       if isc eq 0 then begin
         openw, 1, 'gscinput' & writeu,1, tmp & close, 1 & tmp = 0
-        file_copy, dir_gwb + '/grayspatcon_lin64', 'grayspatcon', /overwrite
+        file_copy, dir_gwb + '/grayspatcon_lin64','grayspatcon', /overwrite
       endif
       spawn, './grayspatcon', log
 
@@ -737,7 +737,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       ;; if we get a GraySpatCon error then the last entry will not be "Normal Finish"
       res = log[n_elements(log)-1] & res = strpos(strlowcase(res), 'normal finish') gt 0
       if res eq 0 then begin
-        file_delete, 'gscinput', 'gscoutput', 'gscoutput.txt', 'gscpars.txt', /allow_nonexistent,/quiet
+        file_delete, 'gscinput','gscoutput','gscoutput.txt','gscpars.txt', /allow_nonexistent,/quiet
         openw, 9, fn_logfile, /append
         printf, 9, 'GSC error'
         for idd = 1, n_elements(log)-1 do printf, 9, log[idd]     
@@ -748,7 +748,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       ;; read the image output
       im = bytarr(sz(0),sz(1))
       openr, 1, 'gscoutput' & readu,1, im & close,1
-      file_delete, 'gscoutput', 'gscpars.txt', /allow_nonexistent,/quiet      
+      file_delete, 'gscoutput','gscpars.txt', /allow_nonexistent,/quiet      
       popd
     ENDELSE 
     
@@ -891,19 +891,19 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, 'Observation scale [(window size * pixel resolution)^2]: '
   ;; Observation scales
   w = indgen(nr_cat)+1 & if nr_cat gt 1 then w = w[1:*]
-  if nr_cat eq 1 then printf, 12, format='(a24)', 'Observation scale:   1' else $
-    printf, 12, format='(a23,9(i11))', 'Observation scale:    1', w
+  if nr_cat eq 1 then printf, 12, format='(a24)','Observation scale:   1' else $
+    printf, 12, format='(a23,9(i11))','Observation scale:    1', w
 
   ;; observation area
   cat2 = strarr(nr_cat)
   for id = 0, nr_cat -1 do cat2[id] = '   ' + strtrim(cat[id],2) + 'x' + strtrim(cat[id],2) + '   '
   cat2[0] = cat2[0] + '  '
-  printf, 12, format = '(a18, 10(A))', 'Neighborhood area:',cat2
+  printf, 12, format = '(a18, 10(A))','Neighborhood area:',cat2
 
   ;; area conversions
   hec = ((pixres * kdim_cat)^2) / 10000.0 & acr = hec * 2.47105
-  printf, 12, format = '(a15, 10(f11.2))', '[hectare]:', hec
-  printf, 12, format = '(a15, 10(f11.2))', '[acres]:', acr
+  printf, 12, format = '(a15, 10(f11.2))','[hectare]:', hec
+  printf, 12, format = '(a15, 10(f11.2))','[acres]:', acr
   printf, 12, '================================================================================'
   printf, 12, 'Proportion [%] of foreground area in foreground cover class:'
   fmt = '(a55,'+strtrim(nr_cat,2)+'(f11.4))'
@@ -945,11 +945,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, 'B1) Pixel-level: method FAD/FED/FAC: check the FG pixel value on the map, or aggregated at'
   printf, 12, 'B2) Patch-level: method _APP (Average-Per-Patch): check the FG pixel value on the map'
   printf, 12, 'B3) Foreground-level: reference area = all foreground pixels'
-  printf, 12, format='(a24,'+strtrim(nr_cat,2)+'(f11.4))', '- Average ' + method + ' at WS [%]: ', strtrim(fad_av_cat,2)
+  printf, 12, format='(a24,'+strtrim(nr_cat,2)+'(f11.4))','- Average ' + method + ' at WS [%]: ', strtrim(fad_av_cat,2)
   printf, 12, '- ECA (Equivalent Connected Area) [pixels]: ', strtrim(ECA,2)  
   printf, 12, '- COH (Coherence = ECA/ECA_max*100) [%]: ', strtrim(COH,2)
   printf, 12, 'B4) Reporting unit-level: reference area = entire reporting unit'
-  printf, 12, format='(a42,'+strtrim(nr_cat,2)+'(f11.4))', '- AVCON (average connectivity) at WS [%]: ', strtrim(fadru_av_cat,2)
+  printf, 12, format='(a42,'+strtrim(nr_cat,2)+'(f11.4))','- AVCON (average connectivity) at WS [%]: ', strtrim(fadru_av_cat,2)
   printf, 12, '- COH_ru (ECA/Reporting unit area*100) [%]: ', strtrim(COH_ru,2)
   printf, 12, '================================================================================'
   printf, 12, '================================================================================'
@@ -1019,10 +1019,10 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   cc = '' & for i = 0, nr_cat-1 do cc = cc + 'WS' + strtrim(ws_cat[i],2) + ','
   printf, 12, 'FGcover histogram [%] at window size,' + cc
   cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,0],2)+ ',' 
-  printf, 12, 'Pixel Value   0', ', ',cc
+  printf, 12, 'Pixel Value   0',', ',cc
   For id = 1, 100 do begin
     cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,id],2)+ ','
-    printf, 12, strtrim(id,2), ', ',cc 
+    printf, 12, strtrim(id,2), ',',cc 
   endfor
   close,12
   

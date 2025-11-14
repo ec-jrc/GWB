@@ -395,7 +395,7 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 1.9.9)'
+GWB_mv = 'GWB_MSPA (version 2.0.0)'
 ;;
 ;; Module changelog:
 ;; 1.9.9: IDL 9.2.0

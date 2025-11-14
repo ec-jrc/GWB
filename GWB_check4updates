@@ -17,6 +17,9 @@ fi
 if test "$topdir" = "/usr/bin" ; then
    topdir="/opt/GWB"
 fi
+if [ "$USER" = "root" ]; then
+   topdir="/opt/GWB"
+fi
 cd "$topdir" || exit
 
 # installed version

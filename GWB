@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+if [ "$(id -u)" -eq "0" ];then
+  echo 'Please run this script as a normal user (not root)'
+  exit 1
+fi
 echo "==============================================================================="
 echo "              GWB: GuidosToolbox-Workbench"
 echo "==============================================================================="
@@ -102,7 +106,7 @@ echo "Approximate peak RAM usage factors for an image of size imsizeGB: "
 echo "GWB_ACC       : 30 * imsizeGB"
 echo "GWB_DIST      : 18 * imsizeGB"
 echo "GWB_FRAG      : 20 * imsizeGB"
-echo "GWB_FOSCHANGE :  9 * imsizeGB"
+echo "GWB_FOSCHANGE : 11 * imsizeGB"
 echo "GWB_GSC       :  5 * imsizeGB"
 echo "GWB_LM        :  9 * imsizeGB"
 echo "GWB_MSPA      : 20 * imsizeGB"

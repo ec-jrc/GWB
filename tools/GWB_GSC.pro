@@ -19,7 +19,7 @@ PRO GWB_GSC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_GSC (version 1.9.9)'
+GWB_mv = 'GWB_GSC (version 2.0.0)'
 ;;
 ;; Module changelog:
 ;; 1.9.9: IDL 9.2.0
