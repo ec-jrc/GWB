@@ -57,7 +57,7 @@ Processing parameter options are stored in the file :code:`input/frag-parameters
     ;; line 39: pixel resolution [meters]
     ;; line 40: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
     ;; line 41: high-precision: 1-float precision  (default)  or 0-rounded byte
-    ;; line 42: statistics: 0 (no statistics - default) or 1 (add summary statistics)
+    ;; line 42: statistics: 0 (no statistics - default) or 1 (add summary statistics) or 2 (statistics from FAD-map input)
     ;; line 43: input map type: Binary (default) or Grayscale grayt (e.g., Grayscale 30)
     ;;
     ;; an example parameter file using the default settings on a binary input map:
