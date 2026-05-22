@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.0)'
+GWB_mv = 'GWB_FRAG (version 2.0.1)'
 ;;
 ;; Module changelog:
+;; 2.0.1: add FOS metadata flag, option to do stats only, SC high prec fix
 ;; 1.9.9: IDL 9.2.0, add color histogram
 ;; 1.9.8: calculate AVCON before potential averaging, fixed csv output
 ;; 1.9.7: increase computing precision, fixed fadru_av to include special BG, AVCON
@@ -249,13 +250,15 @@ if hprec eq '1' then prec = method+'_av: ' else prec = '(byte)'+method+'_av: '
 
 ;; 6) statistics ?
 c_stats = strtrim(finp(q[5]), 2)
-if c_stats eq '1' then begin
+if c_stats eq '2' then begin
+  tstats = 2b & dostats = 'yes'
+endif else if c_stats eq '1' then begin
   tstats = 1b & dostats = 'yes'
 endif else if c_stats eq '0' then begin
   tstats = 0b & dostats = 'no'
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "Statistics is not 1 or 0."
+  print, "Statistics is not 2, 1 or 0."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
   print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -278,7 +281,7 @@ ENDIF ELSE BEGIN
   print, "Exiting..."
   goto,fin
 ENDELSE
-grayt_str  = ''
+grayt_str  = '-1'
 IF fosinp EQ 'Grayscale' THEN BEGIN
   grayt_str  = strtrim(strmid(c_inp,9),2)
   ;; test if in [1,100]
@@ -360,10 +363,10 @@ dir_proc = dir_output + '/.proc'
 ;;==============================================================================
 ;;==============================================================================
 gpref = 'unset LD_LIBRARY_PATH; '
-desc = 'GTB_FOS, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+;desc = 'GTB_FOS, https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
 tagsw = 'TIFFTAG_SOFTWARE='+'"'+"GWB, https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/" +'" '
 gedit = gpref + 'gdal_edit.py -mo ' + tagsw
-gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
+;gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '
 
 fn_logfile = dir_output + '/' + 'frag.log'
 nr_im_files = ct_tifs & time00 = systime( / sec) & okfile = 0l
@@ -379,7 +382,8 @@ cat3 = strtrim(round(float(cat)^2 * pix2hec),2)+',' & cc = '' & for i = 0, nr_ca
 printf, 9, 'Observation scale [ha]: ' + cc
 cat3 = strtrim(round(float(cat)^2 * pix2acr),2)+',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat3[i]
 printf, 9, 'Observation scale [ac]: ' + cc
-printf, 9, 'Statistics: ' + dostats
+if c_stats eq '2' then cc = ' (statistics only, no maps)' else cc = ' '
+printf, 9, 'Statistics: ' + dostats + cc
 if fosinp eq 'Grayscale' then printf, 9, 'Input map type: ' + fosinp + ', Grayscale threshold: ' + $
   grayt_str else printf, 9, 'Input map type: ' + fosinp
 printf, 9, 'Number of files to be processed: ', nr_im_files
@@ -451,6 +455,79 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     close, 9
     GOTO, skip_fos  ;; invalid input
   ENDIF
+  
+  ;; check for metadata flag if stats only
+  IF c_stats EQ '2' THEN BEGIN
+    ;; get metadata info to verify having a valid FAD map as input for statistics
+    spawn, 'unset LD_LIBRARY_PATH; gdalinfo -noct "' + input + '" 2>/dev/null', geotiff_log
+    q=where(strmid(geotiff_log,0,34) eq "  TIFFTAG_IMAGEDESCRIPTION=GTB_FOS") & q=q[0] 
+    if q eq -1 then begin
+      openw, 9, fn_logfile, /append
+      printf, 9, 'Skipping invalid input (no FOS input image) '
+      close, 9
+      GOTO, skip_fos  ;; invalid input
+    endif
+    
+    time0 = systime( / sec)
+    ;; get the fostag parameters
+    str = geotiff_log[q] & p1 = strpos(str,'<') & p2 = strpos(str,'>')
+    substr = strmid(str,p1+1,p2-p1-1)
+    ;; extract the tags
+    res = strsplit(substr,',',/extract)
+    fosinp = res[0]
+    grayt_str = res[1]
+    c_FGconn = res[2]
+    fosclass = res[3]
+    pixres_str = res[4]
+    kdim_str = res[5]
+        
+    ;; read the FOS input map
+    geotiff = 0
+    im = read_tiff(input, geotiff=geotiff) & is_geotiff = (size(geotiff))[0]
+    im = rotate(temporary(im),7) & sz=size(im,/dim) & xdim=sz[0] & ydim=sz[1] & imgminsize=(xdim<ydim)
+    ;; get stuff we need to do the statistics
+    ;; image properties
+    IF fosinp EQ 'Binary' THEN BEGIN
+      qmiss = where(im eq 102b, ctmiss, /l64, complement=ruarea)
+      n_ruarea = n_elements(ruarea)
+      q4b = where(im eq 106b, ct4b, /l64)
+      qFG = where(im LE 100b, /l64, fgarea)
+      fareaperc=100.0/n_ruarea*fgarea
+    ENDIF ELSE BEGIN ;; grayscale
+      print, 'not done yet for grayscale
+    
+    ENDELSE
+    
+    ext1 = bytarr(sz[0] + 2, sz[1] + 2)
+    IF fosinp EQ 'Binary' THEN BEGIN
+      ext1[1:sz[0], 1:sz[1]] = im LT 101b
+    ENDIF ELSE BEGIN
+      ;ext1[1:sz[0], 1:sz[1]] = long(temporary(tt))
+      print, 'not done yet'
+    ENDELSE
+    ;; label FG only
+    ext1 = ulong(temporary(ext1)) & obj_area = histogram(ext1, /l64)
+    ext1 = label_region(temporary(ext1), all_neighbors=conn8, / ulong)
+    obj_last = max(ext1) & z80 = strtrim(obj_last,2)
+    aps = total(obj_area[1:*],/double) / obj_last & z81 = strtrim(aps,2)
+    ;; get pixel indices by patch
+    ext1 = histogram(temporary(ext1), reverse_indices = rev, /l64)
+    ;; PCnum:= overall connectivity. Sum of [ (areas per component)^2 ]
+    pcnum = total(ext1(1: * )^2, / double) & ECA = sqrt(pcnum)
+    ECA_max = total(ext1(1: * ), / double) & COH = ECA/ECA_max*100.0
+    COH_ru = ECA/n_ruarea*100.0 & ext1=0
+   
+    kdim = float(kdim_str)
+    fbn = file_basename(list[fidx], '.tif')
+    outdir = dir_output + '/' + fbn + '_frag' & file_mkdir, outdir
+    
+    ;; copy over the tif with the amended filename
+    fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.tif'
+    file_copy, input, fn_out, /overwrite    
+    goto, stats2a
+    
+  ENDIF 
+
   
   ;; read it
   geotiff = 0
@@ -780,12 +857,31 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     IF is_geotiff GT 0 THEN $
       write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, geotiff = geotiff, compression = 1 ELSE $
       write_tiff, fn_out, rotate(im,7), red = r, green = g, blue = b, compression = 1
+    ;spawn, gedit + fn_out + ' > /dev/null 2>&1'
+    
+    ;; add the metadata info, all tags are strings, we need:
+    ;;  fosinp: Binary or Grayscale
+    ;;  grayt_str: -1 for Binary data or integer value in [0, 100] for Grayscale data
+    ;;  c_FGconn: 8 or 4 
+    ;;  fosclass: FAD/FED/FAC_5/6 or FAD-APP/FED-APP/FAC-APP_2/5 
+    ;;  pixres_str: pixel resolution [m]
+    ;;  kdim_str: window size number in [1,3, ...501] 
+    fostag = '<' + fosinp + ',' + grayt_str + ',' + c_FGconn + ',' + fosclass + ',' + pixres_str + ',' + kdim_str + '>, '
+    
+    desc = 'GTB_FOS, ' + fostag + 'https://forest.jrc.ec.europa.eu/en/activities/lpa/gtb/'
+    gedit = gedit + '-mo TIFFTAG_IMAGEDESCRIPTION="'+desc + '" '  
     spawn, gedit + fn_out + ' > /dev/null 2>&1'
+    
+    ;; ----- map is done ----
+    
 
-
-    if tstats eq 0 then goto, nostats        
+    if tstats eq 0 then goto, nostats    
+    stats2a:
     ;; a) build histogram
     hist = histogram(im[qFG],/l64) & hist = hist[0:100]
+    if tstats eq 2 then begin
+      fad_av = mean(im[qFG]) & fadru_av = fad_av*fgarea/n_ruarea
+    endif   
     if strlen(fosclass) eq 5 then begin
       method = strmid(fosclass,0,3) & rep = strmid(fosclass,4,1)
     endif else begin
@@ -793,7 +889,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     endelse
     bins = findgen(101)-0.5 & xtit = method & tit = 'Foreground pixel histogram (WS: ' + kdim_str + ')'    
     ;; plot as percentage by FG-area
-    hist2 = float(hist)/n_elements(qfg)*100.0 & bmax = max(hist2) * 1.05 & hist2_cat[isc,*] = hist2
+    hist2 = float(hist)/n_elements(qfg)*100.0 & bmax = max(hist2) * 1.05 & if tstats eq 1 then hist2_cat[isc,*] = hist2
     
     IF rep EQ '5' THEN BEGIN
       bp = barplot(bins[0:9], hist2[0:9], fill_color=[215,50,40], xtitle=xtit, /buffer, thick=0, $
@@ -827,22 +923,22 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       ;; get the 5 fragmentation proportions (the 6th, rare, is always 100.0%)
       if strmid(fragtype,4,1) eq '6' then begin
         zz = (im EQ 100b) & intact = total(zz,/double)/fgarea*100.0 & intact_cat[isc] = intact
-        zz = (im GE 90b) AND (im LT 100b) & interior = total(zz,/double)/fgarea*100.0 & interior_cat[isc] = interior
+        zz = (im GE 90b) AND (im LT 100b) & interior = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then interior_cat[isc] = interior
       endif else begin
-        zz = (im GE 90b) AND (im LE 100b) & interior = total(zz,/double)/fgarea*100.0 & interior_cat[isc] = interior
+        zz = (im GE 90b) AND (im LE 100b) & interior = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then interior_cat[isc] = interior
       endelse
-      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz,/double)/fgarea*100.0 & dominant_cat[isc] = dominant
-      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz,/double)/fgarea*100.0 & transitional_cat[isc] = transitional
-      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz,/double)/fgarea*100.0 & patchy_cat[isc] = patchy
-      zz = (im LT 10b) & rare = total(zz,/double)/fgarea*100.0 & zz = 0 & rare_cat[isc] = rare
+      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then dominant_cat[isc] = dominant
+      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then transitional_cat[isc] = transitional
+      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then patchy_cat[isc] = patchy
+      zz = (im LT 10b) & rare = total(zz,/double)/fgarea*100.0 & zz = 0 & if tstats eq 1 then rare_cat[isc] = rare
     endif else begin ;; output 5-class as well as 2-class
-      zz = (im GE 90b) AND (im LE 100b) & interior = total(zz,/double)/fgarea*100.0 & interior_cat[isc] = interior
-      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz,/double)/fgarea*100.0 & dominant_cat[isc] = dominant
-      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz,/double)/fgarea*100.0 & transitional_cat[isc] = transitional
-      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz,/double)/fgarea*100.0 & patchy_cat[isc] = patchy
+      zz = (im GE 90b) AND (im LE 100b) & interior = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then interior_cat[isc] = interior
+      zz = (im GE 60b) AND (im LT 90b) & dominant = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then dominant_cat[isc] = dominant
+      zz = (im GE 40b) AND (im LT 60b) & transitional = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then transitional_cat[isc] = transitional
+      zz = (im GE 10b) AND (im LT 40b) & patchy = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then patchy_cat[isc] = patchy
       zz = (im LT 10b) & rare = total(zz,/double)/fgarea*100.0 & rare_cat[isc] = rare
-      zz = (im GE 40b) AND (im LE 100b) & continuous = total(zz,/double)/fgarea*100.0 & continuous_cat[isc] = continuous
-      zz = (im LT 40b) & separated = total(zz,/double)/fgarea*100.0 & zz = 0 & separated_cat[isc] = separated
+      zz = (im GE 40b) AND (im LE 100b) & continuous = total(zz,/double)/fgarea*100.0 & if tstats eq 1 then continuous_cat[isc] = continuous
+      zz = (im LT 40b) & separated = total(zz,/double)/fgarea*100.0 & zz = 0 & if tstats eq 1 then if tstats eq 1 then separated_cat[isc] = separated
     endelse
     ;; c) save stats summary in idl sav format for potential change analysis at some later point
     hec = ((pixres * kdim)^2) / 10000.0 & acr = hec * 2.47105 & geotiff_log = ''
@@ -850,6 +946,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.sav'
     save, filename = fn_out, grayt_str, fragtype, xdim, ydim, geotiff_log, rare, patchy, transitional, dominant, interior, intact, $
       separated, continuous, fad_av, fadru_av, fgarea, kdim_str, obj_last, conn_str, pixres_str, kdim, hec, acr
+    if tstats eq 2 then goto, stats2b
     nostats: 
   endfor    ;; end of isc scale loop  
   
@@ -863,7 +960,8 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; d) write out the statistics table as plain text file
   ;;=======================================
-  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.txt'
+  stats2b:
+  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.txt'
   openw,12,fn_out
   printf, 12, 'Fragmentation analysis using Fixed Observation Scale (FOS)'
   printf, 12, '(Fragmentation is complementary to Connectivity: Fragmentation = 100% - Connectivity)
@@ -883,10 +981,29 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, 'Reporting style: ' + repstyle
   printf, 12, 'Number of reporting classes: ' + repclass
   printf, 12, 'Pixel resolution [m]: ' + pixres_str
+  
+  if tstats eq 2 then nr_cat = 1
   ws_cat = strarr(nr_cat)
   for id = 0, nr_cat -1 do ws_cat[id] = '   ' + strtrim(cat[id],2)
   cc = '' & for i = 0, nr_cat-1 do cc = cc + ws_cat[i]
-  ccws = cc
+  ccws = cc   
+  
+  if tstats eq 2 then begin
+    ccws = kdim_str
+    kdim_cat = kdim
+    rare_cat = rare
+    patchy_cat = patchy
+    transitional_cat = transitional
+    dominant_cat = dominant
+    interior_cat = interior
+    intact_cat = intact
+    separated_cat = separated
+    continuous_cat = continuous
+    fad_av_cat = fad_av
+    fadru_av_cat = fadru_av
+  endif
+
+
   printf, 12, 'Window size [pixels]: ' + ccws
   printf, 12, 'Observation scale [(window size * pixel resolution)^2]: '
   ;; Observation scales
@@ -957,13 +1074,17 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   fmt3 = '(a6,' + strtrim(nr_cat,2)+'(f11.4))'
   cc = '' & for i = 0, nr_cat-1 do cc = cc + '   WS' + strtrim(ws_cat[i],2) + '    '
   printf, 12, 'Value ' + cc
-  For id = 0, 100 do printf, 12, format=fmt3, strtrim(id,2), hist2_cat[*,id]
+  if tstats eq 2 then begin
+    For id = 0, 100 do printf, 12, format=fmt3, strtrim(id,2), hist2[id]
+  endif else begin
+    For id = 0, 100 do printf, 12, format=fmt3, strtrim(id,2), hist2_cat[*,id]
+  endelse
   close, 12
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; e) write out the statistics table as csv 
   ;;=======================================
-  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class.csv'
+  fn_out = outdir + '/' + fbn + '_fos-' + strlowcase(fragtype) + 'class_' + kdim_str + '.csv'
   openw,12,fn_out
   w = indgen(nr_cat+1, /string) +',' & w = w[1:*] & cc = '' & for i = 0, nr_cat-1 do cc = cc + w[i]
   IF fosinp EQ 'Grayscale' THEN tt = 'Grayscale_' + grayt_str ELSE tt = fosinp
@@ -1018,12 +1139,22 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, ' '
   cc = '' & for i = 0, nr_cat-1 do cc = cc + 'WS' + strtrim(ws_cat[i],2) + ','
   printf, 12, 'FGcover histogram [%] at window size,' + cc
-  cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,0],2)+ ',' 
-  printf, 12, 'Pixel Value   0',', ',cc
-  For id = 1, 100 do begin
-    cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,id],2)+ ','
-    printf, 12, strtrim(id,2), ',',cc 
-  endfor
+  if tstats eq 1 then begin
+    cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,0],2)+ ','
+    printf, 12, 'Pixel Value   0',', ',cc
+    For id = 1, 100 do begin
+      cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,id],2)+ ','
+      printf, 12, strtrim(id,2), ',',cc
+    endfor      
+  endif else begin
+    cc = strtrim(hist2[0],2)+ ','
+    printf, 12, 'Pixel Value   0',', ',cc
+    For id = 1, 100 do begin
+      cc = strtrim(hist2[id],2)+ ','
+      printf, 12, strtrim(id,2), ',',cc
+    endfor
+  endelse
+  
   close,12
   
   skipstats:

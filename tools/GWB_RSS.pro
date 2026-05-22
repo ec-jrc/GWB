@@ -20,7 +20,7 @@ PRO GWB_RSS
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 2.0.0)'
+GWB_mv = 'GWB_RSS (version 2.0.1)'
 ;;
 ;; Module changelog:
 ;; 1.9.9: IDL 9.2.0
@@ -291,7 +291,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   
   ;;if nocheck eq 1b then save, h_comp_area, nr_comp, data_area, filename=dir_output + '/'+input2+'.sav'
  
-  rowstr = input2 + ',' + strtrim(eca_max,2) + ',' + strtrim(rac_orig,2) + ',' + $
+  rowstr = input2 + ',' + strtrim(ulong64(eca_max),2) + ',' + strtrim(rac_orig,2) + ',' + $
     strtrim(nr_comp,2) + ',' + strtrim(obj_big, 2) + ',' + $
     strtrim(aps, 2) + ',' + strtrim(cnoa, 2) + ',' + $
     strtrim(eca_orig,2) + ',' + strtrim(doc_orig,2) + ',' + strtrim(rest_pot,2)
