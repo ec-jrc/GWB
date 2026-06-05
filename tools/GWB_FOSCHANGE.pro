@@ -23,9 +23,10 @@ PRO GWB_FOSCHANGE
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FOSCHANGE (version 2.0.1)'
+GWB_mv = 'GWB_FOSCHANGE (version 2.0.2)'
 ;;
 ;; Module changelog:
+;; 2.0.2: fixed and improved output statistics
 ;; 2.0.0: read path to GeoTIFF, add FADAV/AVCON relative change,
 ;;        fixed grayscale reading, add color legend file, improved statistics output
 ;; 1.9.9: initial release
@@ -654,7 +655,7 @@ ch_pref = 'fos-' + strlowcase(fosclass)+ '_' + a_kdim
 ;;=================================================================================================
 ;; 5) FOSchange.csv: save the tables as a csv-file
 ;;=================================================================================================
-z=strtrim(change,2) & zp=strtrim(perc,2)
+z=strtrim(change,2) & areacom = total(change,/double)
 f_out = dir_output + '/FOSchange.csv'
 
 ;; test if forcom is defined, else calculate it
@@ -662,6 +663,7 @@ IF total(size(forcom)) LT 0.1 THEN BEGIN
   forcom = total((im1 lE 100b)*(im2 LE 100b),/double)
 ENDIF
 close,12 & openw,12, f_out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printf, 12, '1) General info:'
 printf,12, 'Change typ: ' + ch_pref + ': change from A -> B'
 ;; try to write out more user-friendly
@@ -675,6 +677,7 @@ printf,12, 'Observation scale:,' + strtrim(hec,2) + ' hectares ~ ' + strtrim(acr
 printf,12, 'Map area [pixels]:,' + strtrim(marea,2)
 printf,12, ' '
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printf,12, '2) Land cover status of A and B'
 printf,12, 'Land cover,Pixel value,A-Pixels,B-Pixels,A-%,B-%,Net change-Pixels'
 printf,12, 'Foreground,[0 - 100],' + strtrim(farea_a,2) + ',' + strtrim(farea_b,2) + ',' + $
@@ -686,14 +689,19 @@ printf,12, 'Missing,[102],' + strtrim(miss_a,2) + ',' + strtrim(miss_b,2) + ',' 
   strtrim(miss_a*100.0/marea_a,2) + ',' + strtrim(miss_b*100.0/marea_b,2) + ',' + strtrim(miss_b - miss_a,2)
 printf,12, ' '
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printf,12, '3) Land cover change matrix'
 printf,12, 'A->B [pixels],B-Foreground,B-Background,B-Missing'
 printf,12, 'A-Foreground,' + strtrim(lccmat[0,0],2) + ',' + strtrim(lccmat[1,0],2) + ',' + strtrim(lccmat[2,0],2)
 printf,12, 'A-Background,' + strtrim(lccmat[0,1],2) + ',' + strtrim(lccmat[1,1],2) + ',' + strtrim(lccmat[2,1],2)
 printf,12, 'A-Missing,'  + strtrim(lccmat[0,2],2) + ',' + strtrim(lccmat[1,2],2) + ',' + strtrim(lccmat[2,2],2)
+printf,12, 'AREACOM - common FG+BG at both times:,' + strtrim(total(lccmat[0:1,0:1]),2) 
+printf,12, 'FORCOM - common FG at both times:,' + strtrim(lccmat[0,0],2)
+printf,12, 'FG gain:,' + strtrim(lccmat[0,1],2)
+printf,12, 'FG loss:,' + strtrim(lccmat[1,0],2) 
 printf,12, ' '
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printf, 12, '4) ' + method + ' status: ' + strmid(fostype,3) + ' classes' 
 printf, 12, method + ',Foreground cover,Connectivity,Fragmentation,A-pixels,B-pixels,A-%,B-%'
 printf, 12, '[0 9],Rare,Very low,Very high,' + strtrim(rare_a,2) + ',' + strtrim(rare_b,2) + ',' + strtrim(rare_a/farea_a*100.0,2) + ',' + strtrim(rare_b/farea_b*100.0,2)
@@ -712,8 +720,9 @@ printf, 12, 'AVCON [%],' + strtrim(a_fadru_av,2) + ',' + strtrim(b_fadru_av,2) +
   strtrim(b_fadru_av - a_fadru_av,2) + ',' + strtrim(100.0/a_fadru_av*b_fadru_av-100,2)
 printf, 12, method + '_AV [%],'+ strtrim(a_fad_av,2) + ',' + strtrim(b_fad_av,2) + ',' + $
   strtrim(b_fad_av - a_fad_av,2)+ ',' + strtrim(100.0/a_fad_av*b_fad_av-100,2)
-
 printf,12, ' '
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 printf, 12, '5) ' + method + ' change histogram: 7 classes listing the degree in Delta' + method + ' (= ' + method + ' change)'
 printf, 12, 'Delta' + method + ',Connectivity,Color,Pixels,%'
 printf, 12, '[-100 -21],High decrease,RED,' + strtrim(inc3,2) + ',' + strtrim(inc3n,2)
@@ -724,10 +733,10 @@ printf, 12, '[+2 +10],Low increase,LIGHT GREEN,' + strtrim(dec1,2) + ',' + strtr
 printf, 12, '[+11 +20],Medium increase,MEDIUM GREEN,' + strtrim(dec2,2) + ',' + strtrim(dec2n,2)
 printf, 12, '[+21 +100],High increase,DARK GREEN,' + strtrim(dec3,2) + ',' + strtrim(dec3n,2)
 printf, 12, 'Note: Change histogram is constrained to FORCOM [pixels]:,' + strtrim(forcom,2)
-
-
 printf,12, ' '
-printf,12, '6) ' + method + ' change matrix: ' + strmid(fostype,3) + ' classes listing ' + method + ' status change from A->B'
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+printf,12, '6a) AREACOM ' + method + ' change matrix: ' + strmid(fostype,3) + ' classes listing ' + method + ' status change from A->B'
 if fostype eq 'FOS6' then begin
   printf,12, 'A->B [pixels], B0-Background, B1-Rare, B2-Patchy, B3-Transitional, B4-Dominant, B5-Interior, B6-Intact'
   printf,12, 'A0-Background,  '+z[0,0]+','+z[1,0]+','+z[2,0]+','+z[3,0]+','+z[4,0]+','+z[5,0]+','+z[6,0]
@@ -750,14 +759,47 @@ endif else begin
   sum_ab = total(change[1:*,0],/double)+total(change[2:*,1],/double)+total(change[3:*,2],/double)+total(change[4:*,3],/double)+change[5,4]
   sum_be = change[0,1]+total(change[0:1,2],/double)+total(change[0:2,3],/double)+total(change[0:3,4],/double)+total(change[0:4,5],/double)
 endelse
-printf,12, 'Note: Change matrix is constrained to FORCOM [pixels]:,' + strtrim(forcom,2)
+printf,12, 'AREACOM change matrix [pixels]:,' + strtrim(areacom,2)
+printf,12, 'Same status class - matrix diagonal [pixels]:,' + strtrim(diag+change[0,0],2)
+chsum = sum_ab + sum_be
+printf,12, 'Different status classes [pixels]:,' + strtrim(chsum,2)
+printf,12, 'Above the matrix diagonal [pixels]:,' + strtrim(sum_ab,2)
+printf,12, 'Below the matrix diagonal [pixels]:,' + strtrim(sum_be,2)
+printf, 12, ''
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+printf,12, '6b) FORCOM ' +method + ' change matrix:'
+if fostype eq 'FOS6' then begin
+  printf,12, 'A->B [pixels], B1-Rare, B2-Patchy, B3-Transitional, B4-Dominant, B5-Interior, B6-Intact'
+  printf,12, 'A1-Rare,        '+z[1,1]+','+z[2,1]+','+z[3,1]+','+z[4,1]+','+z[5,1]+','+z[6,1]
+  printf,12, 'A2-Patchy,      '+z[1,2]+','+z[2,2]+','+z[3,2]+','+z[4,2]+','+z[5,2]+','+z[6,2]
+  printf,12, 'A3-Transitional,'+z[1,3]+','+z[2,3]+','+z[3,3]+','+z[4,3]+','+z[5,3]+','+z[6,3]
+  printf,12, 'A4-Dominant,    '+z[1,4]+','+z[2,4]+','+z[3,4]+','+z[4,4]+','+z[5,4]+','+z[6,4]
+  printf,12, 'A5-Interior,    '+z[1,5]+','+z[2,5]+','+z[3,5]+','+z[4,5]+','+z[5,5]+','+z[6,5]
+  printf,12, 'A6-Intact,      '+z[1,6]+','+z[2,6]+','+z[3,6]+','+z[4,6]+','+z[5,6]+','+z[6,6]
+  sum_ab = total(mch[1:*,0])+total(mch[2:*,1])+total(mch[3:*,2])+total(mch[4:*,3])+ mch[5,4]
+  sum_be = mch[0,1]+total(mch[0:1,2])+total(mch[0:2,3])+total(mch[0:3,4])+total(mch[0:4,5])
+endif else begin
+  printf,12, 'A->B [pixels], B1-Rare, B2-Patchy, B3-Transitional, B4-Dominant, B5-Interior'
+  printf,12, 'A1-Rare,        '+z[1,1]+','+z[2,1]+','+z[3,1]+','+z[4,1]+','+z[5,1]
+  printf,12, 'A2-Patchy,      '+z[1,2]+','+z[2,2]+','+z[3,2]+','+z[4,2]+','+z[5,2]
+  printf,12, 'A3-Transitional,'+z[1,3]+','+z[2,3]+','+z[3,3]+','+z[4,3]+','+z[5,3]
+  printf,12, 'A4-Dominant,    '+z[1,4]+','+z[2,4]+','+z[3,4]+','+z[4,4]+','+z[5,4]
+  printf,12, 'A5-Interior,    '+z[1,5]+','+z[2,5]+','+z[3,5]+','+z[4,5]+','+z[5,5]
+  sum_ab = total(mch[1:*,0])+total(mch[2:*,1])+total(mch[3:*,2])+ mch[4,3]
+  sum_be = mch[0,1]+total(mch[0:1,2])+total(mch[0:2,3])+total(mch[0:3,4])
+endelse
+printf,12, 'FORCOM change matrix [pixels]:,' + strtrim(forcom,2)
 printf,12, 'Same status class - matrix diagonal [pixels]:,' + strtrim(diag,2)
-printf,12, 'Different status classes [pixels]:,' + strtrim(chpix,2)
+chsum = sum_ab + sum_be
+printf,12, 'Different status classes [pixels]:,' + strtrim(chsum,2)
 printf,12, 'Connectivity increase (=fragmentation decrease) - above the matrix diagonal [pixels]:,' + strtrim(sum_ab,2)
 printf,12, 'Connectivity decrease (=fragmentation increase) - below the matrix diagonal [pixels]:,' + strtrim(sum_be,2)
-
 printf, 12, ''
-printf,12, method + ' change matrix reduced to and normalized by the ' + strtrim(chpix,2) + ' pixels in different ' + method + ' status classes [%]: '
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+printf,12, '6c) FORCOM ' +method + ' change matrix normalized by the ' + strtrim(chsum,2) + ' pixels in different ' + method + ' status classes [%]: '
+perc = mch/chsum*100 & zp=strtrim(perc,2)
 if fostype eq 'FOS6' then begin
   printf,12, 'A->B [%],B1-Rare,B2-Patchy,B3-Transitional,B4-Dominant,B5-Interior,B6-Intact'
   printf,12, 'A1-Rare      ,'+zp[0,0]+','+zp[1,0]+','+zp[2,0]+','+zp[3,0]+','+zp[4,0]+','+zp[5,0]
@@ -766,6 +808,8 @@ if fostype eq 'FOS6' then begin
   printf,12, 'A4-Dominant  ,'+zp[0,3]+','+zp[1,3]+','+zp[2,3]+','+zp[3,3]+','+zp[4,3]+','+zp[5,3]
   printf,12, 'A5-Interior  ,'+zp[0,4]+','+zp[1,4]+','+zp[2,4]+','+zp[3,4]+','+zp[4,4]+','+zp[5,4]
   printf,12, 'A6-Intact    ,'+zp[0,5]+','+zp[1,5]+','+zp[2,5]+','+zp[3,5]+','+zp[4,5]+','+zp[5,5]
+  sum_ab = total(perc[1:*,0])+total(perc[2:*,1])+total(perc[3:*,2])+total(perc[4:*,3])+ mch[5,4]
+  sum_be = perc[0,1]+total(perc[0:1,2])+total(perc[0:2,3])+total(perc[0:3,4])+total(perc[0:4,5])
 endif else begin
   printf,12, 'A->B [%],B1-Rare,B2-Patchy,B3-Transitional,B4-Dominant,B5-Interior'
   printf,12, 'A1-Rare      ,'+zp[0,0]+','+zp[1,0]+','+zp[2,0]+','+zp[3,0]+','+zp[4,0]
@@ -773,10 +817,12 @@ endif else begin
   printf,12, 'A3-Transitional,'+zp[0,2]+','+zp[1,2]+','+zp[2,2]+','+zp[3,2]+','+zp[4,2]
   printf,12, 'A4-Dominant  ,'+zp[0,3]+','+zp[1,3]+','+zp[2,3]+','+zp[3,3]+','+zp[4,3]
   printf,12, 'A5-Interior  ,'+zp[0,4]+','+zp[1,4]+','+zp[2,4]+','+zp[3,4]+','+zp[4,4]
+  sum_ab = total(perc[1:*,0])+total(perc[2:*,1])+total(perc[3:*,2])+total(perc[4:*,3])
+  sum_be = perc[0,1]+total(perc[0:1,2])+total(perc[0:2,3])+total(perc[0:3,4])
 endelse
-printf,12, 'Connectivity increase (=fragmentation decrease) - above the matrix diagonal [%]:,' + strtrim(sum_above,2)
-printf,12, 'Connectivity decrease (=fragmentation increase) - below the matrix diagonal [%]:,' + strtrim(sum_below,2)
-
+chsum = sum_ab + sum_be
+printf,12, 'Connectivity increase (=fragmentation decrease) - above the matrix diagonal [%]:,' + strtrim(sum_ab,2)
+printf,12, 'Connectivity decrease (=fragmentation increase) - below the matrix diagonal [%]:,' + strtrim(sum_be,2)
 close,12
 
 ;;==========================================================================================

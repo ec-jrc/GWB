@@ -20,7 +20,7 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.1)'
+GWB_mv = 'GWB_FRAG (version 2.0.2)'
 ;;
 ;; Module changelog:
 ;; 2.0.1: add FOS metadata flag, option to do stats only, SC high prec fix

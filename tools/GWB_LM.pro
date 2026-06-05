@@ -20,7 +20,7 @@ PRO GWB_LM
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_LM (version 2.0.1)'
+GWB_mv = 'GWB_LM (version 2.0.2)'
 ;;
 ;; Module changelog:
 ;; 2.0.1: fixed high-precision bug in SC

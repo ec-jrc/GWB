@@ -134,6 +134,10 @@ statistics of processing options and status and trend summaries for the two FOS 
     A-Foreground       1828450       1715957          1
     A-Background        731654      11973123       1007
     A-Missing                0          1394    4223414
+    AREACOM           16249184
+    FORCOM             1828450
+    FG gain:            731654
+    FG loss:           1715957
     
     4) FAD status: 5 classes
      FAD        FG cover Connectivity Fragmentation  A-pixels B-pixels  A-%   B-%
@@ -158,7 +162,7 @@ statistics of processing options and status and trend summaries for the two FOS 
     [+21 +100]    High increase    DARK GREEN   58771   3.2
     Note: Change histogram is constrained to FORCOM [pixels]: 1828450
     
-    6) FAD change matrix: 5 classes, FAD status change from A->B
+    6a) AREACOM FAD change matrix: 5 classes listing FAD status change from A->B
     A->B [pixels]  B0-Background B1-Rare B2-Patchy B3-Transitional B4-Dominant B5-Interior
     A0-Background       11973123   45905    361493          198439      117982        7835
     A1-Rare                29774   12995      8857             842         204          17
@@ -166,14 +170,27 @@ statistics of processing options and status and trend summaries for the two FOS 
     A3-Transitional       474238    3932    198227          262461       65433         897
     A4-Dominant           563007    2768     91482          212239      365189       13438
     A5-Interior           117884     498     10457           21105       75775       29659
-    Note: Change matrix is constrained to FORCOM [pixels]: 1828450
-    Same status class - matrix diagonal [pixels]: 1009503
-    Different status classes [pixels]: 818947
-    Connectivity increase (=fragmentation decrease) - above the matrix diagonal [pixels]:  906744
-    Connectivity decrease (=fragmentation increase) - below the matrix diagonal [pixels]: 2359814
-    
-    FAD change matrix: normalised by the 818947 pixels in different FAD status classes [%]:
-    A->B [%]         B1-Rare B2-Patchy B3-Transitional B4-Dominant B5-Interior
+    AREACOM [pixels]:   16249184
+    Same classes:       12982626
+    Different classes:   3266558
+    Above matrix diagonal:  906744
+    Below matrix diagonal: 2359814
+
+    6b) FORCOM FAD change matrix:
+    A->B [pixels]        B1-Rare B2-Patchy B3-Transitional B4-Dominant B5-Interior
+    A1-Rare                12995      8857             842         204          17
+    A2-Patchy              27374    339199           69917       14892         593
+    A3-Transitional         3932    198227          262461       65433         897
+    A4-Dominant             2768     91482          212239      365189       13438
+    A5-Interior              498     10457           21105       75775       29659
+    FORCOM [pixels]:     1828450
+    Same classes:        1009503
+    Different classes:    818947
+    Connectivity increase (=fragmentation decrease) - above the matrix diagonal [pixels]: 175090
+    Connectivity decrease (=fragmentation increase) - below the matrix diagonal [pixels]: 643857
+
+    6c) FORCOM FAD change matrix normalized by the 818947 pixels in different FAD status classes [%]:
+        A->B [%]         B1-Rare B2-Patchy B3-Transitional B4-Dominant B5-Interior
     A1-Rare              0.0       1.1             0.1         0.0         0.0
     A2-Patchy            3.3       0.0             8.5         1.8         0.1
     A3-Transitional      0.5      24.2             0.0         8.0         0.1
