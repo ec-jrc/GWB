@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.2)'
+GWB_mv = 'GWB_FRAG (version 2.0.3)'
 ;;
 ;; Module changelog:
+;; 2.0.3: remove_APP
 ;; 2.0.1: add FOS metadata flag, option to do stats only, SC high prec fix
 ;; 1.9.9: IDL 9.2.0, add color histogram
 ;; 1.9.8: calculate AVCON before potential averaging, fixed csv output
@@ -168,27 +169,25 @@ ENDIF
 ;; get and check parameters
 ;; 1) frag type
 fragtype = strtrim(finp(q[0]), 2)
-fragarray = ['FAD_5','FAD_6','FAD-APP_2','FAD-APP_5','FED_5','FED_6','FED-APP_2','FED-APP_5','FAC_5','FAC_6','FAC-APP_2','FAC-APP_5']
+fragarray = ['FAD_5','FAD_6','FED_5','FED_6','FAC_5','FAC_6']
 qq = where(fragtype eq fragarray)
 IF qq LT 0 THEN  BEGIN
   print, "The file: " + mod_params + " is in a wrong format."
   print, 'The selected option is not correct: ' + fragtype
-  print, "Select either of: FAD_5,FAD_6,FAD-APP_2,FAD-APP_5,  FED_5,FED_6,FED-APP_2,FED-APP_5,  FAC_5,FAC_6,FAC-APP_2, FAC-APP_5."
+  print, "Select either of: FAD_5,FAD_6, FED_5, FED_6, FAC_5,FAC_6."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
   print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
   print, "Exiting..."
 goto,fin
 ENDIF
-if strmid(fragtype,4,1) eq '6' or strmid(fragtype,4) eq 'APP_5' then begin
+if strmid(fragtype,4,1) eq '6' then begin
   restore, 'idl/fadcolors.sav'
 endif else if strmid(fragtype,4,1) eq '5' then begin
   restore, 'idl/fadcolors5.sav'
-endif else if strmid(fragtype,4) eq 'APP_2' then begin
-  restore, 'idl/fe47colors.sav'
 endif else begin
   print, "The file: " + mod_params + " is in a wrong format."
-  print, "Select either of: FAD_5,FAD_6,FAD-APP_2,FAD-APP_5,  FED_5,FED_6,FED-APP_2,FED-APP_5,  FAC_5,FAC_6,FAC-APP_2, FAC-APP_5."
+  print, "Select either of: FAD_5, FAD_6, FED_5, FED_6, FAC_5, FAC_6."
   print, "Please copy the respective backup file into your input directory:"
   print,  dir_inputdef + "/input/backup/*parameters.txt, or"
   print, "restore the default files using the command: cp -fr /opt/GWB/*put ~/"
@@ -196,11 +195,10 @@ endif else begin
   goto,fin
 endelse
 tvlct, r, g, b
-if strlen(fragtype) eq 5 then fosg = 'FOS' else fosg = 'FOS-APP'
+if strlen(fragtype) eq 5 then fosg = 'FOS'
 method = strmid(fragtype,0,3)
 repstyle = method + ' at pixel level' & repstyle2 = method
-IF fosg eq 'FOS-APP' then repstyle = method + ' at patch level (APP: average per patch)'
-IF fosg eq 'FOS-APP' then repclass = strmid(fragtype,8,1) ELSE repclass = strmid(fragtype,4,1)
+repclass = strmid(fragtype,4,1)
 fosclass = fragtype
 
 ;; 2) FG-connectivity
@@ -658,7 +656,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   ;; FOS loop over observation scales
   kdim_cat = cat & fad_av_cat = fltarr(nr_cat) & fadru_av_cat = fltarr(nr_cat)
   
-  IF (fosg eq 'FOS-APP') OR (tstats eq 1) THEN BEGIN
+  IF tstats eq 1 THEN BEGIN
     ext1 = bytarr(sz[0] + 2, sz[1] + 2)
     IF fosinp EQ 'Binary' THEN BEGIN
       ext1[1:sz[0], 1:sz[1]] = image0 eq 2b
@@ -829,21 +827,9 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
       popd
     ENDELSE 
     
-    ;; build the statistics BEFORE doing APP so they are consistent with non-APP
+    ;; build the statistics
     fad_av = mean(im[qFG]) & fad_av_cat[isc] = fad_av
     fadru_av = fad_av*fgarea/n_ruarea & fadru_av_cat[isc] = fadru_av
-
-    
-    ;; do we want APP?
-    if fosg eq 'FOS-APP' then begin
-      extim = bytarr(sz[0] + 2, sz[1] + 2)
-      extim[1:sz[0], 1:sz[1]] = im
-      FOR i = 1l, obj_last DO BEGIN
-        av = byte(round(mean(extim[rev[rev[i]:rev[i + 1] - 1]])))
-        extim[rev[rev[i]:rev[i + 1] - 1]] = av
-      ENDFOR
-      im = extim[1:sz[0], 1:sz[1]] & extim=0
-    endif
    
     ;; add specialBG (105b), specialBG-Nf (106b), Missing (102b), background (101b)   
     if ct3b gt 0 then im[q3b] = 105b        
@@ -863,7 +849,7 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
     ;;  fosinp: Binary or Grayscale
     ;;  grayt_str: -1 for Binary data or integer value in [0, 100] for Grayscale data
     ;;  c_FGconn: 8 or 4 
-    ;;  fosclass: FAD/FED/FAC_5/6 or FAD-APP/FED-APP/FAC-APP_2/5 
+    ;;  fosclass: FAD/FED/FAC_5/6 
     ;;  pixres_str: pixel resolution [m]
     ;;  kdim_str: window size number in [1,3, ...501] 
     fostag = '<' + fosinp + ',' + grayt_str + ',' + c_FGconn + ',' + fosclass + ',' + pixres_str + ',' + kdim_str + '>, '
@@ -1058,14 +1044,13 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, '================================================================================'
   printf, 12, 'B) Reporting levels'
   printf, 12, '================================================================================'
-  printf, 12, 'Foreground (FG) connectivity is available at 4 reporting levels, B1 - B4:'
+  printf, 12, 'Foreground (FG) connectivity is available at 3 reporting levels, B1 - B3:'
   printf, 12, 'B1) Pixel-level: method FAD/FED/FAC: check the FG pixel value on the map, or aggregated at'
-  printf, 12, 'B2) Patch-level: method _APP (Average-Per-Patch): check the FG pixel value on the map'
-  printf, 12, 'B3) Foreground-level: reference area = all foreground pixels'
+  printf, 12, 'B2) Foreground-level: reference area = all foreground pixels'
   printf, 12, format='(a24,'+strtrim(nr_cat,2)+'(f11.4))','- Average ' + method + ' at WS [%]: ', strtrim(fad_av_cat,2)
   printf, 12, '- ECA (Equivalent Connected Area) [pixels]: ', strtrim(ECA,2)  
   printf, 12, '- COH (Coherence = ECA/ECA_max*100) [%]: ', strtrim(COH,2)
-  printf, 12, 'B4) Reporting unit-level: reference area = entire reporting unit'
+  printf, 12, 'B3) Reporting unit-level: reference area = entire reporting unit'
   printf, 12, format='(a42,'+strtrim(nr_cat,2)+'(f11.4))','- AVCON (average connectivity) at WS [%]: ', strtrim(fadru_av_cat,2)
   printf, 12, '- COH_ru (ECA/Reporting unit area*100) [%]: ', strtrim(COH_ru,2)
   printf, 12, '================================================================================'
@@ -1126,13 +1111,14 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   z = strtrim(fad_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   printf, 12, ' '
   printf, 12, 'B) Reporting levels'
-  printf, 12, 'B3) Foreground-level:'
+  printf, 12, 'B1) Pixel-level: method FAD/FED/FAC: check the FG pixel value on the map'
+  printf, 12, 'B2) Foreground-level:'
   sss = strmid(method,0,3)
-  IF strlen(method) EQ 3 THEN sstr = '- Average ' + sss + ' at window size [%]:,' ELSE sstr = '- Average ' + sss + ' (before APP) at window size [%]:,'   
+  sstr = '- Average ' + sss + ' at window size [%]:,'   
   printf, 12, sstr + cc
   printf, 12, '- ECA [pixels]:, ' + strtrim(ECA,2)
   printf, 12, '- COH [%]:, ' + strtrim(COH,2)
-  printf, 12, 'B4) Reporting unit-level:'
+  printf, 12, 'B3) Reporting unit-level:'
   z = strtrim(fadru_av_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   printf, 12, '- AVCON (average connectivity) at window size [%]:,' + cc
   printf, 12, '- COH_ru [%]:, ' + strtrim(COH_ru,2)

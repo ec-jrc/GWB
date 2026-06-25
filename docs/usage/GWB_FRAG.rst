@@ -41,9 +41,8 @@ Processing parameter options are stored in the file :code:`input/frag-parameters
     ;;
     ;; Method_Reporting: choose one of the following 3 methods to analyze the Foreground (FG) pixels:
     ;;    FAD (FG Area Density); FED (FG Edge Density); FAC (FG Area Clustering):
-    ;; combined with one of the follwing 2 reporting options, per-pixel or average per-patch (APP):
+    ;; combined with per-pixel reporting in either 5 or 6 fragmentation classes:
     ;;    FAD/FED/FAC_5/6: per-pixel reporting, color-coded into 5 or 6 fragmentation classes
-    ;;    FAD-APP/FED-APP/FAC-APP_2/5: per-patch reporting, color-coded into 2 or 5 classes
     ;;
     ;; Input map type (byte) and requirements: binary OR grayscale
     ;; - Binary: 1-background, 2-foreground, optional:
@@ -52,13 +51,13 @@ Processing parameter options are stored in the file :code:`input/frag-parameters
     ;;       255-missing, 103-special background, 104-non-fragmenting background
     ;; 
     ;; Please specify entries at lines 37-43 ONLY using the following syntax:
-    ;; line 37: Method/reporting: FAD_5 (default) or FAD_6, FAD-APP_2, FAD-APP_5 (same for FED or FAC)
-    ;; line 38: Foreground connectivity: 8 (default) or 4
-    ;; line 39: pixel resolution [meters]
-    ;; line 40: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
-    ;; line 41: high-precision: 1-float precision  (default)  or 0-rounded byte
-    ;; line 42: statistics: 0 (no statistics - default) or 1 (add summary statistics) or 2 (statistics from FAD-map input)
-    ;; line 43: input map type: Binary (default) or Grayscale grayt (e.g., Grayscale 30)
+    ;; line 36: Method/reporting: FAD_5 (default) or FAD_6, FED_5, FED_6, FAC_5, or FAC_6
+    ;; line 37: Foreground connectivity: 8 (default) or 4
+    ;; line 38: pixel resolution [meters]
+    ;; line 39: up to 10 window sizes (unit: pixels, uneven within [3, 501] ) in increasing order and separated by a single space.
+    ;; line 40: high-precision: 1-float precision  (default)  or 0-rounded byte
+    ;; line 41: statistics: 0 (no statistics - default) or 1 (add summary statistics) or 2 (statistics from FAD-map input)
+    ;; line 42: input map type: Binary (default) or Grayscale grayt (e.g., Grayscale 30)
     ;;
     ;; an example parameter file using the default settings on a binary input map:
     ;; FAD_5
@@ -90,8 +89,8 @@ success of each input image.
 .. code-block:: console
 
     $ GWB_FRAG -i=$HOME/input -o=$HOME/output
-    IDL 9.1.0 (linux x86_64 m64).
-    (c) 2024, NV5 Geospatial Solutions, Inc.
+    IDL 9.2.0 (linux x86_64 m64).
+    (c) 2025, NV5 Geospatial Solutions, Inc.
 
     GWB_FRAG using:
     dir_input= $HOME/input

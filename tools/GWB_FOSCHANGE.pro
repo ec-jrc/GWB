@@ -23,7 +23,7 @@ PRO GWB_FOSCHANGE
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FOSCHANGE (version 2.0.2)'
+GWB_mv = 'GWB_FOSCHANGE (version 2.0.3)'
 ;;
 ;; Module changelog:
 ;; 2.0.2: fixed and improved output statistics
