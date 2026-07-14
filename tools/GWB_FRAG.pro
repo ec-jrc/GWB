@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.3)'
+GWB_mv = 'GWB_FRAG (version 2.0.4)'
 ;;
 ;; Module changelog:
+;; 2.0.4: fix FED_Gray
 ;; 2.0.3: remove_APP
 ;; 2.0.1: add FOS metadata flag, option to do stats only, SC high prec fix
 ;; 1.9.9: IDL 9.2.0, add color histogram
@@ -790,11 +791,9 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
         printf,1,'X 5'
         printf,1,'Y 10'
         printf,1,'K 5'
-        close,1
-        ;; amend image setup for GSC processing
-        ;; 1) set all BG to zero
-        tmp[BGmask] = 0b
-        IF fosinp EQ 'Binary' THEN BEGIN ;; case (c)
+        close,1        
+        IF fosinp EQ 'Binary' THEN BEGIN ;; case (c), set all BG to zero
+          tmp[BGmask] = 0b
           tmp[qFG] = 100b
           tmp[qmiss] = 255b
           IF ct3b GT 0 THEN tmp[q3b] = 0b ;; set special BG to zero

@@ -19,7 +19,7 @@ PRO GWB_SC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_SC (version 2.0.3)'
+GWB_mv = 'GWB_SC (version 2.0.4)'
 ;;
 ;; Module changelog:
 ;; 2.0.1: fixed high-precision bug in SC

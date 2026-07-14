@@ -1,4 +1,6 @@
 GWB Debian-packages of previous versions:
+https://ies-ows.jrc.ec.europa.eu/gtb/GWB/packages/gwb_2.0.4-1_amd64.deb
+https://ies-ows.jrc.ec.europa.eu/gtb/GWB/packages/gwb_2.0.3-1_amd64.deb
 https://ies-ows.jrc.ec.europa.eu/gtb/GWB/packages/gwb_2.0.2-1_amd64.deb
 https://ies-ows.jrc.ec.europa.eu/gtb/GWB/packages/gwb_2.0.1-1_amd64.deb
 https://ies-ows.jrc.ec.europa.eu/gtb/GWB/packages/gwb_2.0.0-1_amd64.deb
