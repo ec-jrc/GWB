@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.4)'
+GWB_mv = 'GWB_FRAG (version 2.0.5)'
 ;;
 ;; Module changelog:
+;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 2.0.4: fix FED_Gray
 ;; 2.0.3: remove_APP
 ;; 2.0.1: add FOS metadata flag, option to do stats only, SC high prec fix
@@ -76,6 +77,7 @@ cd, current = dir_gwb
 ;; 0) get path to directories or use default
 ;;==============================================================================
 spawn,'echo $USER',res & res = res[0]
+spawn, 'mkdir -p /home/' + res + '/.gwb'
 fn_dirs = '/home/' + res + '/.gwb/gwb_dirs.txt'
 tt = strarr(2) & close,1 & standalone = 1
 

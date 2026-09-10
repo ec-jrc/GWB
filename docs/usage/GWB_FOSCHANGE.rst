@@ -18,7 +18,7 @@ pixel resolution, (equal-area) projection, position, and map dimension in x/y.
 1. Place the two matching input maps in the directory :code:`input` and run a FOS-analysis **including statistics** via the :code:`GWB_FRAG` module.
 2. Empty the directory :code:`input`.
 3. Move the resulting two GTB/GWB-generated FOS-directories from the directory :code:`output` into the directory :code:`input` and empty the directory  :code:`output`.
-4. Specify the full path to the two GTB/GWB-generated FOS-tif maps in the file :code:`input/foschange-parameters.txt`.
+4. Specify the full path to the two GTB/GWB-generated FOS-tif maps in the file :code:`input/foschange-parameters.txt` and ensure the directory contains all statistics (.sav file).
 5. Run the GWB_FOSCHANGE module
 
 .. note::

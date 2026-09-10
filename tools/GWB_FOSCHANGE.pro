@@ -23,9 +23,10 @@ PRO GWB_FOSCHANGE
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FOSCHANGE (version 2.0.4)'
+GWB_mv = 'GWB_FOSCHANGE (version 2.0.5)'
 ;;
 ;; Module changelog:
+;; 2.0.5: IDL 9.3.0, ensure .gwb exists, add require stats
 ;; 2.0.2: fixed and improved output statistics
 ;; 2.0.0: read path to GeoTIFF, add FADAV/AVCON relative change,
 ;;        fixed grayscale reading, add color legend file, improved statistics output
@@ -73,6 +74,7 @@ cd, current = dir_gwb
 ;; 0) get path to directories or use default
 ;;==============================================================================
 spawn,'echo $USER',res & res = res[0]
+spawn, 'mkdir -p /home/' + res + '/.gwb'
 fn_dirs = '/home/' + res + '/.gwb/gwb_dirs.txt'
 tt = strarr(2) & close,1 & standalone = 1 
 
@@ -220,13 +222,15 @@ im2_sav = strmid(im2_file,0,strlen(im2_file)-3)+'sav'
 
 IF (file_info(im1_sav)).exists NE 1b THEN BEGIN
   print, "No matching .sav file found for FOS1 tif map"
-  print, 'Please use an unmodified GTB/GWB-generated FOS-analysis directory.'
+  print, 'Please use an unmodified GTB/GWB-generated FOS-analysis directory,'
+  print, 'including the statistical output (.sav, etc).'
   print, "Exiting..."
   goto,fin
 ENDIF
 IF (file_info(im2_sav)).exists NE 1b THEN BEGIN
   print, "No matching .sav file found for FOS2 tif map"
-  print, 'Please use an unmodified GTB/GWB-generated FOS-analysis directory.'
+  print, 'Please use an unmodified GTB/GWB-generated FOS-analysis directory,'
+  print, 'including the statistical output (.sav, etc).'
   print, "Exiting..."
   goto,fin
 ENDIF

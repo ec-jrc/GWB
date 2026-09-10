@@ -19,9 +19,10 @@ PRO GWB_GSC
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_GSC (version 2.0.4)'
+GWB_mv = 'GWB_GSC (version 2.0.5)'
 ;;
 ;; Module changelog:
+;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 2.0.1: fixed high-precision bug in GSC
 ;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
@@ -63,6 +64,7 @@ cd, current = dir_gwb
 ;; 0) get path to directories or use default
 ;;==============================================================================
 spawn,'echo $USER',res & res = res[0]
+spawn, 'mkdir -p /home/' + res + '/.gwb'
 fn_dirs = '/home/' + res + '/.gwb/gwb_dirs.txt'
 tt = strarr(2) & close,1 & standalone = 1
 

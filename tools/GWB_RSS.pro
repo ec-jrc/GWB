@@ -20,9 +20,10 @@ PRO GWB_RSS
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_RSS (version 2.0.4)'
+GWB_mv = 'GWB_RSS (version 2.0.5)'
 ;;
 ;; Module changelog:
+;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 1.9.9: IDL 9.2.0
 ;; 1.9.7: increase computing precision
 ;; 1.9.6: add gpref, IDL 9.1.0
@@ -69,6 +70,7 @@ device, decomposed = 0
 ;; 0) get path to directories or use default
 ;;==============================================================================
 spawn,'echo $USER',res & res = res[0]
+spawn, 'mkdir -p /home/' + res + '/.gwb'
 fn_dirs = '/home/' + res + '/.gwb/gwb_dirs.txt'
 tt = strarr(2) & close,1 & standalone = 1
 
