@@ -395,9 +395,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 2.0.5)'
+GWB_mv = 'GWB_MSPA (version 2.0.6)'
 ;;
 ;; Module changelog:
+;; 2.0.6: mspa v2.4 
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
@@ -787,10 +788,6 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   spawn, cmdarr, log, /noshell   
     
   im = read_tiff(tmp_out)
-  ;; fix large size MSPA bug
-  IF c_size EQ '1' THEN BEGIN
-    q = where(im EQ 2b, ct, /l64) & IF ct GT 0 THEN im[q] = 0b 
-  ENDIF  
   file_delete, tmp_in, tmp_out, /allow_nonexistent, /quiet
   popd
   

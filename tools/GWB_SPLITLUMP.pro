@@ -23,7 +23,7 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 2.0.5)'
+GWB_mv = 'GWB_SPLITLUMP (version 2.0.6)'
 ;;
 ;; Module changelog:
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists

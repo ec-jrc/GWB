@@ -20,9 +20,10 @@ PRO GWB_FRAG
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FRAG (version 2.0.5)'
+GWB_mv = 'GWB_FRAG (version 2.0.6)'
 ;;
 ;; Module changelog:
+;; 2.0.6: fixed formatting bug in MS-statistics
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 2.0.4: fix FED_Gray
 ;; 2.0.3: remove_APP
@@ -1076,11 +1077,11 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   IF fosinp EQ 'Grayscale' THEN tt = 'Grayscale_' + grayt_str ELSE tt = fosinp
   printf,12, tt + ' ' + fragtype + ': FragmClass\ObsScale:, ' + cc
   cat2 = strtrim(cat2, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + cat2[i]
-  printf,12, 'Neighborhood area [pixels]:,', cc
+  printf,12, 'Neighborhood area [pixels]:,' + cc
   hec = strtrim(hec, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + hec[i]
-  printf,12, 'Neighborhood area [hectares]:,', cc
+  printf,12, 'Neighborhood area [hectares]:,' + cc
   acr = strtrim(acr, 2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + acr[i]
-  printf,12, 'Neighborhood area [acres]:,', cc
+  printf,12, 'Neighborhood area [acres]:,' + cc
 
   z = strtrim(rare_cat,2) + ',' & cc = '' & for i = 0, nr_cat-1 do cc = cc + z[i]
   if fosg eq 'FOS' then begin
@@ -1128,17 +1129,17 @@ FOR fidx = 0, nr_im_files - 1 DO BEGIN
   printf, 12, 'FGcover histogram [%] at window size,' + cc
   if tstats eq 1 then begin
     cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,0],2)+ ','
-    printf, 12, 'Pixel Value   0',', ',cc
+    printf, 12, 'Pixel Value   0,' + cc
     For id = 1, 100 do begin
       cc = '' & for i = 0, nr_cat-1 do cc = cc + strtrim(hist2_cat[i,id],2)+ ','
-      printf, 12, strtrim(id,2), ',',cc
+      printf, 12, strtrim(id,2)+ ',' + cc
     endfor      
   endif else begin
     cc = strtrim(hist2[0],2)+ ','
-    printf, 12, 'Pixel Value   0',', ',cc
+    printf, 12, 'Pixel Value   0,' + cc
     For id = 1, 100 do begin
       cc = strtrim(hist2[id],2)+ ','
-      printf, 12, strtrim(id,2), ',',cc
+      printf, 12, strtrim(id,2) + ',' + cc
     endfor
   endelse
   
