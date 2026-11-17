@@ -23,9 +23,10 @@ PRO GWB_FOSCHANGE
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_FOSCHANGE (version 2.0.6)'
+GWB_mv = 'GWB_FOSCHANGE (version 2.0.7)'
 ;;
 ;; Module changelog:
+;; 2.0.7: added fish shell compatibiliy
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists, add require stats
 ;; 2.0.2: fixed and improved output statistics
 ;; 2.0.0: read path to GeoTIFF, add FADAV/AVCON relative change,
@@ -60,6 +61,12 @@ GWB_mv = 'GWB_FOSCHANGE (version 2.0.6)'
 ;;
 ;;==============================================================================
 ;;==============================================================================
+;; test for fish shell
+spawn,'echo $SHELL', res
+  if strpos(res[0],'fish') gt 0 then begin
+  spawn, "function unset; set -e $argv; end; funcsave unset"
+endif
+
 device, decomposed = 0
 ;; initial system checks
 gpref = 'unset LD_LIBRARY_PATH; '

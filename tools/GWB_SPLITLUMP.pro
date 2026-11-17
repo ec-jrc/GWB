@@ -23,9 +23,10 @@ PRO GWB_SPLITLUMP
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 ;;
 ;;==============================================================================
-GWB_mv = 'GWB_SPLITLUMP (version 2.0.6)'
+GWB_mv = 'GWB_SPLITLUMP (version 2.0.7)'
 ;;
 ;; Module changelog:
+;; 2.0.7: added fish shell compatibiliy
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 1.9.9: IDL 9.2.0
 ;; 1.9.6: add gpref, IDL 9.1.0
@@ -59,6 +60,12 @@ GWB_mv = 'GWB_SPLITLUMP (version 2.0.6)'
 ;;==============================================================================
 ;;==============================================================================
 ;; initial system checks
+;; test for fish shell
+spawn,'echo $SHELL', res
+  if strpos(res[0],'fish') gt 0 then begin
+  spawn, "function unset; set -e $argv; end; funcsave unset"
+endif
+
 gpref = 'unset LD_LIBRARY_PATH; '
 gdi = gpref + 'gdalinfo -noct '
 gtrans = gpref + 'gdal_translate -co COMPRESS=LZW -srcwin '

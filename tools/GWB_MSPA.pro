@@ -395,9 +395,10 @@ PRO GWB_MSPA
 ;;       E-mail: Peter.Vogt@ec.europa.eu
 
 ;;==============================================================================
-GWB_mv = 'GWB_MSPA (version 2.0.6)'
+GWB_mv = 'GWB_MSPA (version 2.0.7)'
 ;;
 ;; Module changelog:
+;; 2.0.7: added fish shell compatibiliy,
 ;; 2.0.6: mspa v2.4 
 ;; 2.0.5: IDL 9.3.0, ensure .gwb exists
 ;; 1.9.9: IDL 9.2.0
@@ -453,6 +454,12 @@ cd, current = dir_gwb
 ;;==============================================================================
 ;; 0) get path to directories or use default
 ;;==============================================================================
+;; test for fish shell
+spawn,'echo $SHELL', res
+  if strpos(res[0],'fish') gt 0 then begin
+  spawn, "function unset; set -e $argv; end; funcsave unset"
+endif
+
 spawn,'echo $USER',res & res = res[0]
 spawn, 'mkdir -p /home/' + res + '/.gwb'
 fn_dirs = '/home/' + res + '/.gwb/gwb_dirs.txt'
