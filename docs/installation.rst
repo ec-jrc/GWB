@@ -6,7 +6,7 @@ Installation packages are available on the
 `project homepage <https://forest.jrc.ec.europa.eu/en/activities/lpa/gwb/>`_. 
 To ensure package integrity, compare the md5sum against the 
 `GWB md5sum list <https://ies-ows.jrc.ec.europa.eu/gtb/GWB/GWB_md5sums.txt>`_. 
-GWB requires :code:`gdal`, :code:`xvfb`, :code:`time`, :code:`libgomp1` and can 
+GWB requires :code:`gdal`, :code:`python3-gdal`, :code:`xvfb`, :code:`time`, :code:`libgomp1` and can 
 be installed in either:
 
 * **System-wide mode:** installation requires root-privileges. GWB will be available to 
