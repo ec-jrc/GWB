@@ -13,7 +13,7 @@ be installed in either:
   all system users.
 * **Standalone mode:** installation per user and *not* requiring root-privileges. GWB is 
   available for the user only and the standalone directory GWB can be used in any 
-  user-accessible location or any external device, provided :code:`gdal`, 
+  user-accessible location or any external device, provided :code:`gdal`, :code:`python3-gdal`, 
   :code:`xvfb`, :code:`time`, :code:`libgomp1` is installed in the system.
 
 
